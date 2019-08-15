@@ -1,0 +1,13 @@
+[package]
+name = "rsbkb"
+version = "0.1.0"
+authors = ["Raphaël Rigo <devel@syscall.eu>"]
+edition = "2018"
+
+[dependencies]
+hex = "0.3.2"
+
+
+[[bin]]
+name = "rsbkb"
+path = "main.rs"
