@@ -4,6 +4,33 @@ use std::io;
 use std::io::Read;
 use std::io::Write;
 extern crate hex;
+extern crate base64;
+
+trait SliceExt {
+    fn trim(&self) -> &Self;
+}
+
+impl SliceExt for [u8] {
+    fn trim(&self) -> &[u8] {
+        fn is_whitespace(c: &u8) -> bool {
+            *c == b'\t' || *c == b' ' || *c == b'\n' || *c == b'\r'
+        }
+
+        fn is_not_whitespace(c: &u8) -> bool {
+            !is_whitespace(c)
+        }
+
+        if let Some(first) = self.iter().position(is_not_whitespace) {
+            if let Some(last) = self.iter().rposition(is_not_whitespace) {
+                &self[first..last + 1]
+            } else {
+                unreachable!();
+            }
+        } else {
+            &[]
+        }
+    }
+}
 
 fn usage(program: String) {
     println!("Usage: {} [todecode]", program);
@@ -12,6 +39,17 @@ fn usage(program: String) {
 fn hex_decode(hexval: Vec<u8>) -> Vec<u8> {
     let decoded = hex::decode(hexval).expect("Decoding hex failed");
     return decoded;
+}
+
+fn b64_decode(b64val: Vec<u8>) -> Vec<u8> {
+    let trimmed : Vec<u8> = b64val.trim().into();
+    let decoded = base64::decode(&trimmed).expect("Decoding base64 failed");
+    return decoded;
+}
+
+fn b64_encode(val: Vec<u8>) -> Vec<u8> {
+    let encoded = base64::encode(&val);
+    return encoded.as_bytes().to_vec();
 }
 
 fn hex_encode(val: Vec<u8>) -> Vec<u8> {
@@ -35,7 +73,9 @@ fn main() {
     let operation = match arg0.as_ref() {
         "unhex" => hex_decode,
         "hex" => hex_encode,
-        _ => panic!("Unknown operation"),
+        "d64" => b64_decode,
+        "b64" => b64_encode,
+        _ => panic!("Unknown operation {}", arg0),
         };
 
     /* No args, read from stdin */
