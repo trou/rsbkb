@@ -60,8 +60,13 @@ fn hex_encode(val: Vec<u8>) -> Vec<u8> {
 
 fn url_decode(urlval: Vec<u8>) -> Vec<u8> {
     let trimmed : Vec<u8> = urlval.trim().into();
-    let decoded = percent_encoding::percent_decode(&trimmed).decode_utf8_lossy();
-    return decoded.as_bytes().to_vec();
+    let decoded: Vec<u8> = percent_encoding::percent_decode(&trimmed).collect();
+    return decoded;
+}
+
+fn url_encode(val: Vec<u8>) -> Vec<u8> {
+    let encoded = percent_encoding::percent_encode(&val, percent_encoding::NON_ALPHANUMERIC).to_string();
+    return encoded.as_bytes().to_vec();
 }
 
 fn main() {
@@ -83,6 +88,7 @@ fn main() {
         "d64" => b64_decode,
         "b64" => b64_encode,
         "urldec" => url_decode,
+        "urlenc" => url_encode,
         _ => panic!("Unknown operation {}", arg0),
         };
 
