@@ -5,6 +5,7 @@ use std::io::Read;
 use std::io::Write;
 extern crate hex;
 extern crate base64;
+extern crate percent_encoding;
 
 trait SliceExt {
     fn trim(&self) -> &Self;
@@ -57,6 +58,12 @@ fn hex_encode(val: Vec<u8>) -> Vec<u8> {
     return encoded.as_bytes().to_vec();
 }
 
+fn url_decode(urlval: Vec<u8>) -> Vec<u8> {
+    let trimmed : Vec<u8> = urlval.trim().into();
+    let decoded = percent_encoding::percent_decode(&trimmed).decode_utf8_lossy();
+    return decoded.as_bytes().to_vec();
+}
+
 fn main() {
     let args: Vec<_>= env::args().collect();
 
@@ -75,6 +82,7 @@ fn main() {
         "hex" => hex_encode,
         "d64" => b64_decode,
         "b64" => b64_encode,
+        "urldec" => url_decode,
         _ => panic!("Unknown operation {}", arg0),
         };
 
