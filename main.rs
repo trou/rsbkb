@@ -6,6 +6,8 @@ use std::io::Write;
 extern crate hex;
 extern crate base64;
 extern crate percent_encoding;
+extern crate clap;
+use clap::{Arg, App};
 
 trait SliceExt {
     fn trim(&self) -> &Self;
@@ -33,15 +35,6 @@ impl SliceExt for [u8] {
     }
 }
 
-fn usage(program: String) {
-    println!("Usage: {} [todecode]", program);
-}
-
-fn hex_decode(hexval: Vec<u8>) -> Vec<u8> {
-    let decoded = hex::decode(hexval).expect("Decoding hex failed");
-    return decoded;
-}
-
 fn b64_decode(b64val: Vec<u8>) -> Vec<u8> {
     let trimmed : Vec<u8> = b64val.trim().into();
     let decoded = base64::decode(&trimmed).expect("Decoding base64 failed");
@@ -50,11 +43,6 @@ fn b64_decode(b64val: Vec<u8>) -> Vec<u8> {
 
 fn b64_encode(val: Vec<u8>) -> Vec<u8> {
     let encoded = base64::encode(&val);
-    return encoded.as_bytes().to_vec();
-}
-
-fn hex_encode(val: Vec<u8>) -> Vec<u8> {
-    let encoded = hex::encode(val);
     return encoded.as_bytes().to_vec();
 }
 
@@ -69,43 +57,86 @@ fn url_encode(val: Vec<u8>) -> Vec<u8> {
     return encoded.as_bytes().to_vec();
 }
 
+fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
+    let key_bytes = hex::decode(xorkey).expect("Xor key decoding failed");
+    let inf_key = key_bytes.iter().cycle(); // Iterate endlessly over key bytes 
+    return val.iter().zip(inf_key).map (|(x, k)| x ^ k).collect();
+}
+
+enum Operation {
+        HexDecode,
+        HexEncode,
+        B64Decode,
+        B64Encode,
+        UrlDecode,
+        UrlEncode,
+        Xor,
+}
+
+fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
+    match op {
+        Operation::HexDecode => return hex::decode(val).expect("Decoding hex failed"),
+        Operation::HexEncode => return hex::encode(&val).as_bytes().to_vec(),
+        Operation::B64Decode => return b64_decode(val),
+        Operation::B64Encode => return b64_encode(val),
+        Operation::UrlDecode => return url_decode(val),
+        Operation::UrlEncode => return url_encode(val),
+        Operation::Xor => return xor(args.value_of("xorkey").unwrap(), val),
+    }
+}
+
+
+
 fn main() {
     let args: Vec<_>= env::args().collect();
-
-    if &args.len() < &1 {
-        println!("No argv[0] !");
-        return;
-    }
 
     let arg0 = Path::new(&args[0]).file_name();
     let arg0 = match arg0 {
         Some(a) => a.to_str().unwrap().to_string(),
         None => panic!("No arg0"),
     };
-    let operation = match arg0.as_ref() {
-        "unhex" => hex_decode,
-        "hex" => hex_encode,
-        "d64" => b64_decode,
-        "b64" => b64_encode,
-        "urldec" => url_decode,
-        "urlenc" => url_encode,
-        _ => panic!("Unknown operation {}", arg0),
+    let mut app = App::new("rsbkb")
+        .version("0.1.0")
+        .author("Raphael Rigo <devel@syscall.eu>")
+        .about("Rust BlackBag")
+        .arg(Arg::with_name("tool")
+                 .short("t")
+                 .long("tool")
+                 .default_value(&arg0)
+                 .takes_value(true)
+                 .requires_if("xor", "xorkey")
+                 .help("Tool to run"))
+        .arg(Arg::with_name("xorkey")
+                 .short("x")
+                 .long("xorkey")
+                 .takes_value(true)
+                 .help("Xor key in hex format"))
+        .arg(Arg::with_name("value")
+                 .required(false)
+                 .help("input value, reads from stdin in not present"));
+    let matches = app.clone().get_matches();
+
+    let operation = match matches.value_of("tool").unwrap() {
+        "unhex" => Operation::HexDecode,
+        "hex" => Operation::HexEncode,
+        "d64" => Operation::B64Decode,
+        "b64" => Operation::B64Encode,
+        "urldec" => Operation::UrlDecode,
+        "urlenc" => Operation::UrlEncode,
+        "xor" => Operation::Xor,
+        _ => { &app.print_help(); println!(""); return;},
         };
 
-    /* No args, read from stdin */
     let mut inputval = vec![];
-    if &args.len() < &2 {
+
+    /* No args, read from stdin */
+    if !matches.is_present("value") {
         io::stdin().read_to_end(&mut inputval).expect("Reading stdin failed");
     } else {
-        let arg1 = args[1].clone();
-        if arg1 == "-h" {
-            usage(arg0);
-            return;
-        }
-        inputval = arg1.as_bytes().to_vec();
+        inputval = matches.value_of("value").unwrap().as_bytes().to_vec();
     }
 
-    let res = operation(inputval);
+    let res = process(matches, operation, inputval);
 
     let mut stdout = io::stdout();
     stdout.write(&res).expect("Write failed");
