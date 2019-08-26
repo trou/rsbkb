@@ -9,6 +9,7 @@ hex = "0.3.2"
 base64 = "0.10.1"
 percent-encoding = "2.1.0"
 clap = "2.33.0"
+crc = "1.8.1"
 
 [[bin]]
 name = "rsbkb"

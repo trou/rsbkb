@@ -7,7 +7,9 @@ extern crate hex;
 extern crate base64;
 extern crate percent_encoding;
 extern crate clap;
+extern crate crc;
 use clap::{Arg, App};
+use crc::{crc16, crc32};
 
 trait SliceExt {
     fn trim(&self) -> &Self;
@@ -71,6 +73,8 @@ enum Operation {
         UrlDecode,
         UrlEncode,
         Xor,
+        Crc16,
+        Crc32,
 }
 
 fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
@@ -82,6 +86,8 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
         Operation::UrlDecode => return url_decode(val),
         Operation::UrlEncode => return url_encode(val),
         Operation::Xor => return xor(args.value_of("xorkey").unwrap(), val),
+        Operation::Crc16 => return format!("{:08x}\n", crc16::checksum_x25(&val)).as_bytes().to_vec(),
+        Operation::Crc32 => return format!("{:08x}\n", crc32::checksum_ieee(&val)).as_bytes().to_vec(),
     }
 }
 
@@ -124,6 +130,8 @@ fn main() {
         "urldec" => Operation::UrlDecode,
         "urlenc" => Operation::UrlEncode,
         "xor" => Operation::Xor,
+        "crc16" => Operation::Crc16,
+        "crc32" => Operation::Crc32,
         _ => { &app.print_help(); println!(""); return;},
         };
 
