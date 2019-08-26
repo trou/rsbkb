@@ -42,7 +42,7 @@ fn b64_decode(b64val: Vec<u8>) -> Vec<u8> {
 }
 
 fn b64_encode(val: Vec<u8>) -> Vec<u8> {
-    let encoded = base64::encode(&val);
+    let encoded = base64::encode(&val)+"\n";
     return encoded.as_bytes().to_vec();
 }
 
@@ -54,7 +54,7 @@ fn url_decode(urlval: Vec<u8>) -> Vec<u8> {
 
 fn url_encode(val: Vec<u8>) -> Vec<u8> {
     let encoded = percent_encoding::percent_encode(&val, percent_encoding::NON_ALPHANUMERIC).to_string();
-    return encoded.as_bytes().to_vec();
+    return (encoded+"\n").as_bytes().to_vec();
 }
 
 fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
@@ -76,7 +76,7 @@ enum Operation {
 fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
     match op {
         Operation::HexDecode => return hex::decode(val).expect("Decoding hex failed"),
-        Operation::HexEncode => return hex::encode(&val).as_bytes().to_vec(),
+        Operation::HexEncode => return (hex::encode(&val)+"\n").as_bytes().to_vec(),
         Operation::B64Decode => return b64_decode(val),
         Operation::B64Encode => return b64_encode(val),
         Operation::UrlDecode => return url_decode(val),
