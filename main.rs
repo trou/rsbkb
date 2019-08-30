@@ -94,6 +94,27 @@ fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
     return val.iter().zip(inf_key).map (|(x, k)| x ^ k).collect();
 }
 
+fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
+    let trimmed : Vec<u8> = hexval.trim().into();
+    let res = hex::decode(&trimmed);
+    if strict {
+        return res.expect("Decoding hex failed");
+    }
+    match res {
+        Ok(decoded) => return decoded,
+        Err(e) => match e {
+            hex::FromHexError::InvalidHexCharacter {c: _, index} => {
+                let start = (&trimmed[0..index]).to_vec();
+                let end = &trimmed[index..];
+                let mut decoded = hex_decode(start, strict);
+                decoded.extend_from_slice(end);
+                return decoded;
+            },
+            _ => panic!("lol")
+        }
+    }
+}
+
 enum Operation {
         HexDecode,
         HexEncode,
@@ -108,7 +129,7 @@ enum Operation {
 
 fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
     match op {
-        Operation::HexDecode => return hex::decode(val).expect("Decoding hex failed"),
+        Operation::HexDecode => return hex_decode(val, args.is_present("strict")),
         Operation::HexEncode => return (hex::encode(&val)+"\n").as_bytes().to_vec(),
         Operation::B64Decode => return b64_decode(val, args.is_present("strict")),
         Operation::B64Encode => return b64_encode(val),
