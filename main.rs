@@ -43,7 +43,7 @@ impl SliceExt for [u8] {
  *   and return the decoded data concatenated with the rest
  */
 fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
-    let trimmed : Vec<u8> = b64val.trim().into();
+    let mut trimmed : Vec<u8> = b64val.trim().into();
 
     // If the length is invalid, decode up to the supplementary bytes
     if trimmed.len()% 4 != 0 && !strict {
@@ -60,11 +60,10 @@ fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
                 match e {
                     base64::DecodeError::InvalidLastSymbol(offset, _) |
                     base64::DecodeError::InvalidByte(offset, _) => {
-                        let start = (&trimmed[0..offset]).to_vec();
-                        let end = &trimmed[offset..];
-                        let mut decoded = b64_decode(start, strict);
+                        let mut end = trimmed.split_off(offset);
+                        let mut decoded = b64_decode(trimmed, strict);
                         if !strict {
-                            decoded.extend_from_slice(end);
+                            decoded.append(&mut end);
                         }
                         return decoded;
                     },
@@ -95,7 +94,7 @@ fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
 }
 
 fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
-    let trimmed : Vec<u8> = hexval.trim().into();
+    let mut trimmed : Vec<u8> = hexval.trim().into();
     let res = hex::decode(&trimmed);
     if strict {
         return res.expect("Decoding hex failed");
@@ -104,10 +103,9 @@ fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
         Ok(decoded) => return decoded,
         Err(e) => match e {
             hex::FromHexError::InvalidHexCharacter {c: _, index} => {
-                let start = (&trimmed[0..index]).to_vec();
-                let end = &trimmed[index..];
-                let mut decoded = hex_decode(start, strict);
-                decoded.extend_from_slice(end);
+                let mut end = trimmed.split_off(index);
+                let mut decoded = hex_decode(trimmed, strict);
+                decoded.append(&mut end);
                 return decoded;
             },
             _ => panic!("lol")
