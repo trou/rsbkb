@@ -108,7 +108,14 @@ fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
                 decoded.append(&mut end);
                 return decoded;
             },
-            _ => panic!("lol")
+            hex::FromHexError::OddLength => {
+                // TODO: refactor
+                let mut end = trimmed.split_off(trimmed.len()-1);
+                let mut decoded = hex_decode(trimmed, strict);
+                decoded.append(&mut end);
+                return decoded;
+            },
+            _ => panic!("{}", e)
         }
     }
 }
