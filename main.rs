@@ -164,6 +164,7 @@ fn main() {
                  .short("t")
                  .long("tool")
                  .default_value(&arg0)
+                 .possible_values(&["unhex", "hex", "d64", "b64", "urldec", "urlenc", "xor", "crc32", "crc16"])
                  .takes_value(true)
                  .requires_if("xor", "xorkey")
                  .help("Tool to run"))
