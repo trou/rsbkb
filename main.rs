@@ -38,23 +38,25 @@ impl SliceExt for [u8] {
 }
 
 /* b64_decode. With two modes:
- * - strict: error if invalid input
+ * - strict: decode until the end of the valid base64
  * - lenient: decode the b64 input until the first invalid byte
  *   and return the decoded data concatenated with the rest
  */
 fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
     let trimmed : Vec<u8> = b64val.trim().into();
+
+    // If the length is invalid, decode up to the supplementary bytes
     if trimmed.len()% 4 != 0 && !strict {
         let end = trimmed.len()-(trimmed.len() % 4);
         let mut decoded = b64_decode((&trimmed[0..end]).to_vec(), strict);
         decoded.extend_from_slice(&trimmed[end..]);
         return decoded;
     }
-    
+
     let decoded = base64::decode_config(&trimmed, base64::STANDARD.decode_allow_trailing_bits(true));
     match decoded {
         Ok(res) => return res,
-        Err(e) => 
+        Err(e) =>
                 match e {
                     base64::DecodeError::InvalidLastSymbol(offset, _) |
                     base64::DecodeError::InvalidByte(offset, _) => {
@@ -88,7 +90,7 @@ fn url_encode(val: Vec<u8>) -> Vec<u8> {
 
 fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
     let key_bytes = hex::decode(xorkey).expect("Xor key decoding failed");
-    let inf_key = key_bytes.iter().cycle(); // Iterate endlessly over key bytes 
+    let inf_key = key_bytes.iter().cycle(); // Iterate endlessly over key bytes
     return val.iter().zip(inf_key).map (|(x, k)| x ^ k).collect();
 }
 
