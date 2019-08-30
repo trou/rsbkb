@@ -1,8 +1,8 @@
 use std::env;
 use std::path::Path;
 use std::io;
-use std::io::Read;
-use std::io::Write;
+use std::io::{Read, Write, Seek, SeekFrom};
+use std::fs::{OpenOptions};
 extern crate hex;
 extern crate base64;
 extern crate percent_encoding;
@@ -130,6 +130,37 @@ enum Operation {
         Xor,
         Crc16,
         Crc32,
+        Slice,
+}
+
+fn num_from_str_safe(s: &str) -> Result<u64, std::num::ParseIntError> {
+    if &s[0..2] == "0x" {
+        return u64::from_str_radix(&s[2..], 16);
+    } else {
+        return s.parse();
+    }
+}
+
+fn slice(args: clap::ArgMatches) -> Vec<u8> {
+    let file = args.value_of("value").unwrap();
+    let start_va = args.value_of("start").unwrap();
+    let start: u64 = num_from_str_safe(start_va).expect("invalid start");
+
+    let mut f = OpenOptions::new().read(true).write(true).open(file).expect("can't open file");
+    f.seek(SeekFrom::Start(start)).expect("Seek failed");
+    let mut res =  vec![];
+    if args.is_present("end") {
+        let end: u64 = num_from_str_safe(args.value_of("end").unwrap()).expect("Invalid end");
+        if end < start {
+            panic!("end < start");
+        }
+        let len: usize = (end-start) as usize;
+        res.resize(len, 0);
+        f.read_exact(&mut res).expect("Read failed");
+    } else {
+        f.read_to_end(&mut res).expect("Read failed");
+    }
+    return res.to_vec();
 }
 
 fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
@@ -141,6 +172,7 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
         Operation::UrlDecode => return url_decode(val),
         Operation::UrlEncode => return url_encode(val),
         Operation::Xor => return xor(args.value_of("xorkey").unwrap(), val),
+        Operation::Slice => return slice(args),
         Operation::Crc16 => return format!("{:08x}\n", crc16::checksum_x25(&val)).as_bytes().to_vec(),
         Operation::Crc32 => return format!("{:08x}\n", crc32::checksum_ieee(&val)).as_bytes().to_vec(),
     }
@@ -164,13 +196,14 @@ fn main() {
                  .short("t")
                  .long("tool")
                  .default_value(&arg0)
-                 .possible_values(&["unhex", "hex", "d64", "b64", "urldec", "urlenc", "xor", "crc32", "crc16"])
+                 .possible_values(&["unhex", "hex", "d64", "b64", "urldec", "urlenc", "xor", "crc32", "crc16", "slice"])
                  .takes_value(true)
-                 .requires_if("xor", "xorkey")
+                 .requires_if("slice", "value")
                  .help("Tool to run"))
         .arg(Arg::with_name("xorkey")
                  .short("x")
                  .long("xorkey")
+                 .required_if("tool", "xor")
                  .takes_value(true)
                  .help("Xor key in hex format"))
         .arg(Arg::with_name("strict")
@@ -180,7 +213,13 @@ fn main() {
                  .help("strict decoding, error on invalid data"))
         .arg(Arg::with_name("value")
                  .required(false)
-                 .help("input value, reads from stdin in not present"));
+                 .help("input value, reads from stdin in not present"))
+        .arg(Arg::with_name("start")
+                 .required_if("tool", "slice")
+                 .help("start from slice"))
+        .arg(Arg::with_name("end")
+                 .required(false)
+                 .help("start from slice"));
     let matches = app.clone().get_matches();
 
     let operation = match matches.value_of("tool").unwrap() {
@@ -193,6 +232,7 @@ fn main() {
         "xor" => Operation::Xor,
         "crc16" => Operation::Crc16,
         "crc32" => Operation::Crc32,
+        "slice" => Operation::Slice,
         _ => { &app.print_help(); println!(""); return;},
         };
 
