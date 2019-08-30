@@ -37,10 +37,37 @@ impl SliceExt for [u8] {
     }
 }
 
-fn b64_decode(b64val: Vec<u8>) -> Vec<u8> {
+/* b64_decode. With two modes:
+ * - strict: error if invalid input
+ * - lenient: decode the b64 input until the first invalid byte
+ *   and return the decoded data concatenated with the rest
+ */
+fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
     let trimmed : Vec<u8> = b64val.trim().into();
-    let decoded = base64::decode(&trimmed).expect("Decoding base64 failed");
-    return decoded;
+    if trimmed.len()% 4 != 0 && !strict {
+        let end = trimmed.len()-(trimmed.len() % 4);
+        let mut decoded = b64_decode((&trimmed[0..end]).to_vec(), strict);
+        decoded.extend_from_slice(&trimmed[end..]);
+        return decoded;
+    }
+    
+    let decoded = base64::decode_config(&trimmed, base64::STANDARD.decode_allow_trailing_bits(true));
+    match decoded {
+        Ok(res) => return res,
+        Err(e) => 
+                match e {
+                    base64::DecodeError::InvalidLastSymbol(offset, _) |
+                    base64::DecodeError::InvalidByte(offset, _) => {
+                        let start = (&b64val[0..offset]).to_vec();
+                        let end = &b64val[offset..];
+                        let mut decoded = b64_decode(start, strict);
+                        if !strict {
+                            decoded.extend_from_slice(end);
+                        }
+                        return decoded;
+                    },
+                    _ =>  {println!("{}",e); panic!("Decoding base64 failed: {}", e) }}
+    }
 }
 
 fn b64_encode(val: Vec<u8>) -> Vec<u8> {
@@ -81,7 +108,7 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
     match op {
         Operation::HexDecode => return hex::decode(val).expect("Decoding hex failed"),
         Operation::HexEncode => return (hex::encode(&val)+"\n").as_bytes().to_vec(),
-        Operation::B64Decode => return b64_decode(val),
+        Operation::B64Decode => return b64_decode(val, args.is_present("strict")),
         Operation::B64Encode => return b64_encode(val),
         Operation::UrlDecode => return url_decode(val),
         Operation::UrlEncode => return url_encode(val),
@@ -117,6 +144,11 @@ fn main() {
                  .long("xorkey")
                  .takes_value(true)
                  .help("Xor key in hex format"))
+        .arg(Arg::with_name("strict")
+                 .short("s")
+                 .long("strict")
+                 .takes_value(false)
+                 .help("strict decoding, error on invalid data"))
         .arg(Arg::with_name("value")
                  .required(false)
                  .help("input value, reads from stdin in not present"));
