@@ -60,8 +60,8 @@ fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
                 match e {
                     base64::DecodeError::InvalidLastSymbol(offset, _) |
                     base64::DecodeError::InvalidByte(offset, _) => {
-                        let start = (&b64val[0..offset]).to_vec();
-                        let end = &b64val[offset..];
+                        let start = (&trimmed[0..offset]).to_vec();
+                        let end = &trimmed[offset..];
                         let mut decoded = b64_decode(start, strict);
                         if !strict {
                             decoded.extend_from_slice(end);
