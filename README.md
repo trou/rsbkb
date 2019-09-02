@@ -17,7 +17,7 @@ Matasano's BlackBag.
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
-for i in unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; done
+for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; done
 ```
 
 ## Included tools
@@ -31,3 +31,4 @@ for i in unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; d
 * `xor`
 * `crc16`
 * `crc32`
+* `slice`
