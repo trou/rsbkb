@@ -17,12 +17,13 @@ Matasano's BlackBag.
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
-for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; done
+for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s rsbkb $i ; done
 ```
 
 ## Included tools
 
 * `unhex`
+* `unhex2`: decode all hex pairs, leave the rest untouched
 * `hex`
 * `d64`
 * `b64`
