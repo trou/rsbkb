@@ -120,8 +120,30 @@ fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
     }
 }
 
+/* Iterate over the whole "hexval", decoding only pairs of hex chars
+ * and leaving the rest untouched */
+fn hex_decode_all(hexval: Vec<u8>) -> Vec<u8> {
+    let mut res: Vec<u8> = vec![];
+    let ref mut iter = hexval.windows(2);
+    loop {
+        let chro = iter.next();
+        let chr = match chro {
+            None => return res,
+            Some(a) => a
+        };
+
+        if (chr[0] as char).is_digit(16) && (chr[1] as char).is_digit(16) {
+            res.append(&mut hex::decode(chr).expect("hex decoding failed"));
+            iter.next();
+        } else {
+            res.extend_from_slice(&chr[0..1]);
+        }
+    }
+}
+
 enum Operation {
         HexDecode,
+        HexDecodeAll,
         HexEncode,
         B64Decode,
         B64Encode,
@@ -166,6 +188,7 @@ fn slice(args: clap::ArgMatches) -> Vec<u8> {
 fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
     match op {
         Operation::HexDecode => return hex_decode(val, args.is_present("strict")),
+        Operation::HexDecodeAll => return hex_decode_all(val),
         Operation::HexEncode => return (hex::encode(&val)+"\n").as_bytes().to_vec(),
         Operation::B64Decode => return b64_decode(val, args.is_present("strict")),
         Operation::B64Encode => return b64_encode(val),
@@ -196,7 +219,7 @@ fn main() {
                  .short("t")
                  .long("tool")
                  .default_value(&arg0)
-                 .possible_values(&["unhex", "hex", "d64", "b64", "urldec", "urlenc", "xor", "crc32", "crc16", "slice"])
+                 .possible_values(&["unhex", "unhex2", "hex", "d64", "b64", "urldec", "urlenc", "xor", "crc32", "crc16", "slice"])
                  .takes_value(true)
                  .requires_if("slice", "value")
                  .help("Tool to run"))
@@ -224,6 +247,7 @@ fn main() {
 
     let operation = match matches.value_of("tool").unwrap() {
         "unhex" => Operation::HexDecode,
+        "unhex2" => Operation::HexDecodeAll,
         "hex" => Operation::HexEncode,
         "d64" => Operation::B64Decode,
         "b64" => Operation::B64Encode,
