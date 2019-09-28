@@ -22,7 +22,7 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s
 
 ## Included tools
 
-* `unhex`
+* `unhex`: decode hex, ignores spaces. in strict mode, the input must be only hex chars
 * `unhex2`: decode all hex pairs, leave the rest untouched
 * `hex`
 * `d64`
