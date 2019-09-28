@@ -99,6 +99,9 @@ fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
     if strict {
         return res.expect("Decoding hex failed");
     }
+    /* remove spaces */
+    trimmed.retain(|&x| x != 0x20);
+    let res = hex::decode(&trimmed);
     match res {
         Ok(decoded) => return decoded,
         Err(e) => match e {
