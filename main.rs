@@ -128,18 +128,24 @@ fn hex_decode(hexval: Vec<u8>, strict: bool) -> Vec<u8> {
 fn hex_decode_all(hexval: Vec<u8>) -> Vec<u8> {
     let mut res: Vec<u8> = vec![];
     let ref mut iter = hexval.windows(2);
+    let mut last : &[u8] = &[];
     loop {
         let chro = iter.next();
         let chr = match chro {
-            None => return res,
+            None => { res.extend_from_slice(last) ; return res },
             Some(a) => a
         };
 
         if (chr[0] as char).is_digit(16) && (chr[1] as char).is_digit(16) {
             res.append(&mut hex::decode(chr).expect("hex decoding failed"));
-            iter.next();
+            /* make sure we dont miss the last char if we have something like
+             * "41 " as input */
+            let next_win = iter.next().unwrap_or(&[]);
+            if next_win.len() > 1 { last = &next_win[1..2] } else
+            { last = &[] };
         } else {
             res.extend_from_slice(&chr[0..1]);
+            last = &chr[1..2];
         }
     }
 }
