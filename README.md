@@ -33,3 +33,22 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s
 * `crc16`
 * `crc32`
 * `slice`
+
+## Examples
+
+```console
+$ echo '4141:4141' | unhex 
+AA:AA
+$ echo '41 41 41 32' | unhex 
+A A A 2
+$ echo '41 41 41 32' | unhex2
+AAA2
+$ echo '41 41 41 32' | unhex2 | xor -x 41 | hex
+00000073
+$ crc32 '41 41 41 32'
+e60ce752
+$ echo -n '41 41 41 32' | crc32
+e60ce752
+$ echo test | b64 | urlenc
+dGVzdAo%3D%0A
+```
