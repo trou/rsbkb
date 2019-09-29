@@ -56,18 +56,21 @@ fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
     let decoded = base64::decode_config(&trimmed, base64::STANDARD.decode_allow_trailing_bits(true));
     match decoded {
         Ok(res) => return res,
-        Err(e) =>
-                match e {
-                    base64::DecodeError::InvalidLastSymbol(offset, _) |
-                    base64::DecodeError::InvalidByte(offset, _) => {
-                        let mut end = trimmed.split_off(offset);
-                        let mut decoded = b64_decode(trimmed, strict);
-                        if !strict {
-                            decoded.append(&mut end);
+        Err(e) => { if strict { panic!("Decoding base64 failed: {}", e); } else {
+                    match e {
+                        base64::DecodeError::InvalidLastSymbol(offset, _) |
+                        base64::DecodeError::InvalidByte(offset, _) => {
+                            let mut end = trimmed.split_off(offset);
+                            let mut decoded = b64_decode(trimmed, strict);
+                            if !strict {
+                                decoded.append(&mut end);
+                            }
+                            return decoded;
+                        },
+                        _ =>  { println!("{}",e); panic!("Decoding base64 failed: {}", e) }
                         }
-                        return decoded;
-                    },
-                    _ =>  {println!("{}",e); panic!("Decoding base64 failed: {}", e) }}
+            }
+        }
     }
 }
 
@@ -314,6 +317,47 @@ mod tests {
     #[should_panic(expected = "Decoding hex failed: InvalidHexCharacter")]
     fn test_unhex_invalid() {
         hex_decode("01at".as_bytes().to_vec(), true);
+    }
+
+    #[test]
+    #[should_panic(expected = "Encoded text cannot have a 6-bit remainder.")]
+    fn test_b64_inv_remainder() {
+        b64_decode("0123456789a!bcdef".as_bytes().to_vec(), true);
+    }
+
+    #[test]
+    #[should_panic(expected = "Decoding base64 failed: Invalid byte 58, offset 0.")]
+    fn test_b64_inv_byte() {
+        b64_decode("::::".as_bytes().to_vec(), true);
+    }
+
+    #[test]
+    fn test_b64_inv_lenient() {
+        assert_eq!("::::".as_bytes().to_vec(), b64_decode("::::".as_bytes().to_vec(), false));
+    }
+
+    #[test]
+    fn test_b64_enc_dec() {
+        // https://tools.ietf.org/html/rfc4648#page-12
+        assert_eq!("\n".as_bytes().to_vec(), b64_encode("".as_bytes().to_vec()));
+        assert_eq!("Zg==\n".as_bytes().to_vec(), b64_encode("f".as_bytes().to_vec()));
+        assert_eq!("Zm8=\n".as_bytes().to_vec(), b64_encode("fo".as_bytes().to_vec()));
+        assert_eq!("Zm9v\n".as_bytes().to_vec(), b64_encode("foo".as_bytes().to_vec()));
+        assert_eq!("Zm9vYg==\n".as_bytes().to_vec(), b64_encode("foob".as_bytes().to_vec()));
+        assert_eq!("Zm9vYmE=\n".as_bytes().to_vec(), b64_encode("fooba".as_bytes().to_vec()));
+        assert_eq!("Zm9vYmFy\n".as_bytes().to_vec(), b64_encode("foobar".as_bytes().to_vec()));
+
+        let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
+        assert_eq!("FPucA9l+\n".as_bytes().to_vec(), b64_encode(test));
+    }
+
+    #[test]
+    fn test_encode_and_back() {
+        let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
+        assert_eq!(to_enc, hex_decode(hex::encode(&to_enc).as_bytes().to_vec(), true));
+        assert_eq!(to_enc, b64_decode(b64_encode(to_enc.clone()), true));
+        assert_eq!(to_enc, url_decode(url_encode(to_enc.clone())));
+        assert_eq!(to_enc, xor("41", xor("41", to_enc.clone())));
     }
 
 
