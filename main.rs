@@ -258,8 +258,8 @@ fn main() {
     let matches = app.clone().get_matches();
 
     let operation = match matches.value_of("tool").unwrap() {
-        "unhex" => Operation::HexDecode,
-        "unhex2" => Operation::HexDecodeAll,
+        "unhex" => Operation::HexDecodeAll,
+        "unhex2" => Operation::HexDecode,
         "hex" => Operation::HexEncode,
         "d64" => Operation::B64Decode,
         "b64" => Operation::B64Encode,
