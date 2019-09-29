@@ -24,15 +24,15 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s
 
 * `unhex`: decode all hex pairs, leave the rest untouched
 * `unhex2`: decode hex, ignores spaces. in strict mode, the input must be only hex chars
-* `hex`
-* `d64`
-* `b64`
-* `urldec`
-* `urlenc`
-* `xor`
-* `crc16`
-* `crc32`
-* `slice`
+* `hex`: hex encode
+* `d64`: base64 decode
+* `b64`: base64 encode
+* `urldec`: url decode
+* `urlenc`: url encode
+* `xor`: xor (use `-x` to specify the key, in hex)
+* `crc16`: CRC-16
+* `crc32`: CRC-32
+* `slice`: slice of a file: `slice input_file 10` will print `input_file` from offset 10 on stdout. `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded).
 
 ## Examples
 
