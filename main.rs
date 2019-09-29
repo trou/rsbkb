@@ -168,7 +168,7 @@ enum Operation {
 }
 
 fn num_from_str_safe(s: &str) -> Result<u64, std::num::ParseIntError> {
-    if &s[0..2] == "0x" {
+    if s.len() > 2 && &s[0..2] == "0x" {
         return u64::from_str_radix(&s[2..], 16);
     } else {
         return s.parse();
