@@ -283,3 +283,38 @@ fn main() {
     let mut stdout = io::stdout();
     stdout.write(&res).expect("Write failed");
 }
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_unhex() {
+        assert_eq!(hex_decode("01 23 45 67 89 ab cd ef".as_bytes().to_vec(), false), [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+        assert_eq!(hex_decode("0123456789abcdef".as_bytes().to_vec(), true), [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+    }
+
+    #[test]
+    fn test_unhex2() {
+        assert_eq!(hex_decode_all("test52af ".as_bytes().to_vec()), [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20]);
+        assert_eq!(hex_decode_all("test52af".as_bytes().to_vec()), [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf]);
+        assert_eq!(hex_decode_all("!52af".as_bytes().to_vec()), [0x21, 0x52, 0xaf]);
+        assert_eq!(hex_decode_all("!5 2af".as_bytes().to_vec()), [0x21, 0x35, 0x20, 0x2a, 0x66]);
+    }
+
+
+    #[test]
+    #[should_panic(expected = "Decoding hex failed: OddLength")]
+    fn test_unhex_odd() {
+        hex_decode("01 23 45 67 89 ab cd ef".as_bytes().to_vec(), true);
+    }
+
+    #[test]
+    #[should_panic(expected = "Decoding hex failed: InvalidHexCharacter")]
+    fn test_unhex_invalid() {
+        hex_decode("01at".as_bytes().to_vec(), true);
+    }
+
+
+}
