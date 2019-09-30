@@ -10,7 +10,18 @@ Matasano's BlackBag.
 * Ruby is slow
 * I wanted to learn Rust
 
+
 ## How to use
+
+### Build
+
+```
+$ cargo rustc --release
+```
+or get the binary from the [release page](https://github.com/trou/rsbkb/releases).
+
+### Usage
+
 
 * All tools take values as an argument on the command line or if not present, read stdin
 * Tool name can be specified on the command line `rsbkb -t TOOL`
