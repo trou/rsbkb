@@ -37,6 +37,8 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s
 ## Examples
 
 ```console
+$ unhex 4141:4141
+AA:AA
 $ echo '4141:4141' | unhex 
 AA:AA
 $ echo '41 41 41 32' | unhex 
