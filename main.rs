@@ -8,6 +8,7 @@ extern crate base64;
 extern crate percent_encoding;
 extern crate clap;
 extern crate crc;
+use atty::Stream;
 use clap::{Arg, App};
 use crc::{crc16, crc32};
 
@@ -75,7 +76,7 @@ fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
 }
 
 fn b64_encode(val: Vec<u8>) -> Vec<u8> {
-    let encoded = base64::encode(&val)+"\n";
+    let encoded = base64::encode(&val);
     return encoded.as_bytes().to_vec();
 }
 
@@ -87,7 +88,7 @@ fn url_decode(urlval: Vec<u8>) -> Vec<u8> {
 
 fn url_encode(val: Vec<u8>) -> Vec<u8> {
     let encoded = percent_encoding::percent_encode(&val, percent_encoding::NON_ALPHANUMERIC).to_string();
-    return (encoded+"\n").as_bytes().to_vec();
+    return encoded.as_bytes().to_vec();
 }
 
 fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
@@ -201,15 +202,15 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
     match op {
         Operation::HexDecode => return hex_decode(val, args.is_present("strict")),
         Operation::HexDecodeAll => return hex_decode_all(val),
-        Operation::HexEncode => return (hex::encode(&val)+"\n").as_bytes().to_vec(),
+        Operation::HexEncode => return hex::encode(&val).as_bytes().to_vec(),
         Operation::B64Decode => return b64_decode(val, args.is_present("strict")),
         Operation::B64Encode => return b64_encode(val),
         Operation::UrlDecode => return url_decode(val),
         Operation::UrlEncode => return url_encode(val),
         Operation::Xor => return xor(args.value_of("xorkey").unwrap(), val),
         Operation::Slice => return slice(args),
-        Operation::Crc16 => return format!("{:08x}\n", crc16::checksum_x25(&val)).as_bytes().to_vec(),
-        Operation::Crc32 => return format!("{:08x}\n", crc32::checksum_ieee(&val)).as_bytes().to_vec(),
+        Operation::Crc16 => return format!("{:08x}", crc16::checksum_x25(&val)).as_bytes().to_vec(),
+        Operation::Crc32 => return format!("{:08x}", crc32::checksum_ieee(&val)).as_bytes().to_vec(),
     }
 }
 
@@ -285,6 +286,11 @@ fn main() {
 
     let mut stdout = io::stdout();
     stdout.write(&res).expect("Write failed");
+
+    /* Only add a newline when outputing to a terminal */
+    if atty::is(Stream::Stdout) {
+        println!("");
+    }
 }
 
 #[cfg(test)]
@@ -339,16 +345,16 @@ mod tests {
     #[test]
     fn test_b64_enc_dec() {
         // https://tools.ietf.org/html/rfc4648#page-12
-        assert_eq!("\n".as_bytes().to_vec(), b64_encode("".as_bytes().to_vec()));
-        assert_eq!("Zg==\n".as_bytes().to_vec(), b64_encode("f".as_bytes().to_vec()));
-        assert_eq!("Zm8=\n".as_bytes().to_vec(), b64_encode("fo".as_bytes().to_vec()));
-        assert_eq!("Zm9v\n".as_bytes().to_vec(), b64_encode("foo".as_bytes().to_vec()));
-        assert_eq!("Zm9vYg==\n".as_bytes().to_vec(), b64_encode("foob".as_bytes().to_vec()));
-        assert_eq!("Zm9vYmE=\n".as_bytes().to_vec(), b64_encode("fooba".as_bytes().to_vec()));
-        assert_eq!("Zm9vYmFy\n".as_bytes().to_vec(), b64_encode("foobar".as_bytes().to_vec()));
+        assert_eq!("".as_bytes().to_vec(), b64_encode("".as_bytes().to_vec()));
+        assert_eq!("Zg==".as_bytes().to_vec(), b64_encode("f".as_bytes().to_vec()));
+        assert_eq!("Zm8=".as_bytes().to_vec(), b64_encode("fo".as_bytes().to_vec()));
+        assert_eq!("Zm9v".as_bytes().to_vec(), b64_encode("foo".as_bytes().to_vec()));
+        assert_eq!("Zm9vYg==".as_bytes().to_vec(), b64_encode("foob".as_bytes().to_vec()));
+        assert_eq!("Zm9vYmE=".as_bytes().to_vec(), b64_encode("fooba".as_bytes().to_vec()));
+        assert_eq!("Zm9vYmFy".as_bytes().to_vec(), b64_encode("foobar".as_bytes().to_vec()));
 
         let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
-        assert_eq!("FPucA9l+\n".as_bytes().to_vec(), b64_encode(test));
+        assert_eq!("FPucA9l+".as_bytes().to_vec(), b64_encode(test));
     }
 
     #[test]
