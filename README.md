@@ -28,7 +28,7 @@ or get the binary from the [release page](https://github.com/trou/rsbkb/releases
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
-for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s rsbkb $i ; done
+for i in slice unhex hex d64 b64 urldec urlenc xor xorf crc16 crc32 unhex2 ; do ln -s rsbkb $i ; done
 ```
 
 ## Included tools
@@ -41,6 +41,7 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 unhex2 ; do ln -s
 * `urldec`: url decode
 * `urlenc`: url encode
 * `xor`: xor (use `-x` to specify the key, in hex)
+* `xorf`: xor file (use `-f` to specify the keyfile)
 * `crc16`: CRC-16
 * `crc32`: CRC-32
 * `slice`: slice of a file: `slice input_file 10` will print `input_file` from offset 10 on stdout. `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded).

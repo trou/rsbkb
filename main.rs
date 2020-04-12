@@ -3,6 +3,7 @@ use std::path::Path;
 use std::io;
 use std::io::{Read, Write, Seek, SeekFrom};
 use std::fs::{OpenOptions};
+use std::fs;
 extern crate hex;
 extern crate base64;
 extern crate percent_encoding;
@@ -94,6 +95,12 @@ fn url_encode(val: Vec<u8>) -> Vec<u8> {
 fn xor(xorkey: &str, val: Vec<u8>) -> Vec<u8> {
     let key_bytes = hex::decode(xorkey).expect("Xor key decoding failed");
     let inf_key = key_bytes.iter().cycle(); // Iterate endlessly over key bytes
+    return val.iter().zip(inf_key).map (|(x, k)| x ^ k).collect();
+}
+
+fn xorfile(keyfile: &str, val: Vec<u8>) -> Vec<u8> {
+    let keyfile_data = &fs::read(keyfile).expect("can't open keyfile");
+    let inf_key = keyfile_data.iter().cycle(); // Iterate endlessly over key bytes
     return val.iter().zip(inf_key).map (|(x, k)| x ^ k).collect();
 }
 
@@ -207,7 +214,11 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
         Operation::B64Encode => return b64_encode(val),
         Operation::UrlDecode => return url_decode(val),
         Operation::UrlEncode => return url_encode(val),
-        Operation::Xor => return xor(args.value_of("xorkey").unwrap(), val),
+        Operation::Xor => if args.is_present("xorfile") {
+                            return xorfile(args.value_of("xorfile").unwrap(), val);
+                          } else {
+                            return xor(args.value_of("xorkey").unwrap(), val)
+                          },
         Operation::Slice => return slice(args),
         Operation::Crc16 => return format!("{:08x}", crc16::checksum_x25(&val)).as_bytes().to_vec(),
         Operation::Crc32 => return format!("{:08x}", crc32::checksum_ieee(&val)).as_bytes().to_vec(),
@@ -232,16 +243,22 @@ fn main() {
                  .short("t")
                  .long("tool")
                  .default_value(&arg0)
-                 .possible_values(&["unhex", "unhex2", "hex", "d64", "b64", "urldec", "urlenc", "xor", "crc32", "crc16", "slice"])
+                 .possible_values(&["unhex", "unhex2", "hex", "d64", "b64", "urldec", "urlenc", "xor", "xorf", "crc32", "crc16", "slice"])
                  .takes_value(true)
                  .requires_if("slice", "value")
+                 .requires_if("xor", "xorkey")
+                 .requires_if("xorf", "xorfile")
                  .help("Tool to run"))
         .arg(Arg::with_name("xorkey")
                  .short("x")
                  .long("xorkey")
-                 .required_if("tool", "xor")
                  .takes_value(true)
                  .help("Xor key in hex format"))
+        .arg(Arg::with_name("xorfile")
+                 .short("f")
+                 .long("xorfile")
+                 .takes_value(true)
+                 .help("File to use as xor key"))
         .arg(Arg::with_name("strict")
                  .short("s")
                  .long("strict")
@@ -267,6 +284,7 @@ fn main() {
         "urldec" => Operation::UrlDecode,
         "urlenc" => Operation::UrlEncode,
         "xor" => Operation::Xor,
+        "xorf" => Operation::Xor,
         "crc16" => Operation::Crc16,
         "crc32" => Operation::Crc32,
         "slice" => Operation::Slice,
