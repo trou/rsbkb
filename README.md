@@ -36,8 +36,8 @@ for i in slice unhex hex d64 b64 urldec urlenc xor xorf crc16 crc32 unhex2 ; do 
 * `unhex`: decode all hex pairs, leave the rest untouched
 * `unhex2`: decode hex, ignores spaces. in strict mode, the input must be only hex chars
 * `hex`: hex encode
-* `d64`: base64 decode
-* `b64`: base64 encode
+* `d64`: base64 decode (use `-u` or `--URL` for URL-safe b64)
+* `b64`: base64 encode (use `-u` or `--URL` for URL-safe b64)
 * `urldec`: url decode
 * `urlenc`: url encode
 * `xor`: xor (use `-x` to specify the key, in hex)

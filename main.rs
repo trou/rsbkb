@@ -44,18 +44,19 @@ impl SliceExt for [u8] {
  * - lenient: decode the b64 input until the first invalid byte
  *   and return the decoded data concatenated with the rest
  */
-fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
+fn b64_decode(b64val: Vec<u8>, strict: bool, url_safe: bool) -> Vec<u8> {
     let mut trimmed : Vec<u8> = b64val.trim().into();
 
     // If the length is invalid, decode up to the supplementary bytes
     if trimmed.len()% 4 != 0 && !strict {
         let end = trimmed.len()-(trimmed.len() % 4);
-        let mut decoded = b64_decode((&trimmed[0..end]).to_vec(), strict);
+        let mut decoded = b64_decode((&trimmed[0..end]).to_vec(), strict, url_safe);
         decoded.extend_from_slice(&trimmed[end..]);
         return decoded;
     }
 
-    let decoded = base64::decode_config(&trimmed, base64::STANDARD.decode_allow_trailing_bits(true));
+    let config = if url_safe { base64::URL_SAFE.decode_allow_trailing_bits(true) } else { base64::STANDARD.decode_allow_trailing_bits(true) };
+    let decoded = base64::decode_config(&trimmed, config);
     match decoded {
         Ok(res) => return res,
         Err(e) => { if strict { panic!("Decoding base64 failed: {}", e); } else {
@@ -63,7 +64,7 @@ fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
                         base64::DecodeError::InvalidLastSymbol(offset, _) |
                         base64::DecodeError::InvalidByte(offset, _) => {
                             let mut end = trimmed.split_off(offset);
-                            let mut decoded = b64_decode(trimmed, strict);
+                            let mut decoded = b64_decode(trimmed, strict, url_safe);
                             if !strict {
                                 decoded.append(&mut end);
                             }
@@ -76,8 +77,9 @@ fn b64_decode(b64val: Vec<u8>, strict: bool) -> Vec<u8> {
     }
 }
 
-fn b64_encode(val: Vec<u8>) -> Vec<u8> {
-    let encoded = base64::encode(&val);
+fn b64_encode(val: Vec<u8>, url_safe: bool) -> Vec<u8> {
+    let config = if url_safe { base64::URL_SAFE } else { base64::STANDARD };
+    let encoded = base64::encode_config(&val, config);
     return encoded.as_bytes().to_vec();
 }
 
@@ -210,8 +212,8 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
         Operation::HexDecode => return hex_decode(val, args.is_present("strict")),
         Operation::HexDecodeAll => return hex_decode_all(val),
         Operation::HexEncode => return hex::encode(&val).as_bytes().to_vec(),
-        Operation::B64Decode => return b64_decode(val, args.is_present("strict")),
-        Operation::B64Encode => return b64_encode(val),
+        Operation::B64Decode => return b64_decode(val, args.is_present("strict"), args.is_present("URL")),
+        Operation::B64Encode => return b64_encode(val, args.is_present("URL")),
         Operation::UrlDecode => return url_decode(val),
         Operation::UrlEncode => return url_encode(val),
         Operation::Xor => if args.is_present("xorfile") {
@@ -264,6 +266,11 @@ fn main() {
                  .long("strict")
                  .takes_value(false)
                  .help("strict decoding, error on invalid data"))
+        .arg(Arg::with_name("URL")
+                 .short("u")
+                 .long("URL")
+                 .takes_value(false)
+                 .help("URL safe base64 encoding/decoding"))
         .arg(Arg::with_name("value")
                  .required(false)
                  .help("input value, reads from stdin in not present"))
@@ -346,40 +353,40 @@ mod tests {
     #[test]
     #[should_panic(expected = "Encoded text cannot have a 6-bit remainder.")]
     fn test_b64_inv_remainder() {
-        b64_decode("0123456789a!bcdef".as_bytes().to_vec(), true);
+        b64_decode("0123456789a!bcdef".as_bytes().to_vec(), true, false);
     }
 
     #[test]
     #[should_panic(expected = "Decoding base64 failed: Invalid byte 58, offset 0.")]
     fn test_b64_inv_byte() {
-        b64_decode("::::".as_bytes().to_vec(), true);
+        b64_decode("::::".as_bytes().to_vec(), true, false);
     }
 
     #[test]
     fn test_b64_inv_lenient() {
-        assert_eq!("::::".as_bytes().to_vec(), b64_decode("::::".as_bytes().to_vec(), false));
+        assert_eq!("::::".as_bytes().to_vec(), b64_decode("::::".as_bytes().to_vec(), false, false));
     }
 
     #[test]
     fn test_b64_enc_dec() {
         // https://tools.ietf.org/html/rfc4648#page-12
-        assert_eq!("".as_bytes().to_vec(), b64_encode("".as_bytes().to_vec()));
-        assert_eq!("Zg==".as_bytes().to_vec(), b64_encode("f".as_bytes().to_vec()));
-        assert_eq!("Zm8=".as_bytes().to_vec(), b64_encode("fo".as_bytes().to_vec()));
-        assert_eq!("Zm9v".as_bytes().to_vec(), b64_encode("foo".as_bytes().to_vec()));
-        assert_eq!("Zm9vYg==".as_bytes().to_vec(), b64_encode("foob".as_bytes().to_vec()));
-        assert_eq!("Zm9vYmE=".as_bytes().to_vec(), b64_encode("fooba".as_bytes().to_vec()));
-        assert_eq!("Zm9vYmFy".as_bytes().to_vec(), b64_encode("foobar".as_bytes().to_vec()));
+        assert_eq!("".as_bytes().to_vec(), b64_encode("".as_bytes().to_vec(), false));
+        assert_eq!("Zg==".as_bytes().to_vec(), b64_encode("f".as_bytes().to_vec(), false));
+        assert_eq!("Zm8=".as_bytes().to_vec(), b64_encode("fo".as_bytes().to_vec(), false));
+        assert_eq!("Zm9v".as_bytes().to_vec(), b64_encode("foo".as_bytes().to_vec(), false));
+        assert_eq!("Zm9vYg==".as_bytes().to_vec(), b64_encode("foob".as_bytes().to_vec(), false));
+        assert_eq!("Zm9vYmE=".as_bytes().to_vec(), b64_encode("fooba".as_bytes().to_vec(), false));
+        assert_eq!("Zm9vYmFy".as_bytes().to_vec(), b64_encode("foobar".as_bytes().to_vec(), false));
 
         let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
-        assert_eq!("FPucA9l+".as_bytes().to_vec(), b64_encode(test));
+        assert_eq!("FPucA9l+".as_bytes().to_vec(), b64_encode(test, false));
     }
 
     #[test]
     fn test_encode_and_back() {
         let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
         assert_eq!(to_enc, hex_decode(hex::encode(&to_enc).as_bytes().to_vec(), true));
-        assert_eq!(to_enc, b64_decode(b64_encode(to_enc.clone()), true));
+        assert_eq!(to_enc, b64_decode(b64_encode(to_enc.clone(), false), true, false));
         assert_eq!(to_enc, url_decode(url_encode(to_enc.clone())));
         assert_eq!(to_enc, xor("41", xor("41", to_enc.clone())));
     }
