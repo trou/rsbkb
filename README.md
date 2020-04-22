@@ -51,11 +51,11 @@ for i in slice unhex hex d64 b64 urldec urlenc xor xorf crc16 crc32 unhex2 ; do 
 ```console
 $ unhex 4141:4141
 AA:AA
-$ echo '4141:4141' | unhex 
+$ echo '4141:4141' | unhex
 AA:AA
-$ echo '41 41 41 32' | unhex 
+$ echo '41 41 41 32' | unhex
 A A A 2
-$ echo '41 41 41 32' | unhex2
+$ echo '41 41 41 32' | unhex
 AAA2
 $ echo '41 41 41 32' | unhex2 | xor -x 41 | hex
 00000073
