@@ -10,7 +10,7 @@ extern crate percent_encoding;
 extern crate clap;
 extern crate crc;
 use atty::Stream;
-use clap::{Arg, App};
+use clap::{Arg, App, SubCommand};
 use crc::{crc16, crc32};
 
 trait SliceExt {
@@ -185,8 +185,8 @@ fn num_from_str_safe(s: &str) -> Result<u64, std::num::ParseIntError> {
     }
 }
 
-fn slice(args: clap::ArgMatches) -> Vec<u8> {
-    let file = args.value_of("value").unwrap();
+fn slice(args: &clap::ArgMatches) -> Vec<u8> {
+    let file = args.value_of("file").unwrap();
     let start_va = args.value_of("start").unwrap();
     let start: u64 = num_from_str_safe(start_va).expect("invalid start");
 
@@ -207,7 +207,7 @@ fn slice(args: clap::ArgMatches) -> Vec<u8> {
     return res.to_vec();
 }
 
-fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
+fn process(args: &clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
     match op {
         Operation::HexDecode => return hex_decode(val, args.is_present("strict")),
         Operation::HexDecodeAll => return hex_decode_all(val),
@@ -230,7 +230,7 @@ fn process(args: clap::ArgMatches , op: Operation, val: Vec<u8>) -> Vec<u8> {
 
 
 fn main() {
-    let args: Vec<_>= env::args().collect();
+    let mut args: Vec<_>= env::args().collect();
 
     let arg0 = Path::new(&args[0]).file_name();
     let arg0 = match arg0 {
@@ -241,73 +241,105 @@ fn main() {
         .version("0.2.0")
         .author("Raphael Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
-        .arg(Arg::with_name("tool")
-                 .short("t")
-                 .long("tool")
-                 .default_value(&arg0)
-                 .possible_values(&["unhex", "unhex2", "hex", "d64", "b64", "urldec", "urlenc", "xor", "xorf", "crc32", "crc16", "slice"])
-                 .takes_value(true)
-                 .requires_if("slice", "value")
-                 .requires_if("xor", "xorkey")
-                 .requires_if("xorf", "xorfile")
-                 .help("Tool to run"))
-        .arg(Arg::with_name("xorkey")
+        .subcommands(
+                 [("d64", "base64 decoding"),
+                  ("b64", "base64 encoding")].iter().map(|cmd_t|
+                    SubCommand::with_name(cmd_t.0).about(cmd_t.1)
+                    .arg(Arg::with_name("URL")
+                             .short("u")
+                             .long("URL")
+                             .takes_value(false)
+                             .help("URL safe base64 encoding/decoding"))
+                    .arg(Arg::with_name("strict")
+                             .short("s")
+                             .long("strict")
+                             .takes_value(false)
+                             .help("strict decoding, error on invalid data"))
+                    .arg(Arg::with_name("value")
+                    .required(false)
+                    .help("input value, reads from stdin in not present"))))
+        .subcommands(
+                 [
+                    ("unhex",    "Decode all hex data in arbitrary bytes"),
+                    ("urldec",  "URL decoding"),
+                    ("urlenc",  "URL encoding"),
+                    ("crc32",   "Compute CRC-32"),
+                    ("crc16",   "Compute CRC-16")].iter().map(|cmd_t| 
+                    SubCommand::with_name(cmd_t.0).about(cmd_t.1)
+                    .arg(Arg::with_name("value")
+                    .required(false)
+                    .help("input value, reads from stdin in not present"))))
+        .subcommands(
+                 [("unhex2",     "Decode pure hex data"),
+                  ("hex",       "hex encode")].iter().map(|cmd_t| 
+                     SubCommand::with_name(cmd_t.0).about(cmd_t.1)
+                     .arg(Arg::with_name("strict")
+                             .short("s")
+                             .long("strict")
+                             .takes_value(false)
+                             .help("strict decoding, error on invalid data"))
+                     .arg(Arg::with_name("value")
+                     .required(false)
+                     .help("input value, reads from stdin in not present"))))
+        .subcommand(SubCommand::with_name("xor").about("Xor input with key").arg(Arg::with_name("xorkey")
                  .short("x")
                  .long("xorkey")
                  .takes_value(true)
                  .help("Xor key in hex format"))
-        .arg(Arg::with_name("xorfile")
+                    .arg(Arg::with_name("value")
+                    .required(false)
+                    .help("input value, reads from stdin in not present")))
+        .subcommand(SubCommand::with_name("xorf").about("Xor input with file").arg(Arg::with_name("xorfile")
                  .short("f")
                  .long("xorfile")
                  .takes_value(true)
                  .help("File to use as xor key"))
-        .arg(Arg::with_name("strict")
-                 .short("s")
-                 .long("strict")
-                 .takes_value(false)
-                 .help("strict decoding, error on invalid data"))
-        .arg(Arg::with_name("URL")
-                 .short("u")
-                 .long("URL")
-                 .takes_value(false)
-                 .help("URL safe base64 encoding/decoding"))
-        .arg(Arg::with_name("value")
+                 .arg(Arg::with_name("value")
                  .required(false)
-                 .help("input value, reads from stdin in not present"))
-        .arg(Arg::with_name("start")
-                 .required_if("tool", "slice")
-                 .help("start from slice"))
-        .arg(Arg::with_name("end")
-                 .required(false)
-                 .help("start from slice"));
-    let matches = app.clone().get_matches();
+                 .help("input value, reads from stdin in not present")))
+        .subcommand(SubCommand::with_name("slice").about("Get part of a file")
+                 .arg(Arg::with_name("file").required(true).help("File to slice"))
+                 .arg(Arg::with_name("start").required(true).help("start of slice"))
+                 .arg(Arg::with_name("end")
+                         .required(false)
+                         .help("end of slice")));
+        if arg0 != "rsbkb" {
+            args.insert(0, arg0);
+        }
+            let matches = app.clone().get_matches_from(args);
 
-    let operation = match matches.value_of("tool").unwrap() {
-        "unhex" => Operation::HexDecodeAll,
-        "unhex2" => Operation::HexDecode,
-        "hex" => Operation::HexEncode,
-        "d64" => Operation::B64Decode,
-        "b64" => Operation::B64Encode,
-        "urldec" => Operation::UrlDecode,
-        "urlenc" => Operation::UrlEncode,
-        "xor" => Operation::Xor,
-        "xorf" => Operation::Xor,
-        "crc16" => Operation::Crc16,
-        "crc32" => Operation::Crc32,
-        "slice" => Operation::Slice,
+    let operation = match matches.subcommand_name() {
+        Some(x) => match x {
+            "unhex" => Operation::HexDecodeAll,
+            "unhex2" => Operation::HexDecode,
+            "hex" => Operation::HexEncode,
+            "d64" => Operation::B64Decode,
+            "b64" => Operation::B64Encode,
+            "urldec" => Operation::UrlDecode,
+            "urlenc" => Operation::UrlEncode,
+            "xor" => Operation::Xor,
+            "xorf" => Operation::Xor,
+            "crc16" => Operation::Crc16,
+            "crc32" => Operation::Crc32,
+            "slice" => Operation::Slice,
+            _ => { &app.print_help(); println!(""); return;}},
         _ => { &app.print_help(); println!(""); return;},
         };
+    let subcommand = matches.subcommand_name().unwrap();
 
     let mut inputval = vec![];
 
-    /* No args, read from stdin */
-    if !matches.is_present("value") {
-        io::stdin().read_to_end(&mut inputval).expect("Reading stdin failed");
-    } else {
-        inputval = matches.value_of("value").unwrap().as_bytes().to_vec();
+    let sub_matches = matches.subcommand_matches(subcommand).unwrap();
+    if subcommand != "slice" {
+        /* No args, read from stdin */
+        if !sub_matches.is_present("value") {
+            io::stdin().read_to_end(&mut inputval).expect("Reading stdin failed");
+        } else {
+            inputval = sub_matches.value_of("value").unwrap().as_bytes().to_vec();
+        }
     }
 
-    let res = process(matches, operation, inputval);
+    let res = process(sub_matches, operation, inputval);
 
     let mut stdout = io::stdout();
     stdout.write(&res).expect("Write failed");
