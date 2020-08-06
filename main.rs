@@ -238,7 +238,7 @@ fn main() {
         None => panic!("No arg0"),
     };
     let mut app = App::new("rsbkb")
-        .version("0.2.0")
+        .version("0.3.0")
         .author("Raphael Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
         .subcommands(
