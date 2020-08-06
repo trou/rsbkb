@@ -190,7 +190,7 @@ fn slice(args: &clap::ArgMatches) -> Vec<u8> {
     let start_va = args.value_of("start").unwrap();
     let start: u64 = num_from_str_safe(start_va).expect("invalid start");
 
-    let mut f = OpenOptions::new().read(true).write(true).open(file).expect("can't open file");
+    let mut f = OpenOptions::new().read(true).write(false).open(file).expect("can't open file");
     f.seek(SeekFrom::Start(start)).expect("Seek failed");
     let mut res =  vec![];
     if args.is_present("end") {
