@@ -303,7 +303,10 @@ fn main() {
                  .arg(Arg::with_name("end")
                          .required(false)
                          .help("end of slice")));
-        if arg0 != "rsbkb" {
+
+        // Check if arg0 is a supported subcommand and use it
+        if ["unhex", "unhex2", "hex", "d64", "b64", "urldec", "urlenc", "xor", "xorf", "crc16",
+            "crc32", "slice"].contains(&arg0.as_str()) {
             args.insert(0, arg0);
         }
             let matches = app.clone().get_matches_from(args);
