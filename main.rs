@@ -307,7 +307,7 @@ fn main() {
     // Check if arg0 is a supported subcommand and use it
     if ["unhex", "unhex2", "hex", "d64", "b64", "urldec", "urlenc", "xor", "xorf", "crc16",
         "crc32", "slice"].contains(&arg0.as_str()) {
-        args.insert(0, arg0);
+        args.insert(1, arg0);
     }
 
     let matches = app.get_matches_from_safe_borrow(args).expect("Invalid arguments");
