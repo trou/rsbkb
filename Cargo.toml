@@ -14,4 +14,4 @@ atty = "0.2"
 
 [[bin]]
 name = "rsbkb"
-path = "main.rs"
+path = "src/main.rs"
