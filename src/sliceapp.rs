@@ -1,6 +1,6 @@
 use std::io::{BufReader, SeekFrom, Seek, Read};
 use std::fs::{OpenOptions};
-use clap::{Arg, App, SubCommand};
+use clap::{App, SubCommand};
 use crate::applet::Applet;
 
 fn num_from_str_safe(s: &str) -> Result<u64, std::num::ParseIntError> {
@@ -23,11 +23,9 @@ impl Applet for SliceApplet {
 
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
-                 .arg(Arg::with_name("file").required(true).help("File to slice"))
-                 .arg(Arg::with_name("start").required(true).help("start of slice"))
-                 .arg(Arg::with_name("end")
-                         .required(false)
-                         .help("end of slice"))
+                .arg_from_usage("<file>   'file to slice'")
+                .arg_from_usage("<start>  'start of slice'")
+                .arg_from_usage("[end]  'end of slice: absolute or relative if prefixed with +'")
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> { None }
@@ -42,7 +40,11 @@ impl Applet for SliceApplet {
         let start: u64 = num_from_str_safe(start_va).expect("invalid start");
 
         let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
-            Some(num_from_str_safe(end_val).expect("Invalid end"))
+            if end_val.starts_with("+") {
+                    Some(start + num_from_str_safe(&end_val[1..]).expect("Invalid end"))
+                } else {
+                    Some(num_from_str_safe(end_val).expect("Invalid end"))
+                }
             } else { None };
 
         Box::new(Self {file: Some(filename.to_string()), start, end })

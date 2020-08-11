@@ -10,20 +10,11 @@ impl Applet for XorApplet {
 
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
-                 .arg(Arg::with_name("xorkey")
-                     .short("x")
-                     .takes_value(true)
+             .arg(Arg::from_usage("-x --xorkey=[KEY] 'Xor key in hex format'")
                      .required_unless("keyfile")
-                     .conflicts_with("keyfile")
-                     .help("Xor key in hex format"))
-                 .arg(Arg::with_name("keyfile")
-                     .short("f")
-                     .takes_value(true)
-                     .required_unless("xorkey")
-                     .help("File to use as key"))
-                 .arg(Arg::with_name("value")
-                     .required(false)
-                     .help("input value, reads from stdin in not present"))
+                     .conflicts_with("keyfile"))
+             .arg_from_usage("-f --keyfile=[keyfile] 'File to use as key'")
+             .arg_from_usage("[value] 'input value, reads from stdin in not present'")
     }
 
     fn new() -> Box<dyn Applet> {

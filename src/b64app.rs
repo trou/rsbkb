@@ -1,4 +1,4 @@
-use clap::{Arg, App, SubCommand};
+use clap::{App, SubCommand};
 use crate::applet::SliceExt;
 use crate::applet::Applet;
 
@@ -12,14 +12,8 @@ impl Applet for B64EncApplet {
 
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
-        .arg(Arg::with_name("URL")
-                 .short("u")
-                 .long("URL")
-                 .takes_value(false)
-                 .help("URL safe base64 encoding/decoding"))
-        .arg(Arg::with_name("value")
-        .required(false)
-        .help("input value, reads from stdin in not present"))
+             .arg_from_usage("-u --URL 'Use URL-safe base64'")
+             .arg_from_usage("[value] 'input value, reads from stdin in not present'")
     }
 
     fn new() -> Box<dyn Applet> {
@@ -47,19 +41,9 @@ impl Applet for B64DecApplet {
 
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
-        .arg(Arg::with_name("URL")
-                 .short("u")
-                 .long("URL")
-                 .takes_value(false)
-                 .help("URL safe base64 encoding/decoding"))
-        .arg(Arg::with_name("strict")
-                 .short("s")
-                 .long("strict")
-                 .takes_value(false)
-                 .help("strict decoding, error on invalid data"))
-        .arg(Arg::with_name("value")
-        .required(false)
-        .help("input value, reads from stdin in not present"))
+             .arg_from_usage("-u --URL 'Use URL-safe base64'")
+             .arg_from_usage("-s --strict 'strict decoding, error on invalid data'")
+             .arg_from_usage("[value] 'input value, reads from stdin in not present'")
     }
 
     fn new() -> Box<dyn Applet> {
@@ -68,7 +52,12 @@ impl Applet for B64DecApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self { encoding: if args.is_present("URL") { base64::URL_SAFE.decode_allow_trailing_bits(true) } else { self.encoding }, strict : args.is_present("strict")})
+        Box::new(Self {
+                    encoding: if args.is_present("URL") {
+                            base64::URL_SAFE.decode_allow_trailing_bits(true)
+                        } else { 
+                            self.encoding },
+                    strict : args.is_present("strict")})
     }
 
     /* b64_decode. With two modes:
