@@ -4,7 +4,6 @@ use std::env;
 use std::io;
 use std::io::{Read, Write};
 //use std::fs::{OpenOptions};
-//use std::fs;
 extern crate hex;
 extern crate base64;
 extern crate percent_encoding;
@@ -34,6 +33,9 @@ mod crcapp;
 use crcapp::CRC16Applet;
 use crcapp::CRC32Applet;
 
+mod xorapp;
+use xorapp::XorApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  => 
@@ -47,7 +49,8 @@ fn main() {
     applets!(apps = HexApplet, UnHexApplet,
                     UrlEncApplet, UrlDecApplet,
                     CRC16Applet, CRC32Applet,
-                    B64EncApplet, B64DecApplet);
+                    B64EncApplet, B64DecApplet,
+                    XorApplet);
     let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
 
     /* Get arg0 */
