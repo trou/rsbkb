@@ -36,6 +36,9 @@ use crcapp::CRC32Applet;
 mod xorapp;
 use xorapp::XorApplet;
 
+mod sliceapp;
+use sliceapp::SliceApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  => 
@@ -50,7 +53,8 @@ fn main() {
                     UrlEncApplet, UrlDecApplet,
                     CRC16Applet, CRC32Applet,
                     B64EncApplet, B64DecApplet,
-                    XorApplet);
+                    XorApplet,
+                    SliceApplet);
     let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
 
     /* Get arg0 */
