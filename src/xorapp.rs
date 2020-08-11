@@ -9,7 +9,7 @@ impl Applet for XorApplet {
     fn description(&self) -> &'static str { "xor value" }
 
     fn subcommand(&self) -> App {
-        SubCommand::with_name("xor").about("Xor input with key or file")
+        SubCommand::with_name(self.command()).about(self.description())
                  .arg(Arg::with_name("xorkey")
                      .short("x")
                      .takes_value(true)

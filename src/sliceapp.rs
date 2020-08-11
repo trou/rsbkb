@@ -22,7 +22,7 @@ impl Applet for SliceApplet {
     fn description(&self) -> &'static str { "slice" }
 
     fn subcommand(&self) -> App {
-        SubCommand::with_name("slice").about("Get part of a file")
+        SubCommand::with_name(self.command()).about(self.description())
                  .arg(Arg::with_name("file").required(true).help("File to slice"))
                  .arg(Arg::with_name("start").required(true).help("start of slice"))
                  .arg(Arg::with_name("end")
