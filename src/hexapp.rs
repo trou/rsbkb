@@ -97,7 +97,7 @@ impl Applet for UnHexApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(UnHexApplet { hexonly: args.is_present("hexonly"), strict : args.is_present("strict")})
+        Box::new(UnHexApplet { hexonly: args.is_present("hex-only"), strict : args.is_present("strict")})
     }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
