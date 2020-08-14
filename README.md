@@ -49,7 +49,7 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb 
 
 ### Getting help
 
-```
+```console
 $ rsbkb help
 USAGE:
     rsbkb [SUBCOMMAND]
@@ -86,6 +86,7 @@ ARGS:
     <file>     file to slice
     <start>    start of slice
     <end>      end of slice: absolute or relative if prefixed with +
+```
 
 ## Examples
 
