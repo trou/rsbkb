@@ -9,7 +9,7 @@ impl Applet for CRC16Applet {
     fn description(&self) -> &'static str { "compute CRC-16" }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self {}) 
+        Box::new(Self {})
     }
 
     fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
@@ -30,7 +30,7 @@ impl Applet for CRC32Applet {
     fn description(&self) -> &'static str { "compute CRC-32" }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self {}) 
+        Box::new(Self {})
     }
 
     fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {

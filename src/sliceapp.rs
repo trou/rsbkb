@@ -31,7 +31,7 @@ impl Applet for SliceApplet {
     fn arg_or_stdin(&self) -> Option<&'static str> { None }
 
     fn new() ->  Box<dyn Applet> {
-        Box::new(Self { file: None, start: 0, end: None}) 
+        Box::new(Self { file: None, start: 0, end: None})
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
@@ -53,7 +53,7 @@ impl Applet for SliceApplet {
     fn process(&self, _val: Vec<u8>) -> Vec<u8> {
         let start = self.start;
         let filename = self.file.as_ref().unwrap();
-        let mut f = 
+        let mut f =
         BufReader::new(OpenOptions::new().read(true).write(false).open(filename).expect("can't open file"));
 
         f.seek(SeekFrom::Start(self.start)).expect("Seek failed");

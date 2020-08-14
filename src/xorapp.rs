@@ -18,7 +18,7 @@ impl Applet for XorApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self { key_bytes: vec![] }) 
+        Box::new(Self { key_bytes: vec![] })
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {

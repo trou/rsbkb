@@ -17,7 +17,7 @@ impl Applet for B64EncApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self { encoding: base64::STANDARD }) 
+        Box::new(Self { encoding: base64::STANDARD })
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
@@ -32,7 +32,7 @@ impl Applet for B64EncApplet {
 
 
 pub struct B64DecApplet {
-    encoding : base64::Config, strict: bool 
+    encoding : base64::Config, strict: bool
 }
 
 impl Applet for B64DecApplet {
@@ -48,14 +48,14 @@ impl Applet for B64DecApplet {
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {encoding: base64::STANDARD.decode_allow_trailing_bits(true),
-                       strict: false}) 
+                       strict: false})
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         Box::new(Self {
                     encoding: if args.is_present("URL") {
                             base64::URL_SAFE.decode_allow_trailing_bits(true)
-                        } else { 
+                        } else {
                             self.encoding },
                     strict : args.is_present("strict")})
     }

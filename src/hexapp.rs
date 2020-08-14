@@ -17,7 +17,7 @@ impl Applet for HexApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(HexApplet {}) 
+        Box::new(HexApplet {})
     }
 }
 
@@ -85,7 +85,7 @@ impl Applet for UnHexApplet {
     fn description(&self) -> &'static str { "Decode hex data" }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(UnHexApplet {hexonly: false, strict : false}) 
+        Box::new(UnHexApplet {hexonly: false, strict : false})
     }
 
     fn subcommand(&self) -> App {

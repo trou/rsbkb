@@ -1,5 +1,5 @@
 //#![feature(trace_macros)]
-//trace_macros!(true); 
+//trace_macros!(true);
 use std::env;
 use std::io;
 use std::path::Path;
@@ -38,10 +38,10 @@ use sliceapp::SliceApplet;
 
 // Helper to "register" applets
 macro_rules! applets {
-    ($a:ident = $($x:ident),* )  => 
+    ($a:ident = $($x:ident),* )  =>
         {
             let $a : Vec<Box<dyn Applet>>= vec![$($x::new(),)*];
-        
+
         };
 }
 

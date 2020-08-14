@@ -8,7 +8,7 @@ impl Applet for UrlEncApplet {
     fn description(&self) -> &'static str { "URL encode" }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self {}) 
+        Box::new(Self {})
     }
 
     fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
@@ -30,7 +30,7 @@ impl Applet for UrlDecApplet {
     fn description(&self) -> &'static str { "URL decode" }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self {}) 
+        Box::new(Self {})
     }
 
     fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
