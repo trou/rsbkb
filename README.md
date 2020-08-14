@@ -97,6 +97,8 @@ $ echo '4141:4141' | unhex
 AA:AA
 $ echo '41 41 41 32' | unhex
 A A A 2
+$ echo '41 41 41 32' | unhex -o
+AAA2
 echo -n '41414132' | unhex | xor -x 41 | hex
 00000073
 $ crc32 '41 41 41 32'
