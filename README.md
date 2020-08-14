@@ -72,7 +72,7 @@ SUBCOMMANDS:
     xor       xor value
 
 $ rsbkb help slice
-rsbkb-slice 
+rsbkb-slice
 slice
 
 USAGE:
