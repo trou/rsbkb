@@ -97,14 +97,12 @@ $ echo '4141:4141' | unhex
 AA:AA
 $ echo '41 41 41 32' | unhex
 A A A 2
-$ echo '41 41 41 32' | unhex
-AAA2
-$ echo '41 41 41 32' | unhex2 | xor -x 41 | hex
+echo -n '41414132' | unhex | xor -x 41 | hex
 00000073
 $ crc32 '41 41 41 32'
 e60ce752
 $ echo -n '41 41 41 32' | crc32
 e60ce752
 $ echo test | b64 | urlenc
-dGVzdAo%3D%0A
+dGVzdAo%3D
 ```
