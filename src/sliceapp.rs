@@ -1,15 +1,8 @@
 use std::io::{BufReader, SeekFrom, Seek, Read};
 use std::fs::{OpenOptions};
 use clap::{App, SubCommand};
-use crate::applet::Applet;
+use crate::applet::{Applet, FromStrWithRadix};
 
-fn num_from_str_safe(s: &str) -> Result<u64, std::num::ParseIntError> {
-    if s.len() > 2 && &s[0..2] == "0x" {
-        return u64::from_str_radix(&s[2..], 16);
-    } else {
-        return s.parse();
-    }
-}
 
 pub struct SliceApplet {
     file :  Option<String>,
@@ -37,13 +30,13 @@ impl Applet for SliceApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         let filename = args.value_of("file").unwrap();
         let start_va = args.value_of("start").unwrap();
-        let start: u64 = num_from_str_safe(start_va).expect("invalid start");
+        let start = u64::from_str_with_radix(start_va).expect("invalid start");
 
         let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
             if end_val.starts_with("+") {
-                    Some(start + num_from_str_safe(&end_val[1..]).expect("Invalid end"))
+                    Some(start + u64::from_str_with_radix(&end_val[1..]).expect("Invalid end"))
                 } else {
-                    Some(num_from_str_safe(end_val).expect("Invalid end"))
+                    Some(u64::from_str_with_radix(end_val).expect("Invalid end"))
                 }
             } else { None };
 

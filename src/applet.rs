@@ -45,3 +45,27 @@ impl SliceExt for [u8] {
         }
     }
 }
+
+pub trait FromStrWithRadix {
+        fn from_str_with_radix(s: &str)  -> Result<Self, std::num::ParseIntError> where Self:Sized;
+}
+
+impl FromStrWithRadix for u64 {
+        fn from_str_with_radix(s: &str)  -> Result<u64, std::num::ParseIntError> {
+            if s.len() > 2 && &s[0..2] == "0x" {
+                return u64::from_str_radix(&s[2..], 16);
+            } else {
+                return s.parse();
+            }
+        }
+    }
+
+impl FromStrWithRadix for i64 {
+        fn from_str_with_radix(s: &str)  -> Result<i64, std::num::ParseIntError> {
+            if s.len() > 2 && &s[0..2] == "0x" {
+                return i64::from_str_radix(&s[2..], 16);
+            } else {
+                return s.parse();
+            }
+        }
+    }
