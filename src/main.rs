@@ -36,6 +36,9 @@ use xorapp::XorApplet;
 mod sliceapp;
 use sliceapp::SliceApplet;
 
+mod timeapp;
+use timeapp::TimeApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -51,7 +54,8 @@ fn main() {
                     CRC16Applet, CRC32Applet,
                     B64EncApplet, B64DecApplet,
                     XorApplet,
-                    SliceApplet);
+                    SliceApplet,
+                    TimeApplet);
     let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
 
     /* Get arg0 */
