@@ -28,7 +28,7 @@ or get the binary from the [release page](https://github.com/trou/rsbkb/releases
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
-for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; done
+for i in tsdec slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; done
 ```
 
 ## Included tools
@@ -42,6 +42,7 @@ for i in slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb 
 * `xor`: xor (use `-x` to specify the key, in hex, `-f` to specify a file)
 * `crc16`: CRC-16
 * `crc32`: CRC-32
+* `tsdec`: decode various timestamps (Epoch with different resolutions, Windows FILETIME)
 * `slice`: slice of a file: :
  * `slice input_file 10` will print `input_file` from offset 10 on stdout.
  * `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded).
@@ -66,6 +67,7 @@ SUBCOMMANDS:
     help      Prints this message or the help of the given subcommand(s)
     hex       hex encode
     slice     slice
+    tsdec     TimeStamp decode
     unhex     Decode hex data
     urldec    URL decode
     urlenc    URL encode
@@ -107,4 +109,8 @@ $ echo -n '41 41 41 32' | crc32
 e60ce752
 $ echo test | b64 | urlenc
 dGVzdAo%3D
+$ tsdec 146424672000234122
+2065-01-01 0:00:00.023412200
+$ tsdec 0
+1970-01-01 0:00:00.000000000
 ```
