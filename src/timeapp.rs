@@ -1,8 +1,8 @@
 use std::convert::TryFrom;
 use crate::applet::{FromStrWithRadix, Applet};
-use time::{OffsetDateTime, Duration};
+use time::{OffsetDateTime, Duration, UtcOffset};
+use clap::{App, SubCommand};
 
-pub struct TimeApplet {}
 
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.
@@ -45,16 +45,25 @@ fn decode_windows_filetime(ts: i64) -> OffsetDateTime {
     decode_epoch_subseconds(shifted, 10_000_000)
 }
 
+pub struct TimeApplet {
+        local: bool
+    }
 impl Applet for TimeApplet {
     fn command(&self) -> &'static str { "tsdec" }
     fn description(&self) -> &'static str { "TimeStamp decode" }
 
-    fn new() -> Box<dyn Applet> {
-        Box::new(Self {})
+    fn subcommand(&self) -> App {
+        SubCommand::with_name(self.command()).about(self.description())
+             .arg_from_usage("-l --local 'show time in local time zone'")
+             .arg_from_usage("[value] 'input value, reads from stdin in not present'")
     }
 
-    fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self { })
+    fn new() -> Box<dyn Applet> {
+        Box::new(Self { local: false})
+    }
+
+    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+        Box::new(Self { local: args.is_present("local") })
     }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
@@ -80,7 +89,42 @@ impl Applet for TimeApplet {
                             decode_windows_filetime(ts_int),
                 _ => decode_epoch_seconds(ts_int)
             };
-        let date_str = ts.format("%F %T.%N");
+        let (ts, date_fmt) = if self.local {
+                (ts.to_offset(UtcOffset::current_local_offset()),
+                 "%F %T.%N %z")
+            } else { (ts, "%F %T.%N") };
+        let date_str = ts.format(date_fmt);
         return date_str.as_bytes().to_vec();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn run_decode(app: &TimeApplet, ts: &str) -> String {
+        String::from_utf8(app.process(ts.as_bytes().to_vec())).unwrap()
+    }
+
+    #[test]
+    fn test_decimal() {
+        let ts = TimeApplet {local: false};
+        assert_eq!(run_decode(&ts, "0"), "1970-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "1420070400"), "2015-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "142007040000"), "2015-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "1420070400000"), "2015-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "1420070400000000"), "2015-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "142007040001"), "2015-01-01 0:00:00.010000000");
+        assert_eq!(run_decode(&ts, "1420070400001"), "2015-01-01 0:00:00.001000000");
+        assert_eq!(run_decode(&ts, "1420070400000001"), "2015-01-01 0:00:00.000001000");
+        assert_eq!(run_decode(&ts, "146424672000234122"), "2065-01-01 0:00:00.023412200");
+        assert_eq!(run_decode(&ts, "000000000000000000"), "1601-01-01 0:00:00.000000000");
+    }
+
+    #[test]
+    fn test_hex() {
+        let ts = TimeApplet {local: false};
+        assert_eq!(run_decode(&ts, "0x0"), "1970-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "0x1"), "1970-01-01 0:00:01.000000000");
     }
 }
