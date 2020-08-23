@@ -42,7 +42,11 @@ $ tsdec 0
 ```
 $ cargo rustc --release
 ```
-or get the binary from the [release page](https://github.com/trou/rsbkb/releases).
+
+or:
+
+* get the binary from the [release page](https://github.com/trou/rsbkb/releases).
+* get the latest artifact from the [Actions](https://github.com/trou/rsbkb/actions) page.
 
 ### Usage
 
