@@ -4,16 +4,40 @@ A Rust reimplementation of some tools found in emonti's
 [rbkb](https://github.com/emonti/rbkb), itself a Ruby reimplementation of
 Matasano's BlackBag.
 
-## Why reimplement it ?
+### Examples
+
+```console
+$ unhex 4141:4141
+AA:AA
+$ echo '4141:4141' | unhex
+AA:AA
+$ echo '41 41 41 32' | unhex
+A A A 2
+$ echo '41 41 41 32' | unhex -o
+AAA2
+echo -n '41414132' | unhex | xor -x 41 | hex
+00000073
+$ crc32 '41 41 41 32'
+e60ce752
+$ echo -n '41 41 41 32' | crc32
+e60ce752
+$ echo test | b64 | urlenc
+dGVzdAo%3D
+$ tsdec 146424672000234122
+2065-01-01 0:00:00.023412200
+$ tsdec 0
+1970-01-01 0:00:00.000000000
+```
+
+### Why reimplement it ?
 
 * rbkb is unmaintained
 * Ruby is slow
 * I wanted to learn Rust
 
-
 ## How to use
 
-### Build
+### Build it / Get it
 
 ```
 $ cargo rustc --release
@@ -90,27 +114,3 @@ ARGS:
     <end>      end of slice: absolute or relative if prefixed with +
 ```
 
-## Examples
-
-```console
-$ unhex 4141:4141
-AA:AA
-$ echo '4141:4141' | unhex
-AA:AA
-$ echo '41 41 41 32' | unhex
-A A A 2
-$ echo '41 41 41 32' | unhex -o
-AAA2
-echo -n '41414132' | unhex | xor -x 41 | hex
-00000073
-$ crc32 '41 41 41 32'
-e60ce752
-$ echo -n '41 41 41 32' | crc32
-e60ce752
-$ echo test | b64 | urlenc
-dGVzdAo%3D
-$ tsdec 146424672000234122
-2065-01-01 0:00:00.023412200
-$ tsdec 0
-1970-01-01 0:00:00.000000000
-```
