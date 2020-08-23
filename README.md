@@ -6,7 +6,7 @@ Matasano's BlackBag.
 
 ### Examples
 
-```console
+```
 $ unhex 4141:4141
 AA:AA
 $ echo '4141:4141' | unhex
