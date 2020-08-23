@@ -10,6 +10,11 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --verbose --release
+    - uses: actions/upload-artifact@v2
+      with:
+        name: rsbkb-linux64-${{ github.sha }}
+        path: target/release/rsbkb
     - name: Run tests
       run: cargo test --verbose
+
