@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Run tests
+      run: cargo test --verbose
     - uses: actions/checkout@v1
     - name: Build
       run: cargo build --verbose --release
@@ -15,6 +17,4 @@ jobs:
       with:
         name: rsbkb-linux64-${{ github.sha }}
         path: target/release/rsbkb
-    - name: Run tests
-      run: cargo test --verbose
 
