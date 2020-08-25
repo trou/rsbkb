@@ -1,6 +1,7 @@
 use crate::applet::Applet;
 use crate::applet::FromStrWithRadix;
 use clap::{App, SubCommand};
+use std::char;
 
 pub struct BofPattGenApplet {
     len : usize,
@@ -45,7 +46,7 @@ impl Applet for BofPattGenApplet {
         let len_s = args.value_of("length").unwrap();
         let len = usize::from_str_with_radix(len_s).expect("invalid length");
         if len > max_len {
-            panic!("Pattern length's too big, max is {}.", max_len); 
+            panic!("Pattern length's too big, max is {}.", max_len);
         }
         Box::new(Self { len })
     }
@@ -74,12 +75,29 @@ impl Applet for BofPattOffApplet {
 
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
-             .arg_from_usage("<extract> 'Pattern extract'")
+             .arg_from_usage("-b --big-endian 'Parse hex value as big endian'")
+             .arg_from_usage("<extract> 'Pattern extract (Use 0xAABBCCDD for reg value)'")
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         let mut extract = String::new();
-        extract.push_str(args.value_of("extract").unwrap());
+        let arg_val = args.value_of("extract").unwrap();
+        let big_endian = args.is_present("big-endian");
+        if &arg_val[0..2] == "0x" {
+            let mut arg_int = u64::from_str_with_radix(arg_val).expect("Invalid hex value for pattern");
+             while arg_int != 0 {
+                let c = char::from_u32((arg_int&0xFF) as u32).unwrap();
+                if big_endian {
+                    extract.insert(0, c);
+                } else {
+                    extract.push(c);
+                }
+                arg_int >>= 8;
+            }
+            println!("Decoded pattern: {} (big endian: {})", extract, big_endian);
+        } else {
+            extract.push_str(arg_val);
+        }
         Box::new(Self { extract })
     }
 
@@ -89,7 +107,7 @@ impl Applet for BofPattOffApplet {
         gen_pattern(max_len, &mut full_pattern);
         let pattern_str = String::from_utf8(full_pattern).unwrap();
         let offset = pattern_str.find(self.extract.as_str());
-        let res = 
+        let res =
             match offset {
                 Some(o) => o.to_string(),
                 _ => String::from("Pattern not found")
@@ -99,4 +117,29 @@ impl Applet for BofPattOffApplet {
 
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
+    #[test]
+    fn test_gen() {
+        let pat = BofPattGenApplet { len: 40 };
+        assert_eq!(String::from_utf8(pat.process(vec![])).unwrap(),
+                   "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2A");
+    }
+
+    #[test]
+    fn test_off() {
+        let pat = BofPattOffApplet { extract: String::from("Yq6Y") };
+        assert_eq!(String::from_utf8(pat.process(vec![])).unwrap(),
+                   "19218");
+    }
+
+    #[test]
+    fn test_not_found() {
+        let pat = BofPattOffApplet { extract: String::from("***") };
+        assert_eq!(String::from_utf8(pat.process(vec![])).unwrap(),
+                   "Pattern not found");
+    }
+
+}
