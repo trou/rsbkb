@@ -28,7 +28,7 @@ fn gen_pattern(len:usize, res: &mut Vec<u8>) {
 
 impl Applet for BofPattGenApplet {
     fn command(&self) -> &'static str { "bofpatt" }
-    fn description(&self) -> &'static str { "Buffer Overflow Pattern generator" }
+    fn description(&self) -> &'static str { "Buffer overflow pattern generator" }
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self { len: 0})
@@ -65,7 +65,7 @@ pub struct BofPattOffApplet { extract: String }
 
 impl Applet for BofPattOffApplet {
     fn command(&self) -> &'static str { "bofpattoff" }
-    fn description(&self) -> &'static str { "Buffer Overflow Pattern offset finder" }
+    fn description(&self) -> &'static str { "Buffer overflow pattern offset finder" }
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self { extract: String::new() })
