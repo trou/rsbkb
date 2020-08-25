@@ -69,3 +69,13 @@ impl FromStrWithRadix for i64 {
             }
         }
     }
+
+impl FromStrWithRadix for usize {
+        fn from_str_with_radix(s: &str)  -> Result<usize, std::num::ParseIntError> {
+            if s.len() > 2 && &s[0..2] == "0x" {
+                return usize::from_str_radix(&s[2..], 16);
+            } else {
+                return s.parse();
+            }
+        }
+    }
