@@ -39,6 +39,10 @@ use sliceapp::SliceApplet;
 mod timeapp;
 use timeapp::TimeApplet;
 
+mod patternapp;
+use patternapp::BofPattOffApplet;
+use patternapp::BofPattGenApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -53,6 +57,7 @@ fn main() {
                     UrlEncApplet, UrlDecApplet,
                     CRC16Applet, CRC32Applet,
                     B64EncApplet, B64DecApplet,
+                    BofPattOffApplet, BofPattGenApplet,
                     XorApplet,
                     SliceApplet,
                     TimeApplet);
