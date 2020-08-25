@@ -27,6 +27,11 @@ $ tsdec 146424672000234122
 2065-01-01 0:00:00.023412200
 $ tsdec 0
 1970-01-01 0:00:00.000000000
+$ rsbkb bofpatt 60
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9
+$ rsbkb bofpattoff -b 0x41623841
+Decoded pattern: Ab8A (big endian: true)
+54
 ```
 
 ### Why reimplement it ?
@@ -61,15 +66,16 @@ for i in tsdec slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s 
 
 ## Included tools
 
-* `unhex`: decode hex data (either in the middle of arbitrary data, or strictly)
 * `hex`: hex encode
-* `d64`: base64 decode (use `-u` or `--URL` for URL-safe b64)
+* `unhex`: decode hex data (either in the middle of arbitrary data, or strictly)
 * `b64`: base64 encode (use `-u` or `--URL` for URL-safe b64)
-* `urldec`: url decode
+* `d64`: base64 decode (use `-u` or `--URL` for URL-safe b64)
 * `urlenc`: url encode
+* `urldec`: url decode
 * `xor`: xor (use `-x` to specify the key, in hex, `-f` to specify a file)
 * `crc16`: CRC-16
 * `crc32`: CRC-32
+* `bofpatt` / `boffpattoff`: buffer overflow pattern generator / offset calculator
 * `tsdec`: decode various timestamps (Epoch with different resolutions, Windows FILETIME)
 * `slice`: slice of a file: :
  * `slice input_file 10` will print `input_file` from offset 10 on stdout.
@@ -89,6 +95,8 @@ FLAGS:
 
 SUBCOMMANDS:
     b64       base64 encode
+    bofpatt       Buffer overflow pattern generator
+    bofpattoff    Buffer overflow pattern offset finder
     crc16     compute CRC-16
     crc32     compute CRC-32
     d64       base64 decode
