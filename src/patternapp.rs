@@ -109,7 +109,7 @@ impl Applet for BofPattOffApplet {
         let offset = pattern_str.find(self.extract.as_str());
         let res =
             match offset {
-                Some(o) => o.to_string(),
+                Some(o) => format!("Offset: {} / {:#x}", o, o),
                 _ => String::from("Pattern not found")
             };
         return res.as_bytes().to_vec();
@@ -132,7 +132,7 @@ mod tests {
     fn test_off() {
         let pat = BofPattOffApplet { extract: String::from("Yq6Y") };
         assert_eq!(String::from_utf8(pat.process(vec![])).unwrap(),
-                   "19218");
+                   "Offset: 19218 / 0x4b12");
     }
 
     #[test]
