@@ -43,6 +43,9 @@ mod patternapp;
 use patternapp::BofPattOffApplet;
 use patternapp::BofPattGenApplet;
 
+mod entropyapp;
+use entropyapp::EntropyApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -58,7 +61,7 @@ fn main() {
                     CRC16Applet, CRC32Applet,
                     B64EncApplet, B64DecApplet,
                     BofPattOffApplet, BofPattGenApplet,
-                    XorApplet,
+                    XorApplet, EntropyApplet,
                     SliceApplet,
                     TimeApplet);
     let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
