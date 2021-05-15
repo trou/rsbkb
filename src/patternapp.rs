@@ -133,7 +133,7 @@ mod tests {
     fn test_off() {
         let pat = BofPattOffApplet { extract: String::from("Yq6Y") };
         assert_eq!(String::from_utf8(pat.process(vec![])).unwrap(),
-                   "Offset: 19218 / 0x4b12");
+                   "Offset: 19218 (mod 20280) / 0x4b12");
     }
 
     #[test]
