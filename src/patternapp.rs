@@ -14,7 +14,7 @@ const DIGITS : &str = "0123456789";
 fn gen_pattern(len:usize, res: &mut Vec<u8>) {
         for u in UPPER.bytes() {
             if res.len() >= len {
-                break;
+                return;
             }
             for l in LOWER.bytes() {
                 for d in DIGITS.bytes() {
@@ -24,6 +24,7 @@ fn gen_pattern(len:usize, res: &mut Vec<u8>) {
                 }
             }
         }
+        gen_pattern(len-res.len(), res);
 }
 
 impl Applet for BofPattGenApplet {
@@ -46,7 +47,7 @@ impl Applet for BofPattGenApplet {
         let len_s = args.value_of("length").unwrap();
         let len = usize::from_str_with_radix(len_s).expect("invalid length");
         if len > max_len {
-            panic!("Pattern length's too big, max is {}.", max_len);
+            eprintln!("Warning: pattern length's longer than max_len {}.", max_len);
         }
         Box::new(Self { len })
     }
@@ -109,7 +110,7 @@ impl Applet for BofPattOffApplet {
         let offset = pattern_str.find(self.extract.as_str());
         let res =
             match offset {
-                Some(o) => format!("Offset: {} / {:#x}", o, o),
+                Some(o) => format!("Offset: {} (mod {}) / {:#x}", o, max_len, o),
                 _ => String::from("Pattern not found")
             };
         return res.as_bytes().to_vec();
