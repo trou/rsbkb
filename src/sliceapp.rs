@@ -33,12 +33,12 @@ impl Applet for SliceApplet {
         let start = u64::from_str_with_radix(start_va).expect("invalid start");
 
         let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
-            if end_val.starts_with("+") {
-                    Some(start + u64::from_str_with_radix(&end_val[1..]).expect("Invalid end"))
-                } else {
+            if let Some(end_val_no_plus) = end_val.strip_prefix("+") {
+                    Some(start + u64::from_str_with_radix(end_val_no_plus).expect("Invalid end"))
+            } else {
                     Some(u64::from_str_with_radix(end_val).expect("Invalid end"))
-                }
-            } else { None };
+            }
+        } else { None };
 
         Box::new(Self {file: Some(filename.to_string()), start, end })
     }

@@ -92,7 +92,7 @@ fn main() {
     // Get subcommand and args
     let (subcommand, sub_matches) = match matches.subcommand() {
         (s, Some(sm)) => (s, sm),
-        _ => { &app.print_help(); println!(""); return;}
+        _ => { &app.print_help(); println!(); return;}
     };
 
     // Find corresponding app
@@ -113,11 +113,11 @@ fn main() {
     let res = selected_app.process(inputval);
 
     let mut stdout = io::stdout();
-    stdout.write(&res).expect("Write failed");
+    stdout.write_all(&res).expect("Write failed");
 
     /* Only add a newline when outputing to a terminal */
     if atty::is(Stream::Stdout) {
-        println!("");
+        println!();
     }
 }
 

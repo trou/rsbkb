@@ -41,7 +41,7 @@ fn decode_epoch_subseconds(ts: i64, resolution: i64) -> OffsetDateTime {
 */
 fn decode_windows_filetime(ts: i64) -> OffsetDateTime {
     /* Shift to Unix Epoch */
-    let shifted = ts-116444736000000000;
+    let shifted = ts-116_444_736_000_000_000;
     decode_epoch_subseconds(shifted, 10_000_000)
 }
 

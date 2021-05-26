@@ -56,7 +56,7 @@ impl UnHexApplet {
 
     fn hex_decode_all(&self, hexval: Vec<u8>) -> Vec<u8> {
         let mut res: Vec<u8> = vec![];
-        let ref mut iter = hexval.windows(2);
+        let iter = &mut hexval.windows(2);
         let mut last : &[u8] = &[];
         loop {
             let chro = iter.next();
@@ -70,8 +70,11 @@ impl UnHexApplet {
                 /* make sure we dont miss the last char if we have something like
                  * "41 " as input */
                 let next_win = iter.next().unwrap_or(&[]);
-                if next_win.len() > 1 { last = &next_win[1..2] } else
-                { last = &[] };
+                if next_win.len() > 1 {
+                    last = &next_win[1..2]
+                } else {
+                    last = &[]
+                };
             } else {
                 res.extend_from_slice(&chr[0..1]);
                 last = &chr[1..2];

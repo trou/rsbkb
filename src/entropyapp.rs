@@ -2,8 +2,8 @@ use crate::applet::Applet;
 
 pub struct EntropyApplet {}
 
-fn entropy(val: Vec<u8>) -> f64 {
-    if val.len() == 0 {
+fn entropy(val: &[u8]) -> f64 {
+    if val.is_empty() {
         return 0.0;
     }
     /* Compute how many times each value appears */
@@ -38,7 +38,7 @@ impl Applet for EntropyApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
-        format!("{:.3}", entropy(val)).as_bytes().to_vec()
+        format!("{:.3}", entropy(val.as_slice())).as_bytes().to_vec()
     }
 
 }
