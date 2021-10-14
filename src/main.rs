@@ -92,7 +92,7 @@ fn main() {
     // Get subcommand and args
     let (subcommand, sub_matches) = match matches.subcommand() {
         (s, Some(sm)) => (s, sm),
-        _ => { &app.print_help(); println!(); return;}
+        _ => { app.print_help().expect("Help failed ;)"); println!(); return;}
     };
 
     // Find corresponding app
