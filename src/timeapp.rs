@@ -90,7 +90,8 @@ impl Applet for TimeApplet {
                 _ => decode_epoch_seconds(ts_int)
             };
         let (ts, date_fmt) = if self.local {
-                (ts.to_offset(UtcOffset::current_local_offset()),
+                let offset = UtcOffset::try_current_local_offset().unwrap_or(UtcOffset::UTC);
+                (ts.to_offset(offset),
                  "%F %T.%N %z")
             } else { (ts, "%F %T.%N") };
         let date_str = ts.format(date_fmt);
