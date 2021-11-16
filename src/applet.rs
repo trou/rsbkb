@@ -12,6 +12,12 @@ pub trait Applet {
              .arg_from_usage("[value] 'input value, reads from stdin in not present'")
     }
 
+    /* By default, applets accept the input as:
+     *   - an argument, named "value"
+     *   - stdin, if value is not supplied
+     * Applets can overload this method to have a different behaviour
+     * (for example if they have more args
+     * */
     fn arg_or_stdin(&self) -> Option<&'static str> { Some("value") }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8>;
