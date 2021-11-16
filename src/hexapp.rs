@@ -1,3 +1,4 @@
+use std::process;
 use crate::applet::Applet;
 use crate::applet::SliceExt;
 use clap::{App, SubCommand};
@@ -28,7 +29,10 @@ impl UnHexApplet {
         let mut trimmed : Vec<u8> = val.trim().into();
         let res = hex::decode(&trimmed);
         if self.strict {
-            return res.expect("Decoding hex failed");
+            return res.unwrap_or_else(|err| {
+                eprintln!("Invalid hex input: {}", err);
+                process::exit(1);
+            });
         }
         /* remove spaces */
         trimmed.retain(|&x| x != 0x20);
@@ -100,7 +104,7 @@ impl Applet for UnHexApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(UnHexApplet { hexonly: args.is_present("hex-only"), strict : args.is_present("strict")})
+        Box::new(UnHexApplet { hexonly: args.is_present("hex-only") || args.is_present("strict"), strict : args.is_present("strict")})
     }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
