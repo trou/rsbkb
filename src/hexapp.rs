@@ -142,18 +142,4 @@ mod tests {
         assert_eq!(unhex.process("!52af".as_bytes().to_vec()), [0x21, 0x52, 0xaf]);
         assert_eq!(unhex.process("!5 2af".as_bytes().to_vec()), [0x21, 0x35, 0x20, 0x2a, 0x66]);
     }
-
-    #[test]
-    #[should_panic(expected = "Decoding hex failed: OddLength")]
-    fn test_unhex_strict_hexonly() {
-        let unhex = UnHexApplet {strict: true, hexonly: true};
-        unhex.process("01 23 45 67 89 ab cd ef".as_bytes().to_vec());
-    }
-
-    #[test]
-    #[should_panic(expected = "Decoding hex failed: InvalidHexCharacter")]
-    fn test_unhex_invalid() {
-        let unhex = UnHexApplet {strict: true, hexonly: true};
-        unhex.process("01at".as_bytes().to_vec());
-    }
 }
