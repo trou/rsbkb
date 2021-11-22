@@ -130,9 +130,35 @@ mod tests {
     }
 
     #[test]
+    fn test_b64_url_enc() {
+        let b64 = B64EncApplet { encoding: base64::URL_SAFE.decode_allow_trailing_bits(true) };
+        // https://tools.ietf.org/html/rfc4648#page-12
+        assert_eq!("".as_bytes().to_vec(), b64.process("".as_bytes().to_vec()));
+        assert_eq!("Zg==".as_bytes().to_vec(), b64.process("f".as_bytes().to_vec()));
+        assert_eq!("Zm8=".as_bytes().to_vec(), b64.process("fo".as_bytes().to_vec()));
+        assert_eq!("Zm9v".as_bytes().to_vec(), b64.process("foo".as_bytes().to_vec()));
+        assert_eq!("Zm9vYg==".as_bytes().to_vec(), b64.process("foob".as_bytes().to_vec()));
+        assert_eq!("Zm9vYmE=".as_bytes().to_vec(), b64.process("fooba".as_bytes().to_vec()));
+        assert_eq!("Zm9vYmFy".as_bytes().to_vec(), b64.process("foobar".as_bytes().to_vec()));
+        assert_eq!("ZZ-A".as_bytes().to_vec(), b64.process([0x65, 0x9F, 0x80].to_vec()));
+
+        let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
+        assert_eq!("FPucA9l-".as_bytes().to_vec(), b64.process(test));
+    }
+
+    #[test]
     fn test_encode_and_back() {
         let d64 = B64DecApplet { strict: true, encoding: base64::STANDARD };
         let b64 = B64EncApplet { encoding: base64::STANDARD };
+
+        let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
+        assert_eq!(to_enc, d64.process(b64.process(to_enc.clone())));
+    }
+
+    #[test]
+    fn test_encode_and_back_url() {
+        let d64 = B64DecApplet { strict: true, encoding: base64::URL_SAFE};
+        let b64 = B64EncApplet { encoding: base64::URL_SAFE};
 
         let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
         assert_eq!(to_enc, d64.process(b64.process(to_enc.clone())));
