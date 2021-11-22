@@ -1,3 +1,4 @@
+use std::process;
 use clap::{App, SubCommand};
 use crate::applet::SliceExt;
 use crate::applet::Applet;
@@ -79,43 +80,32 @@ impl Applet for B64DecApplet {
         let decoded = base64::decode_config(&trimmed, self.encoding);
         match decoded {
             Ok(res) => return res,
-            Err(e) => { if self.strict { panic!("Decoding base64 failed: {}", e); } else {
-                        match e {
-                            base64::DecodeError::InvalidLastSymbol(offset, _) |
-                            base64::DecodeError::InvalidByte(offset, _) => {
-                                let mut end = trimmed.split_off(offset);
-                                let mut decoded = self.process(trimmed);
-                                if !self.strict {
-                                    decoded.append(&mut end);
-                                }
-                                return decoded;
-                            },
-                            _ =>  { println!("{}",e); panic!("Decoding base64 failed: {}", e) }
+            Err(e) => { if self.strict { eprintln!("Decoding base64 failed: {}", e); process::exit(1); } else {
+                            match e {
+                                base64::DecodeError::InvalidLastSymbol(offset, _) |
+                                base64::DecodeError::InvalidByte(offset, _) => {
+                                    let mut end = trimmed.split_off(offset);
+                                    let mut decoded = self.process(trimmed);
+                                    if !self.strict {
+                                        decoded.append(&mut end);
+                                    }
+                                    return decoded;
+                                },
+                                // Should not happen since we handle trailing data
+                                // before in non-strict mode
+                                base64::DecodeError::InvalidLength =>  { 
+                                        panic!("Decoding base64 failed: {}", e)
+                                    }
                             }
-                }
-            }
+                        }
+                    }
         }
     }
-
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    #[should_panic(expected = "Encoded text cannot have a 6-bit remainder.")]
-    fn test_b64_inv_remainder() {
-        let d64 = B64DecApplet { strict: true, encoding: base64::STANDARD };
-        d64.process("0123456789a!bcdef".as_bytes().to_vec());
-    }
-
-    #[test]
-    #[should_panic(expected = "Decoding base64 failed: Invalid byte 58, offset 0.")]
-    fn test_b64_inv_byte() {
-        let d64 = B64DecApplet { strict: true, encoding: base64::STANDARD };
-        d64.process("::::".as_bytes().to_vec());
-    }
 
     #[test]
     fn test_b64_inv_lenient() {
