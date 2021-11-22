@@ -17,8 +17,8 @@ fn entropy(val: &[u8]) -> f64 {
 
     /* Compute entropy */
     for count in counts.iter() {
-        let p = (*count as f64)/len;
-        if p > 0.0 {
+        if *count > 0 {
+            let p = (*count as f64)/len;
             res -= p*p.log(256.0)
         }
     }
