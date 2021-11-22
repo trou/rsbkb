@@ -1,3 +1,4 @@
+use std::process;
 use std::io::{BufReader, SeekFrom, Seek, Read};
 use std::fs::{OpenOptions};
 use clap::{App, SubCommand};
@@ -54,7 +55,8 @@ impl Applet for SliceApplet {
         if self.end.is_some() {
             let end = self.end.unwrap();
             if end < start {
-                panic!("end < start");
+                eprintln!("Error: specified end < start");
+                process::exit(1);
             }
             let len: usize = (end-start) as usize;
             res.resize(len, 0);
