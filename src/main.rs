@@ -29,6 +29,7 @@ use b64app::B64DecApplet;
 mod crcapp;
 use crcapp::CRC16Applet;
 use crcapp::CRC32Applet;
+use crcapp::CRCApplet;
 
 mod xorapp;
 use xorapp::XorApplet;
@@ -58,7 +59,7 @@ macro_rules! applets {
 fn main() {
     applets!(apps = HexApplet, UnHexApplet,
                     UrlEncApplet, UrlDecApplet,
-                    CRC16Applet, CRC32Applet,
+                    CRC16Applet, CRC32Applet, CRCApplet,
                     B64EncApplet, B64DecApplet,
                     BofPattOffApplet, BofPattGenApplet,
                     XorApplet, EntropyApplet,
