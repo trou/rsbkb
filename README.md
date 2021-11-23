@@ -76,6 +76,7 @@ for i in entropy tsdec slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; d
 * `urlenc`: url encode
 * `urldec`: url decode
 * `xor`: xor (use `-x` to specify the key, in hex, `-f` to specify a file)
+* `crc`: all CRC algorithms implemented in the [Crc](https://docs.rs/crc/2.1.0/crc/) crate
 * `crc16`: CRC-16
 * `crc32`: CRC-32
 * `bofpatt` / `boffpattoff`: buffer overflow pattern generator / offset calculator
@@ -101,6 +102,7 @@ SUBCOMMANDS:
     b64       base64 encode
     bofpatt       Buffer overflow pattern generator
     bofpattoff    Buffer overflow pattern offset finder
+    crc           flexible CRC computation
     crc16     compute CRC-16
     crc32     compute CRC-32
     d64       base64 decode
