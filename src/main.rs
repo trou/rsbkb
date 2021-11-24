@@ -77,8 +77,8 @@ fn main() {
     };
 
     let mut app = clap::App::new("rsbkb")
-        .version("0.6.1")
-        .author("Raphael Rigo <devel@syscall.eu>")
+        .version("0.7")
+        .author("Raphaël Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
         .subcommands(apps.iter().map(|app| app.subcommand()));
 
