@@ -80,6 +80,7 @@ fn main() {
         .version("0.7")
         .author("Raphaël Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
+        .arg_from_usage("--list  'list applets'")
         .subcommands(apps.iter().map(|app| app.subcommand()));
 
     // Check if arg0 is a supported subcommand and use it
@@ -89,6 +90,14 @@ fn main() {
 
     // Parse args
     let matches = app.clone().get_matches_from(args);
+
+    /* Check for --list */
+    if matches.is_present("list") {
+            for app in apps.iter() {
+                println!("{}", app.command());
+            }
+        return;
+    }
 
     // Get subcommand and args
     let (subcommand, sub_matches) = match matches.subcommand() {
