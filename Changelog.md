@@ -1,3 +1,4 @@
+* 2022-05-01: v0.8: handle most errors gracefully, add more CRC algorithms (`crc` command), negative offset for `slice`
 * 2020-09-09: v0.6: add buffer overflow pattern tools, timestamp decoding
 * 2020-08-13: v0.5: code rewrite, merge `xorf` into `xor` and `unhex2` into `unhex`.  `slice`now supports relative `end`.
 * 2020-08-06: v0.3 : URL-safe support for base64, cleaner argument parsing

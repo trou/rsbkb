@@ -1,6 +1,6 @@
 [package]
 name = "rsbkb"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Raphaël Rigo <devel@syscall.eu>"]
 edition = "2018"
 

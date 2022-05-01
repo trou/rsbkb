@@ -64,7 +64,7 @@ or:
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
-for i in entropy tsdec slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; do ln -s rsbkb $i ; done
+for i in $(rsbkb --list) ; do ln -s rsbkb $i ; done
 ```
 
 ## Included tools
@@ -85,6 +85,7 @@ for i in entropy tsdec slice unhex hex d64 b64 urldec urlenc xor crc16 crc32 ; d
  * `slice input_file 10` will print `input_file` from offset 10 on stdout.
  * `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded).
  * `slice input_file 0x10 +0xFF` will copy `0xFF` bytes starting at `0x10`.
+ * `slice input_file -0x10` will the last 0x10 bytes from `input_file`
 * `entropy`: entropy of a file
 
 ### Getting help
@@ -99,25 +100,24 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    b64       base64 encode
+    b64           base64 encode
     bofpatt       Buffer overflow pattern generator
     bofpattoff    Buffer overflow pattern offset finder
     crc           flexible CRC computation
-    crc16     compute CRC-16
-    crc32     compute CRC-32
-    d64       base64 decode
+    crc16         compute CRC-16
+    crc32         compute CRC-32
+    d64           base64 decode
     entropy       compute file entropy
-    help      Prints this message or the help of the given subcommand(s)
-    hex       hex encode
-    slice     slice
-    tsdec     TimeStamp decode
-    unhex     Decode hex data
-    urldec    URL decode
-    urlenc    URL encode
-    xor       xor value
+    help          Prints this message or the help of the given subcommand(s)
+    hex           hex encode
+    slice         slice
+    tsdec         TimeStamp decode
+    unhex         Decode hex data
+    urldec        URL decode
+    urlenc        URL encode
+    xor           xor value
 
 $ rsbkb help slice
-rsbkb-slice
 slice
 
 USAGE:
@@ -129,7 +129,7 @@ FLAGS:
 
 ARGS:
     <file>     file to slice
-    <start>    start of slice
+    <start>    start of slice, relative to end of file if negative
     <end>      end of slice: absolute or relative if prefixed with +
 ```
 
