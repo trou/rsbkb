@@ -1,22 +1,30 @@
-# rsbkb
+# rsbkb (Rust blackbag)
 
-A Rust reimplementation of some tools found in emonti's
-[rbkb](https://github.com/emonti/rbkb), itself a Ruby reimplementation of
-Matasano's BlackBag.
+## What is it?
 
-### Examples
+`rsbkb` has multiple tools which are designed to be called directly (through
+symlinks). This allows various operations on data to be chained easily like
+CyberChef but through pipes.
+
+It also includes various practical tools like `entropy` or a timestamp decoder.
+
+## Examples
+
+Read 10 bytes from `/etc/passwd` starting at offset `0x2f`, `xor` then with
+`0xF2`, encode it in URL-safe base64 and finally URL encode it:
+
+```
+$ slice /etc/passwd 0x2f +10 | xor -x f2 | b64 -u | urlenc
+l5%2DdnMjdh4GA3Q%3D%3D
+```
+
+Various examples:
 
 ```
 $ unhex 4141:4141
 AA:AA
 $ echo '4141:4141' | unhex
 AA:AA
-$ echo '41 41 41 32' | unhex
-A A A 2
-$ echo '41 41 41 32' | unhex -o
-AAA2
-echo -n '41414132' | unhex | xor -x 41 | hex
-00000073
 $ crc32 '41 41 41 32'
 e60ce752
 $ echo -n '41 41 41 32' | crc32
@@ -34,14 +42,7 @@ Decoded pattern: Ab8A (big endian: true)
 54
 $ echo -n tototutu | rsbkb entropy
 0.188
-
 ```
-
-### Why reimplement it ?
-
-* rbkb is unmaintained
-* Ruby is slow
-* I wanted to learn Rust
 
 ## How to use
 
@@ -133,3 +134,8 @@ ARGS:
     <end>      end of slice: absolute or relative if prefixed with +
 ```
 
+## Credits and heritage
+
+This is a Rust reimplementation of some tools found in emonti's
+[rbkb](https://github.com/emonti/rbkb), itself a Ruby reimplementation of
+Matasano's BlackBag.
