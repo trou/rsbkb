@@ -41,7 +41,7 @@ impl Applet for SliceApplet {
         };
 
         let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
-            if let Some(end_val_no_plus) = end_val.strip_prefix("+") {
+            if let Some(end_val_no_plus) = end_val.strip_prefix('+') {
                     Some(start + u64::from_str_with_radix(end_val_no_plus).expect("Invalid end"))
             } else {
                     Some(u64::from_str_with_radix(end_val).expect("Invalid end"))
