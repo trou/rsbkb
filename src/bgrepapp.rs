@@ -2,7 +2,7 @@ use std::io::{Read};
 use std::fs::{File};
 use clap::{App, SubCommand};
 use crate::applet::Applet;
-use std::fmt::Write;
+use std::process;
 
 use regex::bytes::{Regex, RegexBuilder};
 
@@ -46,10 +46,13 @@ impl Applet for BgrepApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         let filename = args.value_of("file").unwrap();
         let pattern_val = args.value_of("pattern").unwrap();
+
+        /* Convert hex pattern to "\x00" format if needed */
         let mut s = String::new();
         let final_pat = if args.is_present("hex") {
             if pattern_val.len()%2 != 0 {
-                    panic!("pattern length is not even");
+                eprintln!("Error: hex pattern length is not even");
+                process::exit(1);
             }
             for i in 0..(pattern_val.len()/2) {
                 s += "\\x";
@@ -66,18 +69,23 @@ impl Applet for BgrepApplet {
     fn process(&self, _val: Vec<u8>) -> Vec<u8> {
         let filename = self.file.as_ref().unwrap();
         let mut f = File::open(filename).expect("Cannot open file");
+
+        /* Read the whole file as the regex crate only support
+         * searching in &[u8] : https://github.com/rust-lang/regex/issues/425
+         * TODO: implement a windowed file Reader */
         let mut data = Vec::<u8>::new();
         f.read_to_end(&mut data).expect("Could not read file");
 
         let regex = self.pattern.as_ref().unwrap();
         let matches = regex.find_iter(data.as_slice());
-        let mut res = String::new();
-        // Iterate the remaining matches:
+
+        /* Print offsets on stdout directly, to avoid buffering */
         for m in matches {
-          writeln!(res, "0x{:x}", m.start()).expect("writeln failed!");
+          println!("0x{:x}", m.start());
         }
 
-        return res.into_bytes() ;
+        /* Return empty Vec as we output directly on stdout */
+        return Vec::<u8>::new();
     }
 
 }
