@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 use crate::applet::{FromStrWithRadix, Applet};
-use time::{OffsetDateTime, Duration, UtcOffset};
+use time::{OffsetDateTime, Duration, UtcOffset, error::ComponentRange, format_description};
 use clap::{App, SubCommand};
 
 
@@ -15,15 +15,20 @@ use clap::{App, SubCommand};
       2025: 1735689600
       2030: 1900000000
 */
-fn decode_epoch_seconds(ts: i64) -> OffsetDateTime {
+fn decode_epoch_seconds(ts: i64) -> Result<OffsetDateTime, ComponentRange> {
     OffsetDateTime::from_unix_timestamp(ts)
 }
 
 
 /* Decode epoch date with more precision */
-fn decode_epoch_subseconds(ts: i64, resolution: i64) -> OffsetDateTime {
+fn decode_epoch_subseconds(ts: i64, resolution: i64) -> Result<OffsetDateTime, ComponentRange> {
     let micros: i32 = i32::try_from((ts%resolution)*(1_000_000_000/resolution)).unwrap();
-    OffsetDateTime::from_unix_timestamp(ts/resolution)+Duration::new(0, micros)
+    let unix = OffsetDateTime::from_unix_timestamp(ts/resolution);
+    if let Ok(date) = unix  {
+        Ok(date+Duration::new(0, micros))
+    } else {
+            unix
+    }
 }
 
 
@@ -39,7 +44,7 @@ fn decode_epoch_subseconds(ts: i64, resolution: i64) -> OffsetDateTime {
       2025: 133801632000000000
       2065: 146424672000000000
 */
-fn decode_windows_filetime(ts: i64) -> OffsetDateTime {
+fn decode_windows_filetime(ts: i64) -> Result<OffsetDateTime, ComponentRange> {
     /* Shift to Unix Epoch */
     let shifted = ts-116_444_736_000_000_000;
     decode_epoch_subseconds(shifted, 10_000_000)
@@ -88,13 +93,12 @@ impl Applet for TimeApplet {
                 (18, _) => /* Windows FILETIME */
                             decode_windows_filetime(ts_int),
                 _ => decode_epoch_seconds(ts_int)
-            };
-        let (ts, date_fmt) = if self.local {
-                let offset = UtcOffset::try_current_local_offset().unwrap_or(UtcOffset::UTC);
-                (ts.to_offset(offset),
-                 "%F %T.%N %z")
-            } else { (ts, "%F %T.%N") };
-        let date_str = ts.format(date_fmt);
+            }.expect("Could not convert timestamp");
+        let ts = if self.local {
+                let offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
+                ts.to_offset(offset)
+            } else { ts };
+        let date_str = ts.format(&format_description::well_known::Rfc3339).expect("Date formatting failed");
         return date_str.as_bytes().to_vec();
     }
 }
@@ -110,22 +114,22 @@ mod tests {
     #[test]
     fn test_decimal() {
         let ts = TimeApplet {local: false};
-        assert_eq!(run_decode(&ts, "0"), "1970-01-01 0:00:00.000000000");
-        assert_eq!(run_decode(&ts, "1420070400"), "2015-01-01 0:00:00.000000000");
-        assert_eq!(run_decode(&ts, "142007040000"), "2015-01-01 0:00:00.000000000");
-        assert_eq!(run_decode(&ts, "1420070400000"), "2015-01-01 0:00:00.000000000");
-        assert_eq!(run_decode(&ts, "1420070400000000"), "2015-01-01 0:00:00.000000000");
-        assert_eq!(run_decode(&ts, "142007040001"), "2015-01-01 0:00:00.010000000");
-        assert_eq!(run_decode(&ts, "1420070400001"), "2015-01-01 0:00:00.001000000");
-        assert_eq!(run_decode(&ts, "1420070400000001"), "2015-01-01 0:00:00.000001000");
-        assert_eq!(run_decode(&ts, "146424672000234122"), "2065-01-01 0:00:00.023412200");
-        assert_eq!(run_decode(&ts, "000000000000000000"), "1601-01-01 0:00:00.000000000");
+        assert_eq!(run_decode(&ts, "0"), "1970-01-01T00:00:00Z");
+        assert_eq!(run_decode(&ts, "1420070400"), "2015-01-01T00:00:00Z");
+        assert_eq!(run_decode(&ts, "142007040000"), "2015-01-01T00:00:00Z");
+        assert_eq!(run_decode(&ts, "1420070400000"), "2015-01-01T00:00:00Z");
+        assert_eq!(run_decode(&ts, "1420070400000000"), "2015-01-01T00:00:00Z");
+        assert_eq!(run_decode(&ts, "142007040001"), "2015-01-01T00:00:00.01Z");
+        assert_eq!(run_decode(&ts, "1420070400001"), "2015-01-01T00:00:00.001Z");
+        assert_eq!(run_decode(&ts, "1420070400000001"), "2015-01-01T00:00:00.000001Z");
+        assert_eq!(run_decode(&ts, "146424672000234122"), "2065-01-01T00:00:00.0234122Z");
+        assert_eq!(run_decode(&ts, "000000000000000000"), "1601-01-01T00:00:00Z");
     }
 
     #[test]
     fn test_hex() {
         let ts = TimeApplet {local: false};
-        assert_eq!(run_decode(&ts, "0x0"), "1970-01-01 0:00:00.000000000");
-        assert_eq!(run_decode(&ts, "0x1"), "1970-01-01 0:00:01.000000000");
+        assert_eq!(run_decode(&ts, "0x0"), "1970-01-01T00:00:00Z");
+        assert_eq!(run_decode(&ts, "0x1"), "1970-01-01T00:00:01Z");
     }
 }
