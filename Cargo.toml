@@ -12,6 +12,7 @@ clap = "2.33.0"
 crc = "2"
 atty = "0.2"
 time = {version = "0.3", features=["local-offset", "formatting"]}
+regex = "1.5"
 
 [[bin]]
 name = "rsbkb"

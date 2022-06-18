@@ -47,6 +47,9 @@ use patternapp::BofPattGenApplet;
 mod entropyapp;
 use entropyapp::EntropyApplet;
 
+mod bgrepapp;
+use bgrepapp::BgrepApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -63,7 +66,7 @@ fn main() {
                     B64EncApplet, B64DecApplet,
                     BofPattOffApplet, BofPattGenApplet,
                     XorApplet, EntropyApplet,
-                    SliceApplet,
+                    SliceApplet, BgrepApplet,
                     TimeApplet);
     let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
 
