@@ -70,7 +70,7 @@ impl Applet for BgrepApplet {
         let filename = self.file.as_ref().unwrap();
         let mut f = File::open(filename).expect("Cannot open file");
 
-        /* Read the whole file as the regex crate only support
+        /* Read the whole file as the regex crate only supports
          * searching in &[u8] : https://github.com/rust-lang/regex/issues/425
          * TODO: implement a windowed file Reader */
         let mut data = Vec::<u8>::new();
