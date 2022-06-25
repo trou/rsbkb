@@ -23,7 +23,7 @@ impl Applet for XorApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         let key_bytes = if args.is_present("xorkey") {
-                hex::decode(args.value_of("xorkey").unwrap().replace(" ","")).expect("Xor key decoding failed")
+                hex::decode(args.value_of("xorkey").unwrap().replace(' ',"")).expect("Xor key decoding failed")
             } else {
                 fs::read(args.value_of("keyfile").unwrap()).expect("can't open keyfile")
             };

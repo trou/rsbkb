@@ -34,7 +34,7 @@ impl Applet for SliceApplet {
         let start_val = args.value_of("start").unwrap();
 
         /* Negative start: offset from the end. */
-        let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix("-") {
+        let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix('-') {
                 (u64::from_str_with_radix(start_val_no_plus).expect("Invalid start"), true)
         } else {
                 (u64::from_str_with_radix(start_val).expect("Invalid start"), false)
