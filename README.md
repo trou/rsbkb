@@ -42,6 +42,10 @@ Decoded pattern: Ab8A (big endian: true)
 54
 $ echo -n tototutu | rsbkb entropy
 0.188
+$ bgrep -x 454c460201 /bin/ls
+0x1
+$ bgrep "\x45\x4c..\x01" /bin/ls
+0x1
 ```
 
 ## How to use
@@ -88,6 +92,7 @@ for i in $(rsbkb --list) ; do ln -s rsbkb $i ; done
  * `slice input_file 0x10 +0xFF` will copy `0xFF` bytes starting at `0x10`.
  * `slice input_file -0x10` will the last 0x10 bytes from `input_file`
 * `entropy`: entropy of a file
+* `bgrep`: simple binary grep
 
 ### Getting help
 
