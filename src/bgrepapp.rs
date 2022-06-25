@@ -78,10 +78,13 @@ impl Applet for BgrepApplet {
 
         let regex = self.pattern.as_ref().unwrap();
         let matches = regex.find_iter(data.as_slice());
+        let mut do_cr = false;
 
         /* Print offsets on stdout directly, to avoid buffering */
         for m in matches {
-          println!("0x{:x}", m.start());
+          /* last line should not have a \n as we add one in main */
+          if do_cr { println!(""); } else { do_cr = true };
+          print!("0x{:x}", m.start());
         }
 
         /* Return empty Vec as we output directly on stdout */
