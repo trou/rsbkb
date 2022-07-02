@@ -1,8 +1,8 @@
-use std::io::{Read};
 use std::fs::{File};
 use clap::{App, SubCommand};
 use crate::applet::Applet;
 use std::process;
+use memmap2::Mmap;
 
 use regex::bytes::{Regex, RegexBuilder};
 
@@ -68,22 +68,19 @@ impl Applet for BgrepApplet {
 
     fn process(&self, _val: Vec<u8>) -> Vec<u8> {
         let filename = self.file.as_ref().unwrap();
-        let mut f = File::open(filename).expect("Cannot open file");
+        let f = File::open(filename).expect("Cannot open file");
 
-        /* Read the whole file as the regex crate only supports
-         * searching in &[u8] : https://github.com/rust-lang/regex/issues/425
-         * TODO: implement a windowed file Reader */
-        let mut data = Vec::<u8>::new();
-        f.read_to_end(&mut data).expect("Could not read file");
+        /* Mmap is necessarily unsafe as data can change unexpectedly */
+        let data = unsafe { Mmap::map(&f).expect("Could not mmap input file") };
 
         let regex = self.pattern.as_ref().unwrap();
-        let matches = regex.find_iter(data.as_slice());
+        let matches = regex.find_iter(&data);
         let mut do_cr = false;
 
         /* Print offsets on stdout directly, to avoid buffering */
         for m in matches {
           /* last line should not have a \n as we add one in main */
-          if do_cr { println!(""); } else { do_cr = true };
+          if do_cr { println!(); } else { do_cr = true };
           print!("0x{:x}", m.start());
         }
 
