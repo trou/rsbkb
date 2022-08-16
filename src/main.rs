@@ -50,6 +50,9 @@ use entropyapp::EntropyApplet;
 mod bgrepapp;
 use bgrepapp::BgrepApplet;
 
+mod findsoapp;
+use findsoapp::FindSoApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -66,7 +69,7 @@ fn main() {
                     B64EncApplet, B64DecApplet,
                     BofPattOffApplet, BofPattGenApplet,
                     XorApplet, EntropyApplet,
-                    SliceApplet, BgrepApplet,
+                    SliceApplet, BgrepApplet, FindSoApplet,
                     TimeApplet);
     let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
 
