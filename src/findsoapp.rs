@@ -1,5 +1,6 @@
 use clap::{App, SubCommand};
 use std::fs;
+use std::path::{PathBuf};
 use crate::applet::Applet;
 use goblin::elf;
 use std::str::FromStr;
@@ -8,7 +9,8 @@ use std::str::FromStr;
 pub struct FindSoApplet {
     function :  Option<String>,
     files : Option<Vec<String>>,
-    is_ref :  bool,
+    is_ref : bool,
+    paths : Option<Vec<PathBuf>>
 }
 
 impl Applet for FindSoApplet {
@@ -18,6 +20,8 @@ impl Applet for FindSoApplet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
                 .arg_from_usage("-r 'use first file as reference ELF to get .so list from'")
+                .arg_from_usage("-p, --ldpath [LDPATH] '\':\' separated list of paths to look for .so in'")
+                .arg_from_usage("-l, --ldconf 'use ld.conf to determine paths'")
                 .arg_from_usage("<function> 'function to search'")
                 .arg_from_usage("<files>... 'files to search in'")
     }
@@ -25,17 +29,18 @@ impl Applet for FindSoApplet {
     fn arg_or_stdin(&self) -> Option<&'static str> { None }
 
     fn new() ->  Box<dyn Applet> {
-        Box::new(Self { files: None, function: None, is_ref: false})
+        Box::new(Self { files: None, function: None, is_ref: false, paths: None})
 
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         let filenames : Vec<String> = args.values_of("files").unwrap().map(|x| x.to_string()).collect();
         let function_val = args.value_of("function").unwrap();
-
+        let paths = args.value_of("ldpath").unwrap().split(':').map(|p| PathBuf::from_str(p).unwrap()).collect();
 
         Box::new(Self {files: Some(filenames), function: Some(function_val.to_string()),
-                       is_ref: args.is_present("r")})
+                       is_ref: args.is_present("r"),
+                       paths: Some(paths)})
     }
 
     fn process(&self, _val: Vec<u8>) -> Vec<u8> {
@@ -46,7 +51,21 @@ impl Applet for FindSoApplet {
             let elf_ref = elf::Elf::parse(f_data.as_slice()).unwrap();
             sofiles.extend(elf_ref.libraries.iter().map(|l| String::from_str(l).unwrap()));
         };
-        println!("{:?}", sofiles);
+
+        /* if ld paths were specified, try to resolve file names */
+        if let Some(paths) = &self.paths {
+            for so in sofiles.iter_mut() {
+                    let so_path = PathBuf::from_str(so).unwrap();
+                    if so_path.is_relative() {
+                        for p in paths.iter() {
+                            let full_path = p.join(&so_path);
+                            if full_path.is_file() {
+                                *so = String::from_str(full_path.to_str().unwrap()).unwrap();
+                            }
+                        }
+                    }
+            }
+        }
         for f in sofiles.iter() {
             let f_data :Vec<u8> = fs::read(f).expect("Could not read file");
             let elf_file = elf::Elf::parse(f_data.as_slice()).unwrap();
