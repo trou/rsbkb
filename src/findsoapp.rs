@@ -6,9 +6,13 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 pub struct FindSoApplet {
+    // Function we are looking for
     function: Option<String>,
+    // .so files
     files: Option<Vec<String>>,
+    // First .so is a binary to look for dependencies in
     is_ref: bool,
+    // LD_LIBRARY_PATH equivalent
     paths: Option<Vec<PathBuf>>,
 }
 
@@ -55,17 +59,21 @@ impl Applet for FindSoApplet {
         let paths = if args.is_present("ldpath") || args.is_present("ldconf") {
             let mut paths: Vec<PathBuf> = args
                 .value_of("ldpath")
-                .unwrap()
+                .unwrap_or("")
                 .split(':')
                 .map(|p| PathBuf::from_str(p).unwrap())
                 .collect();
-            let ldpaths: Vec<PathBuf> = fs::read_to_string(args.value_of("ldconf").unwrap())
-                .expect("Could not read config")
-                .split('\n')
-                .filter(|p| p.get(0..1).unwrap_or("#") != "#")
-                .map(|p| PathBuf::from_str(p).unwrap())
-                .collect::<Vec<PathBuf>>();
-            paths.extend(ldpaths);
+
+            // parse ld.so.conf "like" file
+            if args.is_present("ldconf") {
+                let ldpaths: Vec<PathBuf> = fs::read_to_string(args.value_of("ldconf").unwrap())
+                    .expect("Could not read config")
+                    .split('\n')
+                    .filter(|p| p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
+                    .map(|p| PathBuf::from_str(p).unwrap())
+                    .collect::<Vec<PathBuf>>();
+                paths.extend(ldpaths);
+            }
             Some(paths)
         } else {
             None
@@ -82,10 +90,12 @@ impl Applet for FindSoApplet {
     fn process(&self, _val: Vec<u8>) -> Vec<u8> {
         let fun = self.function.as_ref().unwrap();
         let mut sofiles: Vec<String> = Vec::from(self.files.as_ref().unwrap().as_slice());
+
+        // Load dependencies from first file
         if self.is_ref {
-            let f_data: Vec<u8> =
-                fs::read(self.files.as_ref().unwrap()[0].as_str()).expect("Could not read file");
-            let elf_ref = elf::Elf::parse(f_data.as_slice()).unwrap();
+            let f_data: Vec<u8> = fs::read(sofiles[0].as_str()).expect("Could not read file");
+            let elf_ref =
+                elf::Elf::parse(f_data.as_slice()).expect("Could not parse reference as ELF");
             sofiles.extend(
                 elf_ref
                     .libraries
@@ -109,8 +119,24 @@ impl Applet for FindSoApplet {
             }
         }
         for f in sofiles.iter() {
-            let f_data: Vec<u8> = fs::read(f).expect("Could not read file");
-            let elf_file = elf::Elf::parse(f_data.as_slice()).unwrap();
+            let f_data_r = fs::read(f);
+            let f_data: Vec<u8> = match f_data_r {
+                Err(e) => {
+                    eprintln!("Could not read file {}: {}", f, e);
+                    continue;
+                }
+                Ok(f) => f,
+            };
+
+            let elf_file_r = elf::Elf::parse(f_data.as_slice());
+            let elf_file = match elf_file_r {
+                Err(e) => {
+                    eprintln!("Could not parse {} as ELF: {}", f, e);
+                    continue;
+                }
+                Ok(f) => f,
+            };
+
             let strtab = elf_file.dynstrtab;
 
             let found = elf_file
