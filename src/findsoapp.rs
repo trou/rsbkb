@@ -83,7 +83,7 @@ impl Applet for FindSoApplet {
             files: Some(filenames),
             function: Some(function_val.to_string()),
             is_ref: args.is_present("r"),
-            paths: paths,
+            paths,
         })
     }
 
@@ -142,8 +142,7 @@ impl Applet for FindSoApplet {
             let found = elf_file
                 .dynsyms
                 .iter()
-                .find(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun))
-                .is_some();
+                .any(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun));
             if found {
                 print!("{}", f);
             }
