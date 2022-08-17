@@ -21,7 +21,7 @@ impl Applet for FindSoApplet {
         SubCommand::with_name(self.command()).about(self.description())
                 .arg_from_usage("-r 'use first file as reference ELF to get .so list from'")
                 .arg_from_usage("-p, --ldpath [LDPATH] '\':\' separated list of paths to look for .so in'")
-                .arg_from_usage("-l, --ldconf 'use ld.conf to determine paths'")
+                .arg_from_usage("-l, --ldconf [CONF] 'use config file to get LD paths'")
                 .arg_from_usage("<function> 'function to search'")
                 .arg_from_usage("<files>... 'files to search in'")
     }
@@ -36,11 +36,18 @@ impl Applet for FindSoApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         let filenames : Vec<String> = args.values_of("files").unwrap().map(|x| x.to_string()).collect();
         let function_val = args.value_of("function").unwrap();
-        let paths = args.value_of("ldpath").unwrap().split(':').map(|p| PathBuf::from_str(p).unwrap()).collect();
+        let paths = if args.is_present("ldpath") || args.is_present("ldconf") {
+            let mut paths : Vec<PathBuf> = args.value_of("ldpath").unwrap().split(':').map(|p| PathBuf::from_str(p).unwrap()).collect();
+            let ldpaths : Vec<PathBuf> = fs::read_to_string(args.value_of("ldconf").unwrap()).expect("Could not read config").split('\n').filter(|p| p.get(0..1).unwrap_or("#") != "#").map(|p| PathBuf::from_str(p).unwrap()).collect::<Vec<PathBuf>>();
+            paths.extend(ldpaths);
+            Some(paths)
+        } else {
+            None
+        };
 
         Box::new(Self {files: Some(filenames), function: Some(function_val.to_string()),
                        is_ref: args.is_present("r"),
-                       paths: Some(paths)})
+                       paths: paths})
     }
 
     fn process(&self, _val: Vec<u8>) -> Vec<u8> {
