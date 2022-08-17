@@ -102,7 +102,7 @@ impl Applet for UnHexApplet {
         "unhex"
     }
     fn description(&self) -> &'static str {
-        "Decode hex data"
+        "hex decode"
     }
 
     fn new() -> Box<dyn Applet> {

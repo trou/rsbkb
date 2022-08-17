@@ -27,7 +27,7 @@ impl Applet for BgrepApplet {
         "bgrep"
     }
     fn description(&self) -> &'static str {
-        "bgrep"
+        "binary grep"
     }
 
     fn subcommand(&self) -> App {

@@ -21,7 +21,7 @@ impl Applet for FindSoApplet {
         "findso"
     }
     fn description(&self) -> &'static str {
-        "findso"
+        "Find which .so implements a given function"
     }
 
     fn subcommand(&self) -> App {

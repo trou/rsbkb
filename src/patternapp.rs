@@ -32,7 +32,7 @@ impl Applet for BofPattGenApplet {
         "bofpatt"
     }
     fn description(&self) -> &'static str {
-        "Buffer overflow pattern generator"
+        "buffer overflow pattern generator"
     }
 
     fn new() -> Box<dyn Applet> {
