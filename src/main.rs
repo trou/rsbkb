@@ -2,13 +2,13 @@
 //trace_macros!(true);
 use std::env;
 use std::io;
-use std::path::Path;
 use std::io::{Read, Write};
-extern crate hex;
+use std::path::Path;
 extern crate base64;
-extern crate percent_encoding;
 extern crate clap;
 extern crate crc;
+extern crate hex;
+extern crate percent_encoding;
 use atty::Stream;
 
 mod applet;
@@ -19,12 +19,12 @@ use hexapp::HexApplet;
 use hexapp::UnHexApplet;
 
 mod urlapp;
-use urlapp::UrlEncApplet;
 use urlapp::UrlDecApplet;
+use urlapp::UrlEncApplet;
 
 mod b64app;
-use b64app::B64EncApplet;
 use b64app::B64DecApplet;
+use b64app::B64EncApplet;
 
 mod crcapp;
 use crcapp::CRC16Applet;
@@ -41,8 +41,8 @@ mod timeapp;
 use timeapp::TimeApplet;
 
 mod patternapp;
-use patternapp::BofPattOffApplet;
 use patternapp::BofPattGenApplet;
+use patternapp::BofPattOffApplet;
 
 mod entropyapp;
 use entropyapp::EntropyApplet;
@@ -63,18 +63,29 @@ macro_rules! applets {
 }
 
 fn main() {
-    applets!(apps = HexApplet, UnHexApplet,
-                    UrlEncApplet, UrlDecApplet,
-                    CRC16Applet, CRC32Applet, CRCApplet,
-                    B64EncApplet, B64DecApplet,
-                    BofPattOffApplet, BofPattGenApplet,
-                    XorApplet, EntropyApplet,
-                    SliceApplet, BgrepApplet, FindSoApplet,
-                    TimeApplet);
-    let app_names : Vec<_> = apps.iter().map(|app| app.command()).collect();
+    applets!(
+        apps = HexApplet,
+        UnHexApplet,
+        UrlEncApplet,
+        UrlDecApplet,
+        CRC16Applet,
+        CRC32Applet,
+        CRCApplet,
+        B64EncApplet,
+        B64DecApplet,
+        BofPattOffApplet,
+        BofPattGenApplet,
+        XorApplet,
+        EntropyApplet,
+        SliceApplet,
+        BgrepApplet,
+        FindSoApplet,
+        TimeApplet
+    );
+    let app_names: Vec<_> = apps.iter().map(|app| app.command()).collect();
 
     /* Get arg0 */
-    let mut args: Vec<_>= env::args().collect();
+    let mut args: Vec<_> = env::args().collect();
 
     let arg0 = Path::new(&args[0]).file_name();
     let arg0 = match arg0 {
@@ -99,16 +110,20 @@ fn main() {
 
     /* Check for --list */
     if matches.is_present("list") {
-            for app in apps.iter() {
-                println!("{}", app.command());
-            }
+        for app in apps.iter() {
+            println!("{}", app.command());
+        }
         return;
     }
 
     // Get subcommand and args
     let (subcommand, sub_matches) = match matches.subcommand() {
         (s, Some(sm)) => (s, sm),
-        _ => { app.print_help().expect("Help failed ;)"); println!(); return;}
+        _ => {
+            app.print_help().expect("Help failed ;)");
+            println!();
+            return;
+        }
     };
 
     // Find corresponding app
@@ -119,7 +134,9 @@ fn main() {
     if let Some(argname) = selected_app.arg_or_stdin() {
         /* Check if the given arg is present, else read from stdin */
         if !sub_matches.is_present(argname) {
-            io::stdin().read_to_end(&mut inputval).expect("Reading stdin failed");
+            io::stdin()
+                .read_to_end(&mut inputval)
+                .expect("Reading stdin failed");
         } else {
             inputval = sub_matches.value_of(argname).unwrap().as_bytes().to_vec();
         }
@@ -136,4 +153,3 @@ fn main() {
         println!();
     }
 }
-

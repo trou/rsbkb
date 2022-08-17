@@ -1,16 +1,20 @@
-use std::process;
 use crate::applet::Applet;
 use crate::applet::SliceExt;
 use clap::{App, SubCommand};
+use std::process;
 
-pub struct HexApplet { }
+pub struct HexApplet {}
 
 impl Applet for HexApplet {
-    fn command(&self) -> &'static str { "hex" }
-    fn description(&self) -> &'static str { "hex encode" }
+    fn command(&self) -> &'static str {
+        "hex"
+    }
+    fn description(&self) -> &'static str {
+        "hex encode"
+    }
 
     fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(HexApplet { })
+        Box::new(HexApplet {})
     }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
@@ -22,11 +26,14 @@ impl Applet for HexApplet {
     }
 }
 
-pub struct UnHexApplet { hexonly : bool, strict: bool }
+pub struct UnHexApplet {
+    hexonly: bool,
+    strict: bool,
+}
 
 impl UnHexApplet {
     fn hex_decode_hexonly(&self, val: Vec<u8>) -> Vec<u8> {
-        let mut trimmed : Vec<u8> = val.trim().into();
+        let mut trimmed: Vec<u8> = val.trim().into();
         let res = hex::decode(&trimmed);
         if self.strict {
             return res.unwrap_or_else(|err| {
@@ -40,33 +47,36 @@ impl UnHexApplet {
         match res {
             Ok(decoded) => return decoded,
             Err(e) => match e {
-                hex::FromHexError::InvalidHexCharacter {c: _, index} => {
+                hex::FromHexError::InvalidHexCharacter { c: _, index } => {
                     let mut end = trimmed.split_off(index);
                     let mut decoded = self.hex_decode_hexonly(trimmed);
                     decoded.append(&mut end);
                     return decoded;
-                },
+                }
                 hex::FromHexError::OddLength => {
                     // TODO: refactor
-                    let mut end = trimmed.split_off(trimmed.len()-1);
+                    let mut end = trimmed.split_off(trimmed.len() - 1);
                     let mut decoded = self.hex_decode_hexonly(trimmed);
                     decoded.append(&mut end);
                     return decoded;
-                },
-                _ => panic!("{}", e)
-            }
+                }
+                _ => panic!("{}", e),
+            },
         }
     }
 
     fn hex_decode_all(&self, hexval: Vec<u8>) -> Vec<u8> {
         let mut res: Vec<u8> = vec![];
         let iter = &mut hexval.windows(2);
-        let mut last : &[u8] = &[];
+        let mut last: &[u8] = &[];
         loop {
             let chro = iter.next();
             let chr = match chro {
-                None => { res.extend_from_slice(last) ; return res },
-                Some(a) => a
+                None => {
+                    res.extend_from_slice(last);
+                    return res;
+                }
+                Some(a) => a,
             };
 
             if (chr[0] as char).is_digit(16) && (chr[1] as char).is_digit(16) {
@@ -88,11 +98,18 @@ impl UnHexApplet {
 }
 
 impl Applet for UnHexApplet {
-    fn command(&self) -> &'static str { "unhex" }
-    fn description(&self) -> &'static str { "Decode hex data" }
+    fn command(&self) -> &'static str {
+        "unhex"
+    }
+    fn description(&self) -> &'static str {
+        "Decode hex data"
+    }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(UnHexApplet {hexonly: false, strict : false})
+        Box::new(UnHexApplet {
+            hexonly: false,
+            strict: false,
+        })
     }
 
     fn subcommand(&self) -> App {
@@ -104,7 +121,10 @@ impl Applet for UnHexApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(UnHexApplet { hexonly: args.is_present("hex-only") || args.is_present("strict"), strict : args.is_present("strict")})
+        Box::new(UnHexApplet {
+            hexonly: args.is_present("hex-only") || args.is_present("strict"),
+            strict: args.is_present("strict"),
+        })
     }
 
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
@@ -114,7 +134,6 @@ impl Applet for UnHexApplet {
             self.hex_decode_all(val)
         }
     }
-
 }
 
 #[cfg(test)]
@@ -124,22 +143,49 @@ mod tests {
     #[test]
     fn test_hex() {
         let hex = HexApplet {};
-        assert_eq!(String::from_utf8(hex.process([0, 0xFF].to_vec())).unwrap(), "00ff");
+        assert_eq!(
+            String::from_utf8(hex.process([0, 0xFF].to_vec())).unwrap(),
+            "00ff"
+        );
     }
 
     #[test]
     fn test_unhex_hexonly() {
-        let unhex = UnHexApplet {strict: false, hexonly: true};
-        assert_eq!(unhex.process("01 23 45 67 89 ab cd ef".as_bytes().to_vec()), [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
-        assert_eq!(unhex.process("0123456789abcdef".as_bytes().to_vec()), [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+        let unhex = UnHexApplet {
+            strict: false,
+            hexonly: true,
+        };
+        assert_eq!(
+            unhex.process("01 23 45 67 89 ab cd ef".as_bytes().to_vec()),
+            [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]
+        );
+        assert_eq!(
+            unhex.process("0123456789abcdef".as_bytes().to_vec()),
+            [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]
+        );
     }
 
     #[test]
     fn test_unhex() {
-        let unhex = UnHexApplet {strict: false, hexonly: false};
-        assert_eq!(unhex.process("test52af ".as_bytes().to_vec()), [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20]);
-        assert_eq!(unhex.process("test52af".as_bytes().to_vec()), [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf]);
-        assert_eq!(unhex.process("!52af".as_bytes().to_vec()), [0x21, 0x52, 0xaf]);
-        assert_eq!(unhex.process("!5 2af".as_bytes().to_vec()), [0x21, 0x35, 0x20, 0x2a, 0x66]);
+        let unhex = UnHexApplet {
+            strict: false,
+            hexonly: false,
+        };
+        assert_eq!(
+            unhex.process("test52af ".as_bytes().to_vec()),
+            [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20]
+        );
+        assert_eq!(
+            unhex.process("test52af".as_bytes().to_vec()),
+            [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf]
+        );
+        assert_eq!(
+            unhex.process("!52af".as_bytes().to_vec()),
+            [0x21, 0x52, 0xaf]
+        );
+        assert_eq!(
+            unhex.process("!5 2af".as_bytes().to_vec()),
+            [0x21, 0x35, 0x20, 0x2a, 0x66]
+        );
     }
 }

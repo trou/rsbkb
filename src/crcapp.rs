@@ -1,8 +1,8 @@
 extern crate crc;
-use std::process;
 use crate::applet::Applet;
-use clap::{App, SubCommand, Arg};
-use crc::{*};
+use clap::{App, Arg, SubCommand};
+use crc::*;
+use std::process;
 
 pub struct CRC16Applet {}
 
@@ -83,25 +83,35 @@ impl Applet for CRCApplet {
         SubCommand::with_name(self.command())
             .about(self.description())
             .arg_from_usage("-l --list 'List supported CRC algorithms'")
-            .arg(Arg::with_name("type").help("CRC type to compute").required_unless("list"))
+            .arg(
+                Arg::with_name("type")
+                    .help("CRC type to compute")
+                    .required_unless("list"),
+            )
             .arg_from_usage("[value] 'input value, reads from stdin in not present'")
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
         if args.is_present("list") {
             println!("Supported algorithms:");
-            println!("CRC16:
+            println!(
+                "CRC16:
     CRC_16_ARC, CRC_16_CDMA2000, CRC_16_CMS, CRC_16_DDS_110,
     CRC_16_DECT_R, CRC_16_DECT_X, CRC_16_DNP, CRC_16_EN_13757, CRC_16_GENIBUS, CRC_16_GSM,
     CRC_16_IBM_3740, CRC_16_IBM_SDLC, CRC_16_ISO_IEC_14443_3_A, CRC_16_KERMIT, CRC_16_LJ1200,
     CRC_16_MAXIM_DOW, CRC_16_MCRF4XX, CRC_16_MODBUS, CRC_16_NRSC_5, CRC_16_OPENSAFETY_A,
     CRC_16_OPENSAFETY_B, CRC_16_PROFIBUS, CRC_16_RIELLO, CRC_16_SPI_FUJITSU, CRC_16_T10_DIF,
-    CRC_16_TELEDISK, CRC_16_TMS37157, CRC_16_UMTS, CRC_16_USB, CRC_16_XMODEM");
-            println!("CRC32:
+    CRC_16_TELEDISK, CRC_16_TMS37157, CRC_16_UMTS, CRC_16_USB, CRC_16_XMODEM"
+            );
+            println!(
+                "CRC32:
     CRC_32_AIXM, CRC_32_AUTOSAR, CRC_32_BASE91_D, CRC_32_BZIP2, CRC_32_CD_ROM_EDC, CRC_32_CKSUM,
-    CRC_32_ISCSI, CRC_32_ISO_HDLC, CRC_32_JAMCRC, CRC_32_MPEG_2, CRC_32_XFER");
-            println!("CRC64:
-    CRC_64_ECMA_182, CRC_64_GO_ISO, CRC_64_WE, CRC_64_XZ");
+    CRC_32_ISCSI, CRC_32_ISO_HDLC, CRC_32_JAMCRC, CRC_32_MPEG_2, CRC_32_XFER"
+            );
+            println!(
+                "CRC64:
+    CRC_64_ECMA_182, CRC_64_GO_ISO, CRC_64_WE, CRC_64_XZ"
+            );
             println!("\nSee https://docs.rs/crc/2.1.0/crc/ for more info");
             process::exit(0);
         }
@@ -151,7 +161,9 @@ mod tests {
 
     #[test]
     fn test_crc() {
-        let crc = CRCApplet { crctype : "CRC_32_AIXM".to_string()};
+        let crc = CRCApplet {
+            crctype: "CRC_32_AIXM".to_string(),
+        };
         assert_eq!(
             "fa83f52a".as_bytes().to_vec(),
             crc.process("toto".as_bytes().to_vec())
