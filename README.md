@@ -46,6 +46,8 @@ $ bgrep -x 454c460201 /bin/ls
 0x1
 $ bgrep "\x45\x4c..\x01" /bin/ls
 0x1
+$ findso -p /lib/x86_64-linux-gnu/ -r memcpy /bin/ls
+/lib/x86_64-linux-gnu/libc.so.6
 ```
 
 ## How to use
@@ -93,32 +95,36 @@ for i in $(rsbkb --list) ; do ln -s rsbkb $i ; done
  * `slice input_file -0x10` will the last 0x10 bytes from `input_file`
 * `entropy`: entropy of a file
 * `bgrep`: simple binary grep
+* `findso`: find which ELF shared library (.so) exports a given name/function
 
 ### Getting help
 
 ```console
 $ rsbkb help
 USAGE:
-    rsbkb [SUBCOMMAND]
+    rsbkb [FLAGS] [SUBCOMMAND]
 
 FLAGS:
     -h, --help       Prints help information
+        --list       list applets
     -V, --version    Prints version information
 
 SUBCOMMANDS:
     b64           base64 encode
-    bofpatt       Buffer overflow pattern generator
+    bgrep         binary grep
+    bofpatt       buffer overflow pattern generator
     bofpattoff    Buffer overflow pattern offset finder
     crc           flexible CRC computation
     crc16         compute CRC-16
     crc32         compute CRC-32
     d64           base64 decode
     entropy       compute file entropy
+    findso        Find which .so implements a given function
     help          Prints this message or the help of the given subcommand(s)
     hex           hex encode
     slice         slice
     tsdec         TimeStamp decode
-    unhex         Decode hex data
+    unhex         hex decode
     urldec        URL decode
     urlenc        URL encode
     xor           xor value
