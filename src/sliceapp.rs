@@ -105,6 +105,6 @@ impl Applet for SliceApplet {
         } else {
             f.read_to_end(&mut res).expect("Read failed");
         }
-        return res.to_vec();
+        res.to_vec()
     }
 }

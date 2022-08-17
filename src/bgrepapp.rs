@@ -100,6 +100,6 @@ impl Applet for BgrepApplet {
         }
 
         /* Return empty Vec as we output directly on stdout */
-        return Vec::<u8>::new();
+        Vec::<u8>::new()
     }
 }

@@ -102,7 +102,7 @@ impl Applet for B64DecApplet {
 
         let decoded = base64::decode_config(&trimmed, self.encoding);
         match decoded {
-            Ok(res) => return res,
+            Ok(res) => res,
             Err(e) => {
                 if self.strict {
                     eprintln!("Decoding base64 failed: {}", e);
@@ -116,7 +116,7 @@ impl Applet for B64DecApplet {
                             if !self.strict {
                                 decoded.append(&mut end);
                             }
-                            return decoded;
+                            decoded
                         }
                         // Should not happen since we handle trailing data
                         // before in non-strict mode

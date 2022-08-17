@@ -45,20 +45,20 @@ impl UnHexApplet {
         trimmed.retain(|&x| x != 0x20);
         let res = hex::decode(&trimmed);
         match res {
-            Ok(decoded) => return decoded,
+            Ok(decoded) => decoded,
             Err(e) => match e {
                 hex::FromHexError::InvalidHexCharacter { c: _, index } => {
                     let mut end = trimmed.split_off(index);
                     let mut decoded = self.hex_decode_hexonly(trimmed);
                     decoded.append(&mut end);
-                    return decoded;
+                    decoded
                 }
                 hex::FromHexError::OddLength => {
                     // TODO: refactor
                     let mut end = trimmed.split_off(trimmed.len() - 1);
                     let mut decoded = self.hex_decode_hexonly(trimmed);
                     decoded.append(&mut end);
-                    return decoded;
+                    decoded
                 }
                 _ => panic!("{}", e),
             },

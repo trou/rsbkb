@@ -63,7 +63,7 @@ impl Applet for BofPattGenApplet {
         let mut res: Vec<u8> = Vec::with_capacity(self.len);
         gen_pattern(self.len, &mut res);
         res.truncate(self.len);
-        return res;
+        res
     }
 }
 

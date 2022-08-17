@@ -22,7 +22,7 @@ impl Applet for UrlEncApplet {
     fn process(&self, val: Vec<u8>) -> Vec<u8> {
         let encoded =
             percent_encoding::percent_encode(&val, percent_encoding::NON_ALPHANUMERIC).to_string();
-        return encoded.as_bytes().to_vec();
+        encoded.as_bytes().to_vec()
     }
 }
 
@@ -47,6 +47,6 @@ impl Applet for UrlDecApplet {
     fn process(&self, urlval: Vec<u8>) -> Vec<u8> {
         let trimmed: Vec<u8> = urlval.trim().into();
         let decoded: Vec<u8> = percent_encoding::percent_decode(&trimmed).collect();
-        return decoded;
+        decoded
     }
 }
