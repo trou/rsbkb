@@ -94,7 +94,7 @@ fn main() {
     };
 
     let mut app = clap::App::new("rsbkb")
-        .version("0.8")
+        .version("0.9")
         .author("Raphaël Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
         .arg_from_usage("--list  'list applets'")
