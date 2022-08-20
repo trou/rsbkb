@@ -82,7 +82,7 @@ impl Applet for FindSoApplet {
         Box::new(Self {
             files: Some(filenames),
             function: Some(function_val.to_string()),
-            is_ref: args.is_present("r"),
+            is_ref: args.is_present("ref"),
             paths,
         })
     }
