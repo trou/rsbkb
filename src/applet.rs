@@ -1,4 +1,4 @@
-use clap::{arg, App, SubCommand};
+use clap::{arg, App, Command};
 
 pub trait Applet {
     fn command(&self) -> &'static str;
@@ -6,8 +6,8 @@ pub trait Applet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet>;
 
-    fn subcommand(&self) -> App {
-        SubCommand::with_name(self.command())
+    fn clap_command(&self) -> App {
+        Command::new(self.command())
             .about(self.description())
             .arg(arg!([value] "input value, reads from stdin in not present"))
     }

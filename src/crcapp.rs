@@ -1,6 +1,6 @@
 extern crate crc;
 use crate::applet::Applet;
-use clap::{App, arg, Arg, SubCommand};
+use clap::{arg, App, Arg, Command};
 use crc::*;
 use std::process;
 
@@ -79,8 +79,8 @@ impl Applet for CRCApplet {
         })
     }
 
-    fn subcommand(&self) -> App {
-        SubCommand::with_name(self.command())
+    fn clap_command(&self) -> App {
+        Command::new(self.command())
             .about(self.description())
             .arg(arg!(-l --list  "List supported CRC algorithms"))
             .arg(

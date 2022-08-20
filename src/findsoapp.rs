@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use clap::{App, arg, SubCommand};
+use clap::{arg, App, Command};
 use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
@@ -24,8 +24,8 @@ impl Applet for FindSoApplet {
         "Find which .so implements a given function"
     }
 
-    fn subcommand(&self) -> App {
-        SubCommand::with_name(self.command())
+    fn clap_command(&self) -> App {
+        Command::new(self.command())
             .about(self.description())
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
             .arg_from_usage(

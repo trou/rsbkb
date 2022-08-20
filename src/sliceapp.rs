@@ -1,5 +1,5 @@
 use crate::applet::{Applet, FromStrWithRadix};
-use clap::{App, arg, SubCommand};
+use clap::{arg, App, Command};
 use std::fs::OpenOptions;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 use std::process;
@@ -19,8 +19,8 @@ impl Applet for SliceApplet {
         "slice"
     }
 
-    fn subcommand(&self) -> App {
-        SubCommand::with_name(self.command())
+    fn clap_command(&self) -> App {
+        Command::new(self.command())
             .about(self.description())
             .arg(arg!(<file>    "file to slice"))
             .arg(arg!(<start>   "start of slice, relative to end of file if negative"))

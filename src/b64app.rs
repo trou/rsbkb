@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use clap::{arg, App, SubCommand};
+use clap::{arg, App, Command};
 use std::process;
 
 pub struct B64EncApplet {
@@ -15,8 +15,8 @@ impl Applet for B64EncApplet {
         "base64 encode"
     }
 
-    fn subcommand(&self) -> App {
-        SubCommand::with_name(self.command())
+    fn clap_command(&self) -> App {
+        Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "Use URL-safe base64"))
             .arg(arg!([value] "input value, reads from stdin in not present"))
@@ -58,8 +58,8 @@ impl Applet for B64DecApplet {
         "base64 decode"
     }
 
-    fn subcommand(&self) -> App {
-        SubCommand::with_name(self.command())
+    fn clap_command(&self) -> App {
+        Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "Use URL-safe base64"))
             .arg(arg!(-s --strict "strict decoding, error on invalid data"))

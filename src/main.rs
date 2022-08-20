@@ -1,12 +1,10 @@
 //#![feature(trace_macros)]
 //trace_macros!(true);
-use std::env;
 use std::io;
 use std::io::{Read, Write};
-use std::path::Path;
 extern crate base64;
 extern crate clap;
-use clap::arg;
+use clap::Command;
 extern crate crc;
 extern crate hex;
 extern crate percent_encoding;
@@ -83,42 +81,38 @@ fn main() {
         FindSoApplet,
         TimeApplet
     );
-    let app_names: Vec<_> = apps.iter().map(|app| app.command()).collect();
 
-    /* Get arg0 */
-    let mut args: Vec<_> = env::args().collect();
-
-    let arg0 = Path::new(&args[0]).file_name();
-    let arg0 = match arg0 {
-        Some(a) => a.to_str().unwrap().to_string(),
-        None => panic!("No arg0"),
-    };
-
+    // Define a busybox-like multicall binary
+    // Subcommands must be defined both as subcommands for "rsbkb" and
+    // as main subcommands
     let mut app = clap::App::new("rsbkb")
+        .multicall(true)
         .version("1.0")
         .author("Raphaël Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
-        .arg(arg!(--list "list applets"))
-        .subcommands(apps.iter().map(|app| app.subcommand()));
-
-    // Check if arg0 is a supported subcommand and use it
-    if app_names.contains(&arg0.as_str()) {
-        args.insert(1, arg0);
-    }
+        .subcommand(
+            Command::new("rsbkb")
+                .subcommands([Command::new("list").about("list applets")])
+                .subcommand_value_name("APPLET")
+                .subcommand_help_heading("APPLETS")
+                .subcommands(apps.iter().map(|app| app.clap_command())),
+        )
+        .subcommands(apps.iter().map(|app| app.clap_command()));
 
     // Parse args
-    let matches = app.clone().get_matches_from(args);
+    let matches = app.get_matches_mut();
 
-    /* Check for --list */
-    if matches.is_present("list") {
-        for app in apps.iter() {
-            println!("{}", app.command());
-        }
-        return;
-    }
+    /* Check if we're called as "rsbkb" */
+    let subc = matches.subcommand_name();
+    let real_matches = if let Some("rsbkb") = subc {
+        // get applet
+        matches.subcommand().unwrap().1
+    } else {
+        &matches
+    };
 
     // Get subcommand and args
-    let (subcommand, sub_matches) = match matches.subcommand() {
+    let (subcommand, sub_matches) = match real_matches.subcommand() {
         Some((s, sm)) => (s, sm),
         _ => {
             app.print_help().expect("Help failed ;)");
@@ -126,6 +120,14 @@ fn main() {
             return;
         }
     };
+
+    // list applets
+    if subcommand == "list" {
+        for app in apps.iter() {
+            println!("{}", app.command());
+        }
+        return;
+    }
 
     // Find corresponding app
     let selected_app = apps.iter().find(|a| a.command() == subcommand).unwrap();
