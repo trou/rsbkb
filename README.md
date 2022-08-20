@@ -23,7 +23,7 @@ Various examples:
 ```
 $ unhex 4141:4141
 AA:AA
-$ echo '4141:4141' | unhex
+$ echo -n'4141:4141' | unhex
 AA:AA
 $ crc32 '41 41 41 32'
 e60ce752
@@ -32,14 +32,14 @@ e60ce752
 $ echo test | b64 | urlenc
 dGVzdAo%3D
 $ tsdec 146424672000234122
-2065-01-01 0:00:00.023412200
+2065-01-01T00:00:00.0234122Z
 $ tsdec 0
-1970-01-01 0:00:00.000000000
+1970-01-01T00:00:00Z
 $ rsbkb bofpatt 60
 Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9
 $ rsbkb bofpattoff -b 0x41623841
 Decoded pattern: Ab8A (big endian: true)
-54
+Offset: 54 (mod 20280) / 0x36
 $ echo -n tototutu | rsbkb entropy
 0.188
 $ bgrep -x 454c460201 /bin/ls
