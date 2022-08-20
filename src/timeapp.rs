@@ -1,5 +1,5 @@
 use crate::applet::{Applet, FromStrWithRadix};
-use clap::{App, SubCommand};
+use clap::{App, arg, SubCommand};
 use std::convert::TryFrom;
 use time::{error::ComponentRange, format_description, Duration, OffsetDateTime, UtcOffset};
 
@@ -61,8 +61,8 @@ impl Applet for TimeApplet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command())
             .about(self.description())
-            .arg_from_usage("-l --local 'show time in local time zone'")
-            .arg_from_usage("[value] 'input value, reads from stdin in not present'")
+            .arg(arg!(-l --local  "show time in local time zone"))
+            .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
     fn new() -> Box<dyn Applet> {

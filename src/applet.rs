@@ -1,4 +1,4 @@
-use clap::{App, SubCommand};
+use clap::{arg, App, SubCommand};
 
 pub trait Applet {
     fn command(&self) -> &'static str;
@@ -9,7 +9,7 @@ pub trait Applet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command())
             .about(self.description())
-            .arg_from_usage("[value] 'input value, reads from stdin in not present'")
+            .arg(arg!([value] "input value, reads from stdin in not present"))
     }
 
     /* By default, applets accept the input as:

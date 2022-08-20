@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use clap::{App, Arg, SubCommand};
+use clap::{App, arg, SubCommand};
 use std::fs;
 
 pub struct XorApplet {
@@ -18,12 +18,12 @@ impl Applet for XorApplet {
         SubCommand::with_name(self.command())
             .about(self.description())
             .arg(
-                Arg::from_usage("-x --xorkey=[KEY] 'Xor key in hex format'")
+                arg!(-x --xorkey [KEY]  "Xor key in hex format")
                     .required_unless("keyfile")
-                    .conflicts_with("keyfile"),
+                    .conflicts_with("keyfile")
             )
-            .arg_from_usage("-f --keyfile=[keyfile] 'File to use as key'")
-            .arg_from_usage("[value] 'input value, reads from stdin in not present'")
+            .arg(arg!(-f --keyfile [keyfile]  "File to use as key"))
+            .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
     fn new() -> Box<dyn Applet> {

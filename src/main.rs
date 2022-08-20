@@ -6,6 +6,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 extern crate base64;
 extern crate clap;
+use clap::arg;
 extern crate crc;
 extern crate hex;
 extern crate percent_encoding;
@@ -97,7 +98,7 @@ fn main() {
         .version("1.0")
         .author("Raphaël Rigo <devel@syscall.eu>")
         .about("Rust BlackBag")
-        .arg_from_usage("--list  'list applets'")
+        .arg(arg!(--list "list applets"))
         .subcommands(apps.iter().map(|app| app.subcommand()));
 
     // Check if arg0 is a supported subcommand and use it
@@ -118,7 +119,7 @@ fn main() {
 
     // Get subcommand and args
     let (subcommand, sub_matches) = match matches.subcommand() {
-        (s, Some(sm)) => (s, sm),
+        Some((s, sm)) => (s, sm),
         _ => {
             app.print_help().expect("Help failed ;)");
             println!();

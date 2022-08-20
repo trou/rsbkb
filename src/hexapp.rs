@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use clap::{App, SubCommand};
+use clap::{App, arg, SubCommand};
 use std::process;
 
 pub struct HexApplet {}
@@ -114,9 +114,9 @@ impl Applet for UnHexApplet {
 
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command()).about(self.description())
-             .arg_from_usage("-o --hex-only 'expect only hex data, stop at first non-hex byte (but copy the rest)'")
-             .arg_from_usage("-s --strict 'strict decoding, error on invalid data'")
-             .arg_from_usage("[value] 'input value, reads from stdin in not present'")
+             .arg(arg!(-o --"hex-only"  "expect only hex data, stop at first non-hex byte (but copy the rest)"))
+             .arg(arg!(-s --strict  "strict decoding, error on invalid data"))
+             .arg(arg!([value]  "input value, reads from stdin in not present"))
              .after_help("By default, decode all hex data in the input, regardless of garbage in-between.")
     }
 

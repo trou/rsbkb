@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use clap::{App, SubCommand};
+use clap::{App, arg, SubCommand};
 use memmap2::Mmap;
 use std::fs::File;
 use std::process;
@@ -33,9 +33,9 @@ impl Applet for BgrepApplet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command())
             .about(self.description())
-            .arg_from_usage("-x --hex 'pattern is hex'")
-            .arg_from_usage("<pattern> 'pattern to search'")
-            .arg_from_usage("<file>   'file to search'")
+            .arg(arg!(-x --hex  "pattern is hex"))
+            .arg(arg!(<pattern>  "pattern to search"))
+            .arg(arg!(<file>    "file to search"))
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {

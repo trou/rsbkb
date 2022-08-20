@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use clap::{App, SubCommand};
+use clap::{App, arg, SubCommand};
 use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
@@ -27,13 +27,13 @@ impl Applet for FindSoApplet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command())
             .about(self.description())
-            .arg_from_usage("-r 'use first file as reference ELF to get .so list from'")
+            .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
             .arg_from_usage(
                 "-p, --ldpath [LDPATH] '\':\' separated list of paths to look for .so in'",
             )
-            .arg_from_usage("-l, --ldconf [CONF] 'use config file to get LD paths'")
-            .arg_from_usage("<function> 'function to search'")
-            .arg_from_usage("<files>... 'files to search in'")
+            .arg(arg!(-l --ldconf [CONF]  "use config file to get LD paths"))
+            .arg(arg!(<function>  "function to search"))
+            .arg(arg!(<files>...  "files to search in"))
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {

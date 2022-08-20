@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::FromStrWithRadix;
-use clap::{App, SubCommand};
+use clap::{App, arg, SubCommand};
 use std::char;
 
 pub struct BofPattGenApplet {
@@ -46,7 +46,7 @@ impl Applet for BofPattGenApplet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command())
             .about(self.description())
-            .arg_from_usage("<length> 'Pattern length'")
+            .arg(arg!(<length>  "Pattern length"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
@@ -92,8 +92,8 @@ impl Applet for BofPattOffApplet {
     fn subcommand(&self) -> App {
         SubCommand::with_name(self.command())
             .about(self.description())
-            .arg_from_usage("-b --big-endian 'Parse hex value as big endian'")
-            .arg_from_usage("<extract> 'Pattern extract (Use 0xAABBCCDD for reg value)'")
+            .arg(arg!(-b --"big-endian"  "Parse hex value as big endian"))
+            .arg(arg!(<extract>  "Pattern extract (Use 0xAABBCCDD for reg value)"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
