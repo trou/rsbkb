@@ -71,7 +71,7 @@ or:
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
-for i in $(rsbkb --list) ; do ln -s rsbkb $i ; done
+for i in $(rsbkb list) ; do ln -s rsbkb $i ; done
 ```
 
 ## Included tools
@@ -101,15 +101,15 @@ for i in $(rsbkb --list) ; do ln -s rsbkb $i ; done
 
 ```console
 $ rsbkb help
+rsbkb 
+
 USAGE:
-    rsbkb [FLAGS] [SUBCOMMAND]
+    rsbkb [APPLET]
 
-FLAGS:
-    -h, --help       Prints help information
-        --list       list applets
-    -V, --version    Prints version information
+OPTIONS:
+    -h, --help    Print help information
 
-SUBCOMMANDS:
+APPLETS:
     b64           base64 encode
     bgrep         binary grep
     bofpatt       buffer overflow pattern generator
@@ -120,8 +120,9 @@ SUBCOMMANDS:
     d64           base64 decode
     entropy       compute file entropy
     findso        Find which .so implements a given function
-    help          Prints this message or the help of the given subcommand(s)
+    help          Print this message or the help of the given subcommand(s)
     hex           hex encode
+    list          list applets
     slice         slice
     tsdec         TimeStamp decode
     unhex         hex decode
@@ -134,10 +135,6 @@ slice
 
 USAGE:
     rsbkb slice <file> <start> [end]
-
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
 
 ARGS:
     <file>     file to slice
