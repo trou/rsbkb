@@ -2,7 +2,7 @@ use crate::applet::{Applet, FromStrWithRadix};
 use clap::{arg, App, Command};
 use std::fs::OpenOptions;
 use std::io::{BufReader, Read, Seek, SeekFrom};
-use std::process;
+use crate::errors::{Result, ResultExt};
 
 pub struct SliceApplet {
     file: Option<String>,
@@ -40,42 +40,42 @@ impl Applet for SliceApplet {
         })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filename = args.value_of("file").unwrap();
         let start_val = args.value_of("start").unwrap();
 
         /* Negative start: offset from the end. */
         let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix('-') {
             (
-                u64::from_str_with_radix(start_val_no_plus).expect("Invalid start"),
+                u64::from_str_with_radix(start_val_no_plus).chain_err(|| "Invalid value for 'start'")?,
                 true,
             )
         } else {
             (
-                u64::from_str_with_radix(start_val).expect("Invalid start"),
+                u64::from_str_with_radix(start_val).chain_err(|| "Invalid value for 'start'")?,
                 false,
             )
         };
 
         let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
             if let Some(end_val_no_plus) = end_val.strip_prefix('+') {
-                Some(start + u64::from_str_with_radix(end_val_no_plus).expect("Invalid end"))
+                Some(start + u64::from_str_with_radix(end_val_no_plus).chain_err(|| "Invalid end")?)
             } else {
-                Some(u64::from_str_with_radix(end_val).expect("Invalid end"))
+                Some(u64::from_str_with_radix(end_val).chain_err(|| "Invalid end")?)
             }
         } else {
             None
         };
 
-        Box::new(Self {
+        Ok(Box::new(Self {
             file: Some(filename.to_string()),
             start,
             from_end,
             end,
-        })
+        }))
     }
 
-    fn process(&self, _val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
         let start = self.start;
         let filename = self.file.as_ref().unwrap();
         let mut f = BufReader::new(
@@ -83,28 +83,27 @@ impl Applet for SliceApplet {
                 .read(true)
                 .write(false)
                 .open(filename)
-                .expect("can't open file"),
+                .chain_err(|| "can't open file")?
         );
 
         if self.from_end {
             f.seek(SeekFrom::End(-(self.start as i64)))
-                .expect("Seek failed");
+                .chain_err(|| "seek failed")?;
         } else {
-            f.seek(SeekFrom::Start(self.start)).expect("Seek failed");
+            f.seek(SeekFrom::Start(self.start)).chain_err(|| "seek failed")?;
         }
         let mut res = vec![];
         if self.end.is_some() {
             let end = self.end.unwrap();
             if end < start {
-                eprintln!("Error: specified end < start");
-                process::exit(1);
+                bail!("Error: specified end < start");
             }
             let len: usize = (end - start) as usize;
             res.resize(len, 0);
-            f.read_exact(&mut res).expect("Read failed");
+            f.read_exact(&mut res).chain_err(|| "Read failed")?;
         } else {
-            f.read_to_end(&mut res).expect("Read failed");
+            f.read_to_end(&mut res).chain_err(|| "Read failed")?;
         }
-        res.to_vec()
+        Ok(res.to_vec())
     }
 }
