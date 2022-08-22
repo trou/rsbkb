@@ -130,7 +130,7 @@ mod tests {
     use super::*;
 
     fn run_decode(app: &TimeApplet, ts: &str) -> String {
-        String::from_utf8(app.process(ts.as_bytes().to_vec())).unwrap()
+        String::from_utf8(app.process_test(ts.as_bytes().to_vec())).unwrap()
     }
 
     #[test]

@@ -141,7 +141,7 @@ mod tests {
         };
         assert_eq!(
             "::::".as_bytes().to_vec(),
-            d64.process("::::".as_bytes().to_vec())
+            d64.process_test("::::".as_bytes().to_vec())
         );
     }
 
@@ -151,34 +151,37 @@ mod tests {
             encoding: base64::STANDARD,
         };
         // https://tools.ietf.org/html/rfc4648#page-12
-        assert_eq!("".as_bytes().to_vec(), b64.process("".as_bytes().to_vec()));
+        assert_eq!(
+            "".as_bytes().to_vec(),
+            b64.process_test("".as_bytes().to_vec())
+        );
         assert_eq!(
             "Zg==".as_bytes().to_vec(),
-            b64.process("f".as_bytes().to_vec())
+            b64.process_test("f".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm8=".as_bytes().to_vec(),
-            b64.process("fo".as_bytes().to_vec())
+            b64.process_test("fo".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9v".as_bytes().to_vec(),
-            b64.process("foo".as_bytes().to_vec())
+            b64.process_test("foo".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9vYg==".as_bytes().to_vec(),
-            b64.process("foob".as_bytes().to_vec())
+            b64.process_test("foob".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9vYmE=".as_bytes().to_vec(),
-            b64.process("fooba".as_bytes().to_vec())
+            b64.process_test("fooba".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9vYmFy".as_bytes().to_vec(),
-            b64.process("foobar".as_bytes().to_vec())
+            b64.process_test("foobar".as_bytes().to_vec())
         );
 
         let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
-        assert_eq!("FPucA9l+".as_bytes().to_vec(), b64.process(test));
+        assert_eq!("FPucA9l+".as_bytes().to_vec(), b64.process_test(test));
     }
 
     #[test]
@@ -187,38 +190,41 @@ mod tests {
             encoding: base64::URL_SAFE.decode_allow_trailing_bits(true),
         };
         // https://tools.ietf.org/html/rfc4648#page-12
-        assert_eq!("".as_bytes().to_vec(), b64.process("".as_bytes().to_vec()));
+        assert_eq!(
+            "".as_bytes().to_vec(),
+            b64.process_test("".as_bytes().to_vec())
+        );
         assert_eq!(
             "Zg==".as_bytes().to_vec(),
-            b64.process("f".as_bytes().to_vec())
+            b64.process_test("f".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm8=".as_bytes().to_vec(),
-            b64.process("fo".as_bytes().to_vec())
+            b64.process_test("fo".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9v".as_bytes().to_vec(),
-            b64.process("foo".as_bytes().to_vec())
+            b64.process_test("foo".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9vYg==".as_bytes().to_vec(),
-            b64.process("foob".as_bytes().to_vec())
+            b64.process_test("foob".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9vYmE=".as_bytes().to_vec(),
-            b64.process("fooba".as_bytes().to_vec())
+            b64.process_test("fooba".as_bytes().to_vec())
         );
         assert_eq!(
             "Zm9vYmFy".as_bytes().to_vec(),
-            b64.process("foobar".as_bytes().to_vec())
+            b64.process_test("foobar".as_bytes().to_vec())
         );
         assert_eq!(
             "ZZ-A".as_bytes().to_vec(),
-            b64.process([0x65, 0x9F, 0x80].to_vec())
+            b64.process_test([0x65, 0x9F, 0x80].to_vec())
         );
 
         let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
-        assert_eq!("FPucA9l-".as_bytes().to_vec(), b64.process(test));
+        assert_eq!("FPucA9l-".as_bytes().to_vec(), b64.process_test(test));
     }
 
     #[test]
@@ -232,7 +238,7 @@ mod tests {
         };
 
         let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
-        assert_eq!(to_enc, d64.process(b64.process(to_enc.clone())));
+        assert_eq!(to_enc, d64.process_test(b64.process_test(to_enc.clone())));
     }
 
     #[test]
@@ -246,6 +252,6 @@ mod tests {
         };
 
         let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
-        assert_eq!(to_enc, d64.process(b64.process(to_enc.clone())));
+        assert_eq!(to_enc, d64.process_test(b64.process_test(to_enc.clone())));
     }
 }

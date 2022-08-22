@@ -54,7 +54,7 @@ mod tests {
     use super::*;
 
     fn run_ent(app: &EntropyApplet, val: Vec<u8>) -> String {
-        String::from_utf8(app.process(val)).unwrap()
+        String::from_utf8(app.process_test(val)).unwrap()
     }
 
     #[test]

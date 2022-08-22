@@ -141,7 +141,7 @@ mod tests {
     fn test_gen() {
         let pat = BofPattGenApplet { len: 40 };
         assert_eq!(
-            String::from_utf8(pat.process(vec![])).unwrap(),
+            String::from_utf8(pat.process_test(vec![])).unwrap(),
             "Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2A"
         );
     }
@@ -152,7 +152,7 @@ mod tests {
             extract: String::from("Yq6Y"),
         };
         assert_eq!(
-            String::from_utf8(pat.process(vec![])).unwrap(),
+            String::from_utf8(pat.process_test(vec![])).unwrap(),
             "Offset: 19218 (mod 20280) / 0x4b12"
         );
     }
@@ -163,7 +163,7 @@ mod tests {
             extract: String::from("***"),
         };
         assert_eq!(
-            String::from_utf8(pat.process(vec![])).unwrap(),
+            String::from_utf8(pat.process_test(vec![])).unwrap(),
             "Pattern not found"
         );
     }

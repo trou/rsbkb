@@ -141,7 +141,7 @@ mod tests {
     fn test_hex() {
         let hex = HexApplet {};
         assert_eq!(
-            String::from_utf8(hex.process([0, 0xFF].to_vec()).unwrap()).unwrap(),
+            String::from_utf8(hex.process_test([0, 0xFF].to_vec())).unwrap(),
             "00ff"
         );
     }

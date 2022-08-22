@@ -155,7 +155,7 @@ mod tests {
         let crc32 = CRC32Applet {};
         assert_eq!(
             "10cca4f1".as_bytes().to_vec(),
-            crc32.process("toto".as_bytes().to_vec())
+            crc32.process_test("toto".as_bytes().to_vec())
         );
     }
 
@@ -166,7 +166,7 @@ mod tests {
         };
         assert_eq!(
             "fa83f52a".as_bytes().to_vec(),
-            crc.process("toto".as_bytes().to_vec())
+            crc.process_test("toto".as_bytes().to_vec())
         );
     }
 
@@ -175,7 +175,7 @@ mod tests {
         let crc16 = CRC16Applet {};
         assert_eq!(
             "97a8".as_bytes().to_vec(),
-            crc16.process("toto".as_bytes().to_vec())
+            crc16.process_test("toto".as_bytes().to_vec())
         );
     }
 }

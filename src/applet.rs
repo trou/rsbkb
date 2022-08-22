@@ -25,6 +25,12 @@ pub trait Applet {
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>>;
 
+    /* No error wrapping to make it easier to test */
+    #[cfg(test)]
+    fn process_test(&self, val: Vec<u8>) -> Vec<u8> {
+        self.process(val).unwrap()
+    }
+
     fn new() -> Box<dyn Applet>
     where
         Self: Sized;
