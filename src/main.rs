@@ -177,7 +177,9 @@ fn main() {
         let stderr = &mut ::std::io::stderr();
         let errmsg = "Error writing to stderr";
 
-        writeln!(stderr, "{}", e.display_chain()).expect(errmsg);
+        let msg = e.display_chain().to_string();
+
+        writeln!(stderr, "{}", msg.trim_end()).expect(errmsg);
         ::std::process::exit(1);
     }
 }
