@@ -4,6 +4,7 @@ use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
+use crate::errors::{Result, ResultExt};
 
 pub struct FindSoApplet {
     // Function we are looking for
@@ -49,7 +50,7 @@ impl Applet for FindSoApplet {
         })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filenames: Vec<String> = args
             .values_of("files")
             .unwrap()
@@ -67,7 +68,7 @@ impl Applet for FindSoApplet {
             // parse ld.so.conf "like" file
             if args.is_present("ldconf") {
                 let ldpaths: Vec<PathBuf> = fs::read_to_string(args.value_of("ldconf").unwrap())
-                    .expect("Could not read config")
+                    .chain_err(|| "Could not read config file")?
                     .split('\n')
                     .filter(|p| p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
                     .map(|p| PathBuf::from_str(p).unwrap())
@@ -79,23 +80,23 @@ impl Applet for FindSoApplet {
             None
         };
 
-        Box::new(Self {
+        Ok(Box::new(Self {
             files: Some(filenames),
             function: Some(function_val.to_string()),
             is_ref: args.is_present("ref"),
             paths,
-        })
+        }))
     }
 
-    fn process(&self, _val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
         let fun = self.function.as_ref().unwrap();
         let mut sofiles: Vec<String> = Vec::from(self.files.as_ref().unwrap().as_slice());
 
         // Load dependencies from first file
         if self.is_ref {
-            let f_data: Vec<u8> = fs::read(sofiles[0].as_str()).expect("Could not read file");
+            let f_data: Vec<u8> = fs::read(sofiles[0].as_str()).chain_err(|| "Could not read file")?;
             let elf_ref =
-                elf::Elf::parse(f_data.as_slice()).expect("Could not parse reference as ELF");
+                elf::Elf::parse(f_data.as_slice()).chain_err(|| "Could not parse reference as ELF")?;
             sofiles.extend(
                 elf_ref
                     .libraries
@@ -119,23 +120,8 @@ impl Applet for FindSoApplet {
             }
         }
         for f in sofiles.iter() {
-            let f_data_r = fs::read(f);
-            let f_data: Vec<u8> = match f_data_r {
-                Err(e) => {
-                    eprintln!("Could not read file {}: {}", f, e);
-                    continue;
-                }
-                Ok(f) => f,
-            };
-
-            let elf_file_r = elf::Elf::parse(f_data.as_slice());
-            let elf_file = match elf_file_r {
-                Err(e) => {
-                    eprintln!("Could not parse {} as ELF: {}", f, e);
-                    continue;
-                }
-                Ok(f) => f,
-            };
+            let f_data = fs::read(f).chain_err(|| format!("Could not read file {}", f))?;
+            let elf_file = elf::Elf::parse(f_data.as_slice()).chain_err(|| format!("Could not parse {} as ELF", f))?;
 
             let strtab = elf_file.dynstrtab;
 
@@ -148,6 +134,6 @@ impl Applet for FindSoApplet {
             }
         }
         /* Return empty Vec as we output directly on stdout */
-        Vec::<u8>::new()
+        Ok(Vec::<u8>::new())
     }
 }
