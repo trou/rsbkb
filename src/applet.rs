@@ -1,10 +1,11 @@
 use clap::{arg, App, Command};
+use crate::errors::{Result, ResultExt};
 
 pub trait Applet {
     fn command(&self) -> &'static str;
     fn description(&self) -> &'static str;
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet>;
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>>;
 
     fn clap_command(&self) -> App {
         Command::new(self.command())
@@ -22,7 +23,7 @@ pub trait Applet {
         Some("value")
     }
 
-    fn process(&self, val: Vec<u8>) -> Vec<u8>;
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>>;
 
     fn new() -> Box<dyn Applet>
     where
@@ -57,37 +58,37 @@ impl SliceExt for [u8] {
 }
 
 pub trait FromStrWithRadix {
-    fn from_str_with_radix(s: &str) -> Result<Self, std::num::ParseIntError>
+    fn from_str_with_radix(s: &str) -> Result<Self>
     where
         Self: Sized;
 }
 
 impl FromStrWithRadix for u64 {
-    fn from_str_with_radix(s: &str) -> Result<u64, std::num::ParseIntError> {
+    fn from_str_with_radix(s: &str) -> Result<u64> {
         if s.len() > 2 && &s[0..2] == "0x" {
             u64::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
-        }
+        }.chain_err(|| "Could not convert str")
     }
 }
 
 impl FromStrWithRadix for i64 {
-    fn from_str_with_radix(s: &str) -> Result<i64, std::num::ParseIntError> {
+    fn from_str_with_radix(s: &str) -> Result<i64> {
         if s.len() > 2 && &s[0..2] == "0x" {
             i64::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
-        }
+        }.chain_err(|| "Could not convert str")
     }
 }
 
 impl FromStrWithRadix for usize {
-    fn from_str_with_radix(s: &str) -> Result<usize, std::num::ParseIntError> {
+    fn from_str_with_radix(s: &str) -> Result<usize> {
         if s.len() > 2 && &s[0..2] == "0x" {
             usize::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
-        }
+        }.chain_err(|| "Could not convert str")
     }
 }

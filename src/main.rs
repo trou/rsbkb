@@ -1,5 +1,16 @@
 //#![feature(trace_macros)]
 //trace_macros!(true);
+
+#[macro_use]
+extern crate error_chain;
+
+mod errors {
+    // Create the Error, ErrorKind, ResultExt, and Result types
+    error_chain! {}
+}
+
+pub use errors::*;
+
 use std::io;
 use std::io::{Read, Write};
 extern crate base64;
@@ -146,10 +157,29 @@ fn main() {
     };
 
     let selected_app = selected_app.parse_args(sub_matches);
-    let res = selected_app.process(inputval);
+
+    if let Err(ref e) = selected_app {
+        use error_chain::ChainedError;
+        let stderr = &mut ::std::io::stderr();
+        let errmsg = "Error writing to stderr";
+
+        writeln!(stderr, "{}", e.display_chain()).expect(errmsg);
+        ::std::process::exit(1);
+    }
+
+    let res = selected_app.unwrap().process(inputval);
+
+    if let Err(ref e) = res {
+        use error_chain::ChainedError;
+        let stderr = &mut ::std::io::stderr();
+        let errmsg = "Error writing to stderr";
+
+        writeln!(stderr, "{}", e.display_chain()).expect(errmsg);
+        ::std::process::exit(1);
+    }
 
     let mut stdout = io::stdout();
-    stdout.write_all(&res).expect("Write failed");
+    stdout.write_all(&res.unwrap()).expect("Write failed");
 
     /* Only add a newline when outputing to a terminal */
     if atty::is(Stream::Stdout) {

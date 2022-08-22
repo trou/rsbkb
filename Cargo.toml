@@ -15,6 +15,7 @@ time = {version = "0.3", features=["local-offset", "formatting"]}
 regex = {version = "1.5", default-features=false, features=["std", "perf"]}
 memmap2 = "0.5"
 goblin = {version = "0.5.4", features=["elf32", "elf64", "endian_fd"]}
+error-chain = "0.12.4"
 
 
 [[bin]]
