@@ -72,7 +72,7 @@ macro_rules! applets {
         };
 }
 
-fn main() {
+fn main_with_errors() -> Result<()> {
     applets!(
         apps = HexApplet,
         UnHexApplet,
@@ -128,7 +128,7 @@ fn main() {
         _ => {
             app.print_help().expect("Help failed ;)");
             println!();
-            return;
+            return Ok(());
         }
     };
 
@@ -137,7 +137,7 @@ fn main() {
         for app in apps.iter() {
             println!("{}", app.command());
         }
-        return;
+        return Ok(());
     }
 
     // Find corresponding app
@@ -156,19 +156,22 @@ fn main() {
         }
     };
 
-    let selected_app = selected_app.parse_args(sub_matches);
+    let selected_app = selected_app.parse_args(sub_matches)?;
 
-    if let Err(ref e) = selected_app {
-        use error_chain::ChainedError;
-        let stderr = &mut ::std::io::stderr();
-        let errmsg = "Error writing to stderr";
+    let res = selected_app.process(inputval)?;
 
-        writeln!(stderr, "{}", e.display_chain()).expect(errmsg);
-        ::std::process::exit(1);
+    let mut stdout = io::stdout();
+    stdout.write_all(&res).expect("Write failed");
+
+    /* Only add a newline when outputing to a terminal */
+    if atty::is(Stream::Stdout) {
+        println!();
     }
+    Ok(())
+}
 
-    let res = selected_app.unwrap().process(inputval);
-
+fn main() {
+    let res = main_with_errors();
     if let Err(ref e) = res {
         use error_chain::ChainedError;
         let stderr = &mut ::std::io::stderr();
@@ -176,13 +179,5 @@ fn main() {
 
         writeln!(stderr, "{}", e.display_chain()).expect(errmsg);
         ::std::process::exit(1);
-    }
-
-    let mut stdout = io::stdout();
-    stdout.write_all(&res.unwrap()).expect("Write failed");
-
-    /* Only add a newline when outputing to a terminal */
-    if atty::is(Stream::Stdout) {
-        println!();
     }
 }
