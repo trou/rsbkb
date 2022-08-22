@@ -1,5 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
+use crate::errors::{Result};
 
 pub struct UrlEncApplet {}
 
@@ -15,14 +16,14 @@ impl Applet for UrlEncApplet {
         Box::new(Self {})
     }
 
-    fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self {})
+    fn parse_args(&self, _args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {}))
     }
 
-    fn process(&self, val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
         let encoded =
             percent_encoding::percent_encode(&val, percent_encoding::NON_ALPHANUMERIC).to_string();
-        encoded.as_bytes().to_vec()
+        Ok(encoded.as_bytes().to_vec())
     }
 }
 
@@ -40,13 +41,13 @@ impl Applet for UrlDecApplet {
         Box::new(Self {})
     }
 
-    fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self {})
+    fn parse_args(&self, _args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {}))
     }
 
-    fn process(&self, urlval: Vec<u8>) -> Vec<u8> {
+    fn process(&self, urlval: Vec<u8>) -> Result<Vec<u8>> {
         let trimmed: Vec<u8> = urlval.trim().into();
         let decoded: Vec<u8> = percent_encoding::percent_decode(&trimmed).collect();
-        decoded
+        Ok(decoded)
     }
 }
