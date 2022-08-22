@@ -1,7 +1,7 @@
 use crate::applet::Applet;
+use crate::errors::{Result, ResultExt};
 use clap::{arg, App, Command};
 use std::fs;
-use crate::errors::{Result, ResultExt};
 
 pub struct XorApplet {
     key_bytes: Vec<u8>,

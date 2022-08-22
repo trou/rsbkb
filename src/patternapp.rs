@@ -1,8 +1,8 @@
 use crate::applet::Applet;
 use crate::applet::FromStrWithRadix;
+use crate::errors::Result;
 use clap::{arg, App, Command};
 use std::char;
-use crate::errors::{Result};
 
 pub struct BofPattGenApplet {
     len: usize,
@@ -102,8 +102,7 @@ impl Applet for BofPattOffApplet {
         let arg_val = args.value_of("extract").unwrap();
         let big_endian = args.is_present("big-endian");
         if &arg_val[0..2] == "0x" {
-            let mut arg_int =
-                u64::from_str_with_radix(arg_val)?;
+            let mut arg_int = u64::from_str_with_radix(arg_val)?;
             while arg_int != 0 {
                 let c = char::from_u32((arg_int & 0xFF) as u32).unwrap();
                 if big_endian {

@@ -1,5 +1,5 @@
-use clap::{arg, App, Command};
 use crate::errors::{Result, ResultExt};
+use clap::{arg, App, Command};
 
 pub trait Applet {
     fn command(&self) -> &'static str;
@@ -69,7 +69,8 @@ impl FromStrWithRadix for u64 {
             u64::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
-        }.chain_err(|| "Could not convert str")
+        }
+        .chain_err(|| "Could not convert str")
     }
 }
 
@@ -79,7 +80,8 @@ impl FromStrWithRadix for i64 {
             i64::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
-        }.chain_err(|| "Could not convert str")
+        }
+        .chain_err(|| "Could not convert str")
     }
 }
 
@@ -89,6 +91,7 @@ impl FromStrWithRadix for usize {
             usize::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
-        }.chain_err(|| "Could not convert str")
+        }
+        .chain_err(|| "Could not convert str")
     }
 }

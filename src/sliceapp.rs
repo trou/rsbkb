@@ -1,8 +1,8 @@
 use crate::applet::{Applet, FromStrWithRadix};
+use crate::errors::{Result, ResultExt};
 use clap::{arg, App, Command};
 use std::fs::OpenOptions;
 use std::io::{BufReader, Read, Seek, SeekFrom};
-use crate::errors::{Result, ResultExt};
 
 pub struct SliceApplet {
     file: Option<String>,
@@ -47,7 +47,8 @@ impl Applet for SliceApplet {
         /* Negative start: offset from the end. */
         let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix('-') {
             (
-                u64::from_str_with_radix(start_val_no_plus).chain_err(|| "Invalid value for 'start'")?,
+                u64::from_str_with_radix(start_val_no_plus)
+                    .chain_err(|| "Invalid value for 'start'")?,
                 true,
             )
         } else {
@@ -59,7 +60,10 @@ impl Applet for SliceApplet {
 
         let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
             if let Some(end_val_no_plus) = end_val.strip_prefix('+') {
-                Some(start + u64::from_str_with_radix(end_val_no_plus).chain_err(|| "Invalid end")?)
+                Some(
+                    start
+                        + u64::from_str_with_radix(end_val_no_plus).chain_err(|| "Invalid end")?,
+                )
             } else {
                 Some(u64::from_str_with_radix(end_val).chain_err(|| "Invalid end")?)
             }
@@ -83,14 +87,15 @@ impl Applet for SliceApplet {
                 .read(true)
                 .write(false)
                 .open(filename)
-                .chain_err(|| "can't open file")?
+                .chain_err(|| "can't open file")?,
         );
 
         if self.from_end {
             f.seek(SeekFrom::End(-(self.start as i64)))
                 .chain_err(|| "seek failed")?;
         } else {
-            f.seek(SeekFrom::Start(self.start)).chain_err(|| "seek failed")?;
+            f.seek(SeekFrom::Start(self.start))
+                .chain_err(|| "seek failed")?;
         }
         let mut res = vec![];
         if self.end.is_some() {

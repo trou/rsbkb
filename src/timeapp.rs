@@ -1,8 +1,8 @@
 use crate::applet::{Applet, FromStrWithRadix};
+use crate::errors::{Result, ResultExt};
 use clap::{arg, App, Command};
 use std::convert::TryFrom;
 use time::{format_description, Duration, OffsetDateTime, UtcOffset};
-use crate::errors::{Result, ResultExt};
 
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.

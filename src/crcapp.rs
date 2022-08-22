@@ -1,8 +1,8 @@
 extern crate crc;
 use crate::applet::Applet;
+use crate::errors::Result;
 use clap::{arg, App, Arg, Command};
 use crc::*;
-use crate::errors::{Result};
 use std::process;
 
 pub struct CRC16Applet {}

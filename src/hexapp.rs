@@ -1,7 +1,7 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use clap::{arg, App, Command};
 use crate::errors::{Result, ResultExt};
+use clap::{arg, App, Command};
 
 pub struct HexApplet {}
 
@@ -153,11 +153,15 @@ mod tests {
             hexonly: true,
         };
         assert_eq!(
-            unhex.process("01 23 45 67 89 ab cd ef".as_bytes().to_vec()).unwrap(),
+            unhex
+                .process("01 23 45 67 89 ab cd ef".as_bytes().to_vec())
+                .unwrap(),
             [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]
         );
         assert_eq!(
-            unhex.process("0123456789abcdef".as_bytes().to_vec()).unwrap(),
+            unhex
+                .process("0123456789abcdef".as_bytes().to_vec())
+                .unwrap(),
             [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]
         );
     }

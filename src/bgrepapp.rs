@@ -1,8 +1,8 @@
 use crate::applet::Applet;
+use crate::errors::{Result, ResultExt};
 use clap::{arg, App, Command};
 use memmap2::Mmap;
 use std::fs::File;
-use crate::errors::{Result, ResultExt};
 
 use regex::bytes::{Regex, RegexBuilder};
 
@@ -14,7 +14,9 @@ fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
 
     builder.unicode(false);
     builder.dot_matches_new_line(true);
-    builder.build().chain_err(|| "Could not build regular expression")
+    builder
+        .build()
+        .chain_err(|| "Could not build regular expression")
 }
 
 pub struct BgrepApplet {

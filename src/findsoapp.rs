@@ -1,10 +1,10 @@
 use crate::applet::Applet;
+use crate::errors::{Result, ResultExt};
 use clap::{arg, App, Command};
 use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
-use crate::errors::{Result, ResultExt};
 
 pub struct FindSoApplet {
     // Function we are looking for
@@ -94,9 +94,10 @@ impl Applet for FindSoApplet {
 
         // Load dependencies from first file
         if self.is_ref {
-            let f_data: Vec<u8> = fs::read(sofiles[0].as_str()).chain_err(|| "Could not read file")?;
-            let elf_ref =
-                elf::Elf::parse(f_data.as_slice()).chain_err(|| "Could not parse reference as ELF")?;
+            let f_data: Vec<u8> =
+                fs::read(sofiles[0].as_str()).chain_err(|| "Could not read file")?;
+            let elf_ref = elf::Elf::parse(f_data.as_slice())
+                .chain_err(|| "Could not parse reference as ELF")?;
             sofiles.extend(
                 elf_ref
                     .libraries
@@ -121,7 +122,8 @@ impl Applet for FindSoApplet {
         }
         for f in sofiles.iter() {
             let f_data = fs::read(f).chain_err(|| format!("Could not read file {}", f))?;
-            let elf_file = elf::Elf::parse(f_data.as_slice()).chain_err(|| format!("Could not parse {} as ELF", f))?;
+            let elf_file = elf::Elf::parse(f_data.as_slice())
+                .chain_err(|| format!("Could not parse {} as ELF", f))?;
 
             let strtab = elf_file.dynstrtab;
 

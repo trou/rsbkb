@@ -1,7 +1,7 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use clap::{arg, App, Command};
 use crate::errors::{Result, ResultExt};
+use clap::{arg, App, Command};
 
 pub struct B64EncApplet {
     encoding: base64::Config,
@@ -119,7 +119,9 @@ impl Applet for B64DecApplet {
                         }
                         // Should not happen since we handle trailing data
                         // before in non-strict mode
-                        base64::DecodeError::InvalidLength => decoded.chain_err(|| "Decoding base64 failed")
+                        base64::DecodeError::InvalidLength => {
+                            decoded.chain_err(|| "Decoding base64 failed")
+                        }
                     }
                 }
             }
