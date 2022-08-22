@@ -1,7 +1,7 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
 use clap::{arg, App, Command};
-use std::process;
+use crate::errors::{Result, ResultExt};
 
 pub struct B64EncApplet {
     encoding: base64::Config,
@@ -28,20 +28,20 @@ impl Applet for B64EncApplet {
         })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {
             encoding: if args.is_present("URL") {
                 base64::URL_SAFE
             } else {
                 base64::STANDARD
             },
-        })
+        }))
     }
 
-    fn process(&self, val: Vec<u8>) -> Vec<u8> {
-        base64::encode_config(&val, self.encoding)
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
+        Ok(base64::encode_config(&val, self.encoding)
             .as_bytes()
-            .to_vec()
+            .to_vec())
     }
 }
 
@@ -73,15 +73,15 @@ impl Applet for B64DecApplet {
         })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {
             encoding: if args.is_present("URL") {
                 base64::URL_SAFE.decode_allow_trailing_bits(true)
             } else {
                 self.encoding
             },
             strict: args.is_present("strict"),
-        })
+        }))
     }
 
     /* b64_decode. With two modes:
@@ -89,40 +89,37 @@ impl Applet for B64DecApplet {
      * - lenient: decode the b64 input until the first invalid byte
      *   and return the decoded data concatenated with the rest
      */
-    fn process(&self, b64val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, b64val: Vec<u8>) -> Result<Vec<u8>> {
         let mut trimmed: Vec<u8> = b64val.trim().into();
 
         // If the length is invalid, decode up to the supplementary bytes
         if trimmed.len() % 4 != 0 && !self.strict {
             let end = trimmed.len() - (trimmed.len() % 4);
-            let mut decoded = self.process((&trimmed[0..end]).to_vec());
+            let mut decoded = self.process((&trimmed[0..end]).to_vec())?;
             decoded.extend_from_slice(&trimmed[end..]);
-            return decoded;
+            return Ok(decoded);
         }
 
         let decoded = base64::decode_config(&trimmed, self.encoding);
         match decoded {
-            Ok(res) => res,
-            Err(e) => {
+            Ok(res) => Ok(res),
+            Err(ref e) => {
                 if self.strict {
-                    eprintln!("Decoding base64 failed: {}", e);
-                    process::exit(1);
+                    return decoded.chain_err(|| "Decoding base64 failed");
                 } else {
                     match e {
                         base64::DecodeError::InvalidLastSymbol(offset, _)
                         | base64::DecodeError::InvalidByte(offset, _) => {
-                            let mut end = trimmed.split_off(offset);
-                            let mut decoded = self.process(trimmed);
+                            let mut end = trimmed.split_off(*offset);
+                            let mut decoded = self.process(trimmed)?;
                             if !self.strict {
                                 decoded.append(&mut end);
                             }
-                            decoded
+                            Ok(decoded)
                         }
                         // Should not happen since we handle trailing data
                         // before in non-strict mode
-                        base64::DecodeError::InvalidLength => {
-                            panic!("Decoding base64 failed: {}", e)
-                        }
+                        base64::DecodeError::InvalidLength => decoded.chain_err(|| "Decoding base64 failed")
                     }
                 }
             }
