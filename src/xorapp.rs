@@ -1,6 +1,7 @@
 use crate::applet::Applet;
 use clap::{arg, App, Command};
 use std::fs;
+use crate::errors::{Result, ResultExt};
 
 pub struct XorApplet {
     key_bytes: Vec<u8>,
@@ -30,18 +31,18 @@ impl Applet for XorApplet {
         Box::new(Self { key_bytes: vec![] })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let key_bytes = if args.is_present("xorkey") {
             hex::decode(args.value_of("xorkey").unwrap().replace(' ', ""))
-                .expect("Xor key decoding failed")
+                .chain_err(|| "Xor key decoding failed")?
         } else {
-            fs::read(args.value_of("keyfile").unwrap()).expect("can't open keyfile")
+            fs::read(args.value_of("keyfile").unwrap()).chain_err(|| "Could not read keyfile")?
         };
-        Box::new(Self { key_bytes })
+        Ok(Box::new(Self { key_bytes }))
     }
 
-    fn process(&self, val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
         let inf_key = self.key_bytes.iter().cycle(); // Iterate endlessly over key bytes
-        return val.iter().zip(inf_key).map(|(x, k)| x ^ k).collect();
+        return Ok(val.iter().zip(inf_key).map(|(x, k)| x ^ k).collect());
     }
 }
