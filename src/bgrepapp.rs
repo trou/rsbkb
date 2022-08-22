@@ -2,19 +2,19 @@ use crate::applet::Applet;
 use clap::{arg, App, Command};
 use memmap2::Mmap;
 use std::fs::File;
-use std::process;
+use crate::errors::{Result, ResultExt};
 
 use regex::bytes::{Regex, RegexBuilder};
 
 /// Build the regex pattern with the given options.
 /// By default, the `unicode` flag is set to false, and `dot_matches_new_line` set to true.
 /// Code borrowed from gahag's bgrep (https://github.com/gahag/bgrep)
-fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex, regex::Error> {
+fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
     let mut builder = RegexBuilder::new(pattern.as_ref());
 
     builder.unicode(false);
     builder.dot_matches_new_line(true);
-    builder.build()
+    builder.build().chain_err(|| "Could not build regular expression")
 }
 
 pub struct BgrepApplet {
@@ -49,7 +49,7 @@ impl Applet for BgrepApplet {
         })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filename = args.value_of("file").unwrap();
         let pattern_val = args.value_of("pattern").unwrap();
 
@@ -57,8 +57,7 @@ impl Applet for BgrepApplet {
         let mut s = String::new();
         let final_pat = if args.is_present("hex") {
             if pattern_val.len() % 2 != 0 {
-                eprintln!("Error: hex pattern length is not even");
-                process::exit(1);
+                bail!("Error: hex pattern length is not even");
             }
             for i in 0..(pattern_val.len() / 2) {
                 s += "\\x";
@@ -69,20 +68,20 @@ impl Applet for BgrepApplet {
             pattern_val
         };
 
-        let pattern = build_pattern(&final_pat).expect("Invalid regex");
+        let pattern = build_pattern(&final_pat)?;
 
-        Box::new(Self {
+        Ok(Box::new(Self {
             file: Some(filename.to_string()),
             pattern: Some(pattern),
-        })
+        }))
     }
 
-    fn process(&self, _val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
         let filename = self.file.as_ref().unwrap();
-        let f = File::open(filename).expect("Cannot open file");
+        let f = File::open(filename).chain_err(|| "Could not open file")?;
 
         /* Mmap is necessarily unsafe as data can change unexpectedly */
-        let data = unsafe { Mmap::map(&f).expect("Could not mmap input file") };
+        let data = unsafe { Mmap::map(&f).chain_err(|| "Could not mmap input file")? };
 
         let regex = self.pattern.as_ref().unwrap();
         let matches = regex.find_iter(&data);
@@ -100,6 +99,6 @@ impl Applet for BgrepApplet {
         }
 
         /* Return empty Vec as we output directly on stdout */
-        Vec::<u8>::new()
+        Ok(Vec::<u8>::new())
     }
 }
