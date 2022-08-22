@@ -1,7 +1,8 @@
 use crate::applet::{Applet, FromStrWithRadix};
 use clap::{arg, App, Command};
 use std::convert::TryFrom;
-use time::{error::ComponentRange, format_description, Duration, OffsetDateTime, UtcOffset};
+use time::{format_description, Duration, OffsetDateTime, UtcOffset};
+use crate::errors::{Result, ResultExt};
 
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.
@@ -14,18 +15,18 @@ use time::{error::ComponentRange, format_description, Duration, OffsetDateTime, 
       2025: 1735689600
       2030: 1900000000
 */
-fn decode_epoch_seconds(ts: i64) -> Result<OffsetDateTime, ComponentRange> {
-    OffsetDateTime::from_unix_timestamp(ts)
+fn decode_epoch_seconds(ts: i64) -> Result<OffsetDateTime> {
+    OffsetDateTime::from_unix_timestamp(ts).chain_err(|| "Could not decode as epoch")
 }
 
 /* Decode epoch date with more precision */
-fn decode_epoch_subseconds(ts: i64, resolution: i64) -> Result<OffsetDateTime, ComponentRange> {
+fn decode_epoch_subseconds(ts: i64, resolution: i64) -> Result<OffsetDateTime> {
     let micros: i32 = i32::try_from((ts % resolution) * (1_000_000_000 / resolution)).unwrap();
     let unix = OffsetDateTime::from_unix_timestamp(ts / resolution);
     if let Ok(date) = unix {
         Ok(date + Duration::new(0, micros))
     } else {
-        unix
+        unix.chain_err(|| "Could not decode as epoch")
     }
 }
 
@@ -41,7 +42,7 @@ fn decode_epoch_subseconds(ts: i64, resolution: i64) -> Result<OffsetDateTime, C
       2025: 133801632000000000
       2065: 146424672000000000
 */
-fn decode_windows_filetime(ts: i64) -> Result<OffsetDateTime, ComponentRange> {
+fn decode_windows_filetime(ts: i64) -> Result<OffsetDateTime> {
     /* Shift to Unix Epoch */
     let shifted = ts - 116_444_736_000_000_000;
     decode_epoch_subseconds(shifted, 10_000_000)
@@ -69,13 +70,13 @@ impl Applet for TimeApplet {
         Box::new(Self { local: false })
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {
             local: args.is_present("local"),
-        })
+        }))
     }
 
-    fn process(&self, val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
         let ts_str = String::from_utf8(val).unwrap();
         let ts_int = i64::from_str_with_radix(ts_str.as_str()).unwrap();
         let ts_len = if !ts_str.starts_with("0x") {
@@ -110,7 +111,7 @@ impl Applet for TimeApplet {
             }
             _ => decode_epoch_seconds(ts_int),
         }
-        .expect("Could not convert timestamp");
+        .chain_err(|| "Could not convert timestamp")?;
         let ts = if self.local {
             let offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
             ts.to_offset(offset)
@@ -119,8 +120,8 @@ impl Applet for TimeApplet {
         };
         let date_str = ts
             .format(&format_description::well_known::Rfc3339)
-            .expect("Date formatting failed");
-        return date_str.as_bytes().to_vec();
+            .chain_err(|| "Date formatting failed")?;
+        return Ok(date_str.as_bytes().to_vec());
     }
 }
 
