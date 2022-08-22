@@ -2,6 +2,7 @@ use crate::applet::Applet;
 use crate::applet::FromStrWithRadix;
 use clap::{arg, App, Command};
 use std::char;
+use crate::errors::{Result};
 
 pub struct BofPattGenApplet {
     len: usize,
@@ -49,21 +50,21 @@ impl Applet for BofPattGenApplet {
             .arg(arg!(<length>  "Pattern length"))
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let max_len: usize = UPPER.len() * LOWER.len() * DIGITS.len() * 3;
         let len_s = args.value_of("length").unwrap();
-        let len = usize::from_str_with_radix(len_s).expect("invalid length");
+        let len = usize::from_str_with_radix(len_s)?;
         if len > max_len {
             eprintln!("Warning: pattern length's longer than max_len {}.", max_len);
         }
-        Box::new(Self { len })
+        Ok(Box::new(Self { len }))
     }
 
-    fn process(&self, _data: Vec<u8>) -> Vec<u8> {
+    fn process(&self, _data: Vec<u8>) -> Result<Vec<u8>> {
         let mut res: Vec<u8> = Vec::with_capacity(self.len);
         gen_pattern(self.len, &mut res);
         res.truncate(self.len);
-        res
+        Ok(res)
     }
 }
 
@@ -96,13 +97,13 @@ impl Applet for BofPattOffApplet {
             .arg(arg!(<extract>  "Pattern extract (Use 0xAABBCCDD for reg value)"))
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Box<dyn Applet> {
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let mut extract = String::new();
         let arg_val = args.value_of("extract").unwrap();
         let big_endian = args.is_present("big-endian");
         if &arg_val[0..2] == "0x" {
             let mut arg_int =
-                u64::from_str_with_radix(arg_val).expect("Invalid hex value for pattern");
+                u64::from_str_with_radix(arg_val)?;
             while arg_int != 0 {
                 let c = char::from_u32((arg_int & 0xFF) as u32).unwrap();
                 if big_endian {
@@ -116,10 +117,10 @@ impl Applet for BofPattOffApplet {
         } else {
             extract.push_str(arg_val);
         }
-        Box::new(Self { extract })
+        Ok(Box::new(Self { extract }))
     }
 
-    fn process(&self, _val: Vec<u8>) -> Vec<u8> {
+    fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
         let max_len: usize = UPPER.len() * LOWER.len() * DIGITS.len() * 3;
         let mut full_pattern: Vec<u8> = Vec::with_capacity(max_len);
         gen_pattern(max_len, &mut full_pattern);
@@ -129,7 +130,7 @@ impl Applet for BofPattOffApplet {
             Some(o) => format!("Offset: {} (mod {}) / {:#x}", o, max_len, o),
             _ => String::from("Pattern not found"),
         };
-        return res.as_bytes().to_vec();
+        Ok(res.as_bytes().to_vec())
     }
 }
 
