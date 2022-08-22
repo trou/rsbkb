@@ -1,4 +1,5 @@
 use crate::applet::Applet;
+use crate::errors::{Result};
 
 pub struct EntropyApplet {}
 
@@ -37,14 +38,14 @@ impl Applet for EntropyApplet {
         Box::new(Self {})
     }
 
-    fn parse_args(&self, _args: &clap::ArgMatches) -> Box<dyn Applet> {
-        Box::new(Self {})
+    fn parse_args(&self, _args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {}))
     }
 
-    fn process(&self, val: Vec<u8>) -> Vec<u8> {
-        format!("{:.3}", entropy(val.as_slice()))
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
+        Ok(format!("{:.3}", entropy(val.as_slice()))
             .as_bytes()
-            .to_vec()
+            .to_vec())
     }
 }
 
