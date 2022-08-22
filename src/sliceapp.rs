@@ -101,7 +101,7 @@ impl Applet for SliceApplet {
         if self.end.is_some() {
             let end = self.end.unwrap();
             if end < start {
-                bail!("Error: specified end < start");
+                bail!("specified end < start");
             }
             let len: usize = (end - start) as usize;
             res.resize(len, 0);
