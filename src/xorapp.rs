@@ -46,3 +46,26 @@ impl Applet for XorApplet {
         return Ok(val.iter().zip(inf_key).map(|(x, k)| x ^ k).collect());
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple() {
+        let data = vec![1, 0x55, 0xAA, 0xFF, 0];
+        let x = XorApplet {
+            key_bytes: data.clone(),
+        };
+        assert_eq!(x.process_test(vec![0, 0, 0, 0, 0]), data);
+        assert_eq!(
+            x.process_test(vec![0xFF, 0xFF, 0xFF, 0xFF, 0xFF]),
+            vec![0xFE, 0xAA, 0x55, 0, 0xFF]
+        );
+        assert_eq!(x.process_test(vec![0]), vec![1]);
+        assert_eq!(
+            x.process_test(vec![0, 0, 0, 0, 0, 0]),
+            vec![1, 0x55, 0xAA, 0xFF, 0, 1]
+        );
+    }
+}
