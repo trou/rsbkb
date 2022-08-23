@@ -17,6 +17,9 @@ memmap2 = "0.5"
 goblin = {version = "0.5.4", features=["elf32", "elf64", "endian_fd"]}
 error-chain = "0.12.4"
 
+[dev-dependencies]
+tempfile = "3.3.0"
+rand = "0.8.5"
 
 [[bin]]
 name = "rsbkb"

@@ -112,3 +112,76 @@ impl Applet for SliceApplet {
         Ok(res.to_vec())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::{thread_rng, Rng};
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    fn setup() -> (NamedTempFile, [u8; 100]) {
+        let mut rand_data = [0u8; 100];
+        thread_rng().fill(&mut rand_data[..]);
+
+        let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
+        tmpfile.write(&rand_data).unwrap();
+        (tmpfile, rand_data)
+    }
+
+    #[test]
+    fn test_empty_slice() {
+        let (tmpfile, d) = setup();
+        let filepath = tmpfile.path().to_str().unwrap().to_string();
+        let pat = SliceApplet {
+            file: Some(filepath),
+            end: Some(0),
+            start: 0,
+            from_end: false,
+        };
+
+        assert_eq!(d[0..0], pat.process_test(Vec::new()));
+    }
+
+    #[test]
+    fn test_slice() {
+        let (tmpfile, d) = setup();
+        let filepath = tmpfile.path().to_str().unwrap().to_string();
+        let pat = SliceApplet {
+            file: Some(filepath),
+            end: Some(10),
+            start: 0,
+            from_end: false,
+        };
+
+        assert_eq!(d[0..10], pat.process_test(Vec::new()));
+    }
+
+    #[test]
+    fn test_slice_to_end() {
+        let (tmpfile, d) = setup();
+        let filepath = tmpfile.path().to_str().unwrap().to_string();
+        let pat = SliceApplet {
+            file: Some(filepath),
+            end: None,
+            start: 10,
+            from_end: false,
+        };
+
+        assert_eq!(d[10..], pat.process_test(Vec::new()));
+    }
+
+    #[test]
+    fn test_slice_from_end() {
+        let (tmpfile, d) = setup();
+        let filepath = tmpfile.path().to_str().unwrap().to_string();
+        let pat = SliceApplet {
+            file: Some(filepath),
+            end: None,
+            start: 10,
+            from_end: true,
+        };
+
+        assert_eq!(d[(d.len() - 10)..], pat.process_test(Vec::new()));
+    }
+}
