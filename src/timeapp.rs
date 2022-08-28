@@ -85,7 +85,7 @@ impl Applet for TimeApplet {
         } else {
             // if in hex, compute length using log
             let ts_f: f64 = ts_int as f64;
-            ((ts_f.ln() / 10.0_f64.ln()) as usize) + 1
+            (ts_f.log10() as usize) + 1
         };
         let ts = match (ts_len, ts_int) {
             (10, _) => decode_epoch_seconds(ts_int),

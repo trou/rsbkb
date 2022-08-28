@@ -116,7 +116,7 @@ impl Applet for CRCApplet {
             println!("\nSee https://docs.rs/crc/2.1.0/crc/ for more info");
             process::exit(0);
         }
-        Ok(Box::new(CRCApplet {
+        Ok(Box::new(Self {
             crctype: args.value_of("type").unwrap().to_string(),
         }))
     }

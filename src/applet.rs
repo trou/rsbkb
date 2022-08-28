@@ -43,11 +43,11 @@ pub trait SliceExt {
 
 impl SliceExt for [u8] {
     fn trim(&self) -> &[u8] {
-        fn is_whitespace(c: &u8) -> bool {
+        const fn is_whitespace(c: &u8) -> bool {
             *c == b'\t' || *c == b' ' || *c == b'\n' || *c == b'\r'
         }
 
-        fn is_not_whitespace(c: &u8) -> bool {
+        const fn is_not_whitespace(c: &u8) -> bool {
             !is_whitespace(c)
         }
 
@@ -70,9 +70,9 @@ pub trait FromStrWithRadix {
 }
 
 impl FromStrWithRadix for u64 {
-    fn from_str_with_radix(s: &str) -> Result<u64> {
+    fn from_str_with_radix(s: &str) -> Result<Self> {
         if s.len() > 2 && &s[0..2] == "0x" {
-            u64::from_str_radix(&s[2..], 16)
+            Self::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
         }
@@ -81,9 +81,9 @@ impl FromStrWithRadix for u64 {
 }
 
 impl FromStrWithRadix for i64 {
-    fn from_str_with_radix(s: &str) -> Result<i64> {
+    fn from_str_with_radix(s: &str) -> Result<Self> {
         if s.len() > 2 && &s[0..2] == "0x" {
-            i64::from_str_radix(&s[2..], 16)
+            Self::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
         }
@@ -92,9 +92,9 @@ impl FromStrWithRadix for i64 {
 }
 
 impl FromStrWithRadix for usize {
-    fn from_str_with_radix(s: &str) -> Result<usize> {
+    fn from_str_with_radix(s: &str) -> Result<Self> {
         if s.len() > 2 && &s[0..2] == "0x" {
-            usize::from_str_radix(&s[2..], 16)
+            Self::from_str_radix(&s[2..], 16)
         } else {
             s.parse()
         }

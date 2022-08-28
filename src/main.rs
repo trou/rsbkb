@@ -115,7 +115,7 @@ fn main_with_errors() -> Result<()> {
 
     /* Check if we're called as "rsbkb" */
     let subc = matches.subcommand_name();
-    let real_matches = if let Some("rsbkb") = subc {
+    let real_matches = if subc == Some("rsbkb") {
         // get applet
         matches.subcommand().unwrap().1
     } else {

@@ -14,7 +14,7 @@ impl Applet for HexApplet {
     }
 
     fn parse_args(&self, _args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        Ok(Box::new(HexApplet {}))
+        Ok(Box::new(Self {}))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
@@ -22,7 +22,7 @@ impl Applet for HexApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(HexApplet {})
+        Box::new(Self {})
     }
 }
 
@@ -103,7 +103,7 @@ impl Applet for UnHexApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(UnHexApplet {
+        Box::new(Self {
             hexonly: false,
             strict: false,
         })
@@ -118,7 +118,7 @@ impl Applet for UnHexApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        Ok(Box::new(UnHexApplet {
+        Ok(Box::new(Self {
             hexonly: args.is_present("hex-only") || args.is_present("strict"),
             strict: args.is_present("strict"),
         }))
