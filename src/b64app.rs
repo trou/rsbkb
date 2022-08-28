@@ -105,7 +105,7 @@ impl Applet for B64DecApplet {
             Ok(res) => Ok(res),
             Err(ref e) => {
                 if self.strict {
-                    return decoded.chain_err(|| "Decoding base64 failed");
+                    decoded.chain_err(|| "Decoding base64 failed")
                 } else {
                     match e {
                         base64::DecodeError::InvalidLastSymbol(offset, _)
