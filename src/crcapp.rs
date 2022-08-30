@@ -61,7 +61,7 @@ macro_rules! algs {
     ( $ident:expr; $size:tt; $( $x:expr ),* ) => {
         match $ident {
             $( stringify!($x) => Crc::<$size>::new(&$x), )*
-            _ => { bail!("Error: Unknown CRC algorithm.") } ,
+            _ => { bail!("Unknown CRC algorithm.") } ,
         }
     }
 }
@@ -142,7 +142,7 @@ impl Applet for CRCApplet {
             let crc64 = algs!(alg_name; u64; CRC_64_ECMA_182, CRC_64_GO_ISO, CRC_64_WE, CRC_64_XZ);
             return Ok(format!("{:016x}", crc64.checksum(&val)).as_bytes().to_vec());
         }
-        bail!("Error: Unknown CRC algorithm");
+        bail!("Unknown CRC algorithm");
     }
 }
 
