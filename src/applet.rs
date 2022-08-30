@@ -5,6 +5,12 @@ pub trait Applet {
     fn command(&self) -> &'static str;
     fn description(&self) -> &'static str;
 
+    /* Overload to return "false" if the applet directly
+     * outputs data to stdout */
+    fn returns_data(&self) -> bool {
+        true
+    }
+
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>>;
 
     fn clap_command(&self) -> App {

@@ -54,6 +54,7 @@ impl Applet for B64DecApplet {
     fn command(&self) -> &'static str {
         "d64"
     }
+
     fn description(&self) -> &'static str {
         "base64 decode"
     }

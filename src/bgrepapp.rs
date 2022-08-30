@@ -28,8 +28,13 @@ impl Applet for BgrepApplet {
     fn command(&self) -> &'static str {
         "bgrep"
     }
+
     fn description(&self) -> &'static str {
         "binary grep"
+    }
+
+    fn returns_data(&self) -> bool {
+        false
     }
 
     fn clap_command(&self) -> App {

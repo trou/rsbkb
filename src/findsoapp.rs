@@ -21,8 +21,13 @@ impl Applet for FindSoApplet {
     fn command(&self) -> &'static str {
         "findso"
     }
+
     fn description(&self) -> &'static str {
         "Find which .so implements a given function"
+    }
+
+    fn returns_data(&self) -> bool {
+        false
     }
 
     fn clap_command(&self) -> App {

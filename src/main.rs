@@ -160,12 +160,14 @@ fn main_with_errors() -> Result<()> {
 
     let res = selected_app.process(inputval)?;
 
-    let mut stdout = io::stdout();
-    stdout.write_all(&res).expect("Write failed");
+    if selected_app.returns_data() {
+        let mut stdout = io::stdout();
+        stdout.write_all(&res).expect("Write failed");
 
-    /* Only add a newline when outputing to a terminal */
-    if atty::is(Stream::Stdout) {
-        println!();
+        /* Only add a newline when outputing to a terminal */
+        if atty::is(Stream::Stdout) {
+            println!();
+        }
     }
     Ok(())
 }
