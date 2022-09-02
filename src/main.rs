@@ -96,13 +96,15 @@ fn main_with_errors() -> Result<()> {
     // Define a busybox-like multicall binary
     // Subcommands must be defined both as subcommands for "rsbkb" and
     // as main subcommands
-    let mut app = clap::App::new("rsbkb")
+    let mut app = clap::Command::new("rsbkb")
         .multicall(true)
         .version("1.0")
-        .author("Raphaël Rigo <devel@syscall.eu>")
-        .about("Rust BlackBag")
+        .propagate_version(true)
         .subcommand(
             Command::new("rsbkb")
+                .author("Raphaël Rigo <devel@syscall.eu>")
+                .about("Rust BlackBag")
+                .arg_required_else_help(true)
                 .subcommands([Command::new("list").about("list applets")])
                 .subcommand_value_name("APPLET")
                 .subcommand_help_heading("APPLETS")
@@ -123,14 +125,9 @@ fn main_with_errors() -> Result<()> {
     };
 
     // Get subcommand and args
-    let (subcommand, sub_matches) = match real_matches.subcommand() {
-        Some((s, sm)) => (s, sm),
-        _ => {
-            app.print_help().expect("Help failed ;)");
-            println!();
-            return Ok(());
-        }
-    };
+    let (subcommand, sub_matches) = real_matches
+        .subcommand()
+        .chain_err(|| "Subcommand required")?;
 
     // list applets
     if subcommand == "list" {
