@@ -10,7 +10,7 @@ It also includes various practical tools like `entropy` or a timestamp decoder.
 
 ## Examples
 
-Read 10 bytes from `/etc/passwd` starting at offset `0x2f`, `xor` then with
+Read 10 bytes from `/etc/passwd` starting at offset `0x2f`, then `xor` with
 `0xF2`, encode it in URL-safe base64 and finally URL encode it:
 
 ```
@@ -67,7 +67,7 @@ or:
 
 
 * All tools take values as an argument on the command line or if not present, read stdin
-* Tool name can be specified on the command line `rsbkb -t TOOL`
+* Tool name can be specified on the command line `rsbkb TOOL`
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
 
 ```
