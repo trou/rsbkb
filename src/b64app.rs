@@ -96,7 +96,7 @@ impl Applet for B64DecApplet {
         // If the length is invalid, decode up to the supplementary bytes
         if trimmed.len() % 4 != 0 && !self.strict {
             let end = trimmed.len() - (trimmed.len() % 4);
-            let mut decoded = self.process((&trimmed[0..end]).to_vec())?;
+            let mut decoded = self.process(trimmed[0..end].to_vec())?;
             decoded.extend_from_slice(&trimmed[end..]);
             return Ok(decoded);
         }

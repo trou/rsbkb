@@ -76,7 +76,7 @@ impl UnHexApplet {
                 Some(a) => a,
             };
 
-            if (chr[0] as char).is_digit(16) && (chr[1] as char).is_digit(16) {
+            if (chr[0] as char).is_ascii_hexdigit() && (chr[1] as char).is_ascii_hexdigit() {
                 res.append(&mut hex::decode(chr).chain_err(|| "hex decoding failed")?);
                 /* make sure we dont miss the last char if we have something like
                  * "41 " as input */
