@@ -1,3 +1,4 @@
+* 2023-01-08: v1.1: better usage info and error reporting
 * 2022-08-20: v1.0: `findso` applet, clap update
 * 2022-06-25: v0.9: `time` crate update, basic implementation of binary grep in `bgrep`
 * 2022-05-01: v0.8: handle most errors gracefully, add more CRC algorithms (`crc` command), negative offset for `slice`

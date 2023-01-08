@@ -98,7 +98,7 @@ fn main_with_errors() -> Result<()> {
     // as main subcommands
     let mut app = clap::Command::new("rsbkb")
         .multicall(true)
-        .version("1.0")
+        .version(env!("CARGO_PKG_VERSION"))
         .propagate_version(true)
         .subcommand(
             Command::new("rsbkb")
