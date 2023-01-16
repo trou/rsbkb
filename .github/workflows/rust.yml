@@ -8,12 +8,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose --release
     - name: Run tests
       run: cargo test --verbose
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         name: rsbkb-linux64-${{ github.sha }}
         path: target/release/rsbkb
