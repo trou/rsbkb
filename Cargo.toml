@@ -5,11 +5,11 @@ authors = ["Raphaël Rigo <devel@syscall.eu>"]
 edition = "2018"
 
 [dependencies]
-hex = "0.3.2"
+hex = "0.4"
 base64 = "0.13"
-percent-encoding = "2.1.0"
+percent-encoding = "2.2.0"
 clap = "3.2"
-crc = "2"
+crc = "3"
 atty = "0.2"
 time = {version = "0.3", features=["local-offset", "formatting"]}
 regex = {version = "1.5", default-features=false, features=["std", "perf"]}
