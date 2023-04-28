@@ -18,7 +18,7 @@ impl Applet for HexApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        Ok(hex::encode(&val).as_bytes().to_vec())
+        Ok(hex::encode(val).as_bytes().to_vec())
     }
 
     fn new() -> Box<dyn Applet> {

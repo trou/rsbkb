@@ -39,7 +39,7 @@ impl Applet for B64EncApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        Ok(base64::encode_config(&val, self.encoding)
+        Ok(base64::encode_config(val, self.encoding)
             .as_bytes()
             .to_vec())
     }
