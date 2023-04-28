@@ -157,7 +157,7 @@ fn main_with_errors() -> Result<()> {
                 let mut stderr = io::stderr();
                 writeln!(
                     stderr,
-                    "'{}' is a file, are you sure you did want to pass it to stdin instead?",
+                    "'{}' is a file, maybe you want to pass it to stdin instead?",
                     argname_val
                 )
                 .expect("Error writing to stderr");
