@@ -13,6 +13,7 @@ pub use errors::*;
 
 use std::io;
 use std::io::{Read, Write};
+use std::path::Path;
 extern crate base64;
 extern crate clap;
 use clap::Command;
@@ -149,7 +150,19 @@ fn main_with_errors() -> Result<()> {
                 .read_to_end(&mut inputval)
                 .expect("Reading stdin failed");
         } else {
-            inputval = sub_matches.value_of(argname).unwrap().as_bytes().to_vec();
+            /* Check if the given argument could be a filename, which is probably not
+             * what the user wants */
+            let argname_val = sub_matches.value_of(argname).unwrap();
+            if Path::new(argname_val).exists() {
+                let mut stderr = io::stderr();
+                writeln!(
+                    stderr,
+                    "'{}' is a file, are you sure you did want to pass it to stdin instead?",
+                    argname_val
+                )
+                .expect("Error writing to stderr");
+            }
+            inputval = argname_val.as_bytes().to_vec();
         }
     };
 
