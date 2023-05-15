@@ -21,7 +21,11 @@ impl Applet for B64EncApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "Use URL-safe base64"))
-            .arg(arg!(-a --alphabet <ALPHABET> "specify custom alphabet").conflicts_with("URL"))
+            .arg(
+                arg!(-a --alphabet <ALPHABET> "specify custom alphabet")
+                    .conflicts_with("URL")
+                    .required(false),
+            )
             .arg(arg!([value] "input value, reads from stdin in not present"))
     }
 
@@ -71,7 +75,11 @@ impl Applet for B64DecApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "use URL-safe base64"))
-            .arg(arg!(-a --alphabet <ALPHABET> "specify custom alphabet").conflicts_with("URL"))
+            .arg(
+                arg!(-a --alphabet <ALPHABET> "specify custom alphabet")
+                    .conflicts_with("URL")
+                    .required(false),
+            )
             .arg(arg!(-s --strict "strict decoding, error on invalid data"))
             .arg(arg!([value] "input value, reads from stdin in not present"))
     }
