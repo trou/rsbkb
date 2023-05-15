@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 hex = "0.4"
-base64 = "0.13"
+base64 = "0.21"
 percent-encoding = "2.2.0"
 clap = "3.2"
 crc = "3"
