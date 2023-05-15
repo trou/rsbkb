@@ -21,6 +21,7 @@ impl Applet for B64EncApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "Use URL-safe base64"))
+            .arg(arg!(-a --alphabet <ALPHABET> "specify custom alphabet").conflicts_with("URL"))
             .arg(arg!([value] "input value, reads from stdin in not present"))
     }
 
@@ -34,6 +35,13 @@ impl Applet for B64EncApplet {
         Ok(Box::new(Self {
             engine: if args.is_present("URL") {
                 general_purpose::URL_SAFE
+            } else if args.is_present("alphabet") {
+                let custom = base64::alphabet::Alphabet::new(
+                    args.value_of("alphabet")
+                        .chain_err(|| "alphabet is not specified")?,
+                )
+                .chain_err(|| "Invalid alphabet")?;
+                base64::engine::GeneralPurpose::new(&custom, base64::engine::general_purpose::PAD)
             } else {
                 general_purpose::STANDARD
             },
@@ -41,7 +49,7 @@ impl Applet for B64EncApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        Ok(self.engine.encode(&val).as_bytes() .to_vec())
+        Ok(self.engine.encode(&val).as_bytes().to_vec())
     }
 }
 
@@ -62,13 +70,15 @@ impl Applet for B64DecApplet {
     fn clap_command(&self) -> App {
         Command::new(self.command())
             .about(self.description())
-            .arg(arg!(-u --URL "Use URL-safe base64"))
+            .arg(arg!(-u --URL "use URL-safe base64"))
+            .arg(arg!(-a --alphabet <ALPHABET> "specify custom alphabet").conflicts_with("URL"))
             .arg(arg!(-s --strict "strict decoding, error on invalid data"))
             .arg(arg!([value] "input value, reads from stdin in not present"))
     }
 
     fn new() -> Box<dyn Applet> {
-        let engine_cfg = base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
+        let engine_cfg =
+            base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
         Box::new(Self {
             engine: general_purpose::GeneralPurpose::new(&base64::alphabet::STANDARD, engine_cfg),
             strict: false,
@@ -76,8 +86,19 @@ impl Applet for B64DecApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let engine_cfg = base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
-        let alphabet = if args.is_present("URL") { base64::alphabet::URL_SAFE}  else { base64::alphabet::STANDARD};
+        let engine_cfg =
+            base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
+        let alphabet = if args.is_present("URL") {
+            base64::alphabet::URL_SAFE
+        } else if args.is_present("alphabet") {
+            base64::alphabet::Alphabet::new(
+                args.value_of("alphabet")
+                    .chain_err(|| "alphabet is not specified")?,
+            )
+            .chain_err(|| "Invalid alphabet")?
+        } else {
+            base64::alphabet::STANDARD
+        };
         Ok(Box::new(Self {
             engine: general_purpose::GeneralPurpose::new(&alphabet, engine_cfg),
             strict: false,
@@ -138,7 +159,8 @@ mod tests {
 
     #[test]
     fn test_b64_inv_lenient() {
-        let engine_cfg = base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
+        let engine_cfg =
+            base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
         let engine = general_purpose::GeneralPurpose::new(&base64::alphabet::STANDARD, engine_cfg);
 
         let d64 = B64DecApplet {
@@ -193,7 +215,7 @@ mod tests {
     #[test]
     fn test_b64_url_enc() {
         let b64 = B64EncApplet {
-            engine: general_purpose::URL_SAFE
+            engine: general_purpose::URL_SAFE,
         };
         // https://tools.ietf.org/html/rfc4648#page-12
         assert_eq!(
@@ -232,7 +254,7 @@ mod tests {
         let test = [0x14, 0xfb, 0x9c, 0x03, 0xd9, 0x7e].to_vec();
         assert_eq!("FPucA9l-".as_bytes().to_vec(), b64.process_test(test));
     }
- 
+
     #[test]
     fn test_encode_and_back() {
         let b64 = B64EncApplet {
@@ -250,11 +272,11 @@ mod tests {
     #[test]
     fn test_encode_and_back_url() {
         let b64 = B64EncApplet {
-            engine: general_purpose::URL_SAFE
+            engine: general_purpose::URL_SAFE,
         };
         let d64 = B64DecApplet {
             strict: true,
-            engine: general_purpose::URL_SAFE
+            engine: general_purpose::URL_SAFE,
         };
 
         let to_enc = [0x74, 0x65, 0x73, 0x74, 0x52, 0xaf, 0x20].to_vec();
