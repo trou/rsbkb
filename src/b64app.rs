@@ -53,7 +53,7 @@ impl Applet for B64EncApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        Ok(self.engine.encode(&val).as_bytes().to_vec())
+        Ok(self.engine.encode(val).as_bytes().to_vec())
     }
 }
 
