@@ -1,4 +1,4 @@
-use crate::errors::{Result, ResultExt};
+use anyhow::{Context, Result};
 use clap::{arg, App, Command};
 
 pub trait Applet {
@@ -82,7 +82,7 @@ impl FromStrWithRadix for u64 {
         } else {
             s.parse()
         }
-        .chain_err(|| "Could not convert str")
+        .with_context(|| "Could not convert str")
     }
 }
 
@@ -93,7 +93,7 @@ impl FromStrWithRadix for i64 {
         } else {
             s.parse()
         }
-        .chain_err(|| "Could not convert str")
+        .with_context(|| "Could not convert str")
     }
 }
 
@@ -104,6 +104,6 @@ impl FromStrWithRadix for usize {
         } else {
             s.parse()
         }
-        .chain_err(|| "Could not convert str")
+        .with_context(|| "Could not convert str")
     }
 }

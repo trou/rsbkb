@@ -1,5 +1,5 @@
 use crate::applet::{Applet, FromStrWithRadix};
-use crate::errors::{Result, ResultExt};
+use anyhow::{Context, Result};
 use clap::{arg, App, Command};
 use std::convert::TryFrom;
 use time::{format_description, Duration, OffsetDateTime, UtcOffset};
@@ -16,7 +16,7 @@ use time::{format_description, Duration, OffsetDateTime, UtcOffset};
       2030: 1900000000
 */
 fn decode_epoch_seconds(ts: i64) -> Result<OffsetDateTime> {
-    OffsetDateTime::from_unix_timestamp(ts).chain_err(|| "Could not decode as epoch")
+    OffsetDateTime::from_unix_timestamp(ts).with_context(|| "Could not decode as epoch")
 }
 
 /* Decode epoch date with more precision */
@@ -26,7 +26,7 @@ fn decode_epoch_subseconds(ts: i64, resolution: i64) -> Result<OffsetDateTime> {
     if let Ok(date) = unix {
         Ok(date + Duration::new(0, micros))
     } else {
-        unix.chain_err(|| "Could not decode as epoch")
+        unix.with_context(|| "Could not decode as epoch")
     }
 }
 
@@ -111,7 +111,7 @@ impl Applet for TimeApplet {
             }
             _ => decode_epoch_seconds(ts_int),
         }
-        .chain_err(|| "Could not convert timestamp")?;
+        .with_context(|| "Could not convert timestamp")?;
         let ts = if self.local {
             let offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
             ts.to_offset(offset)
@@ -120,7 +120,7 @@ impl Applet for TimeApplet {
         };
         let date_str = ts
             .format(&format_description::well_known::Rfc3339)
-            .chain_err(|| "Date formatting failed")?;
+            .with_context(|| "Date formatting failed")?;
         return Ok(date_str.as_bytes().to_vec());
     }
 }

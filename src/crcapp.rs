@@ -1,6 +1,6 @@
 extern crate crc;
 use crate::applet::Applet;
-use crate::errors::Result;
+use anyhow::{bail, Result};
 use clap::{arg, App, Arg, Command};
 use crc::*;
 use std::process;

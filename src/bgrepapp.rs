@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use crate::errors::{Result, ResultExt};
+use anyhow::{bail, Context, Result};
 use clap::{arg, App, Command};
 use memmap2::Mmap;
 use std::fs::File;
@@ -16,7 +16,7 @@ fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
     builder.dot_matches_new_line(true);
     builder
         .build()
-        .chain_err(|| "Could not build regular expression")
+        .with_context(|| "Could not build regular expression")
 }
 
 pub struct BgrepApplet {
@@ -85,10 +85,10 @@ impl Applet for BgrepApplet {
 
     fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
         let filename = self.file.as_ref().unwrap();
-        let f = File::open(filename).chain_err(|| "Could not open file")?;
+        let f = File::open(filename).with_context(|| "Could not open file")?;
 
         /* Mmap is necessarily unsafe as data can change unexpectedly */
-        let data = unsafe { Mmap::map(&f).chain_err(|| "Could not mmap input file")? };
+        let data = unsafe { Mmap::map(&f).with_context(|| "Could not mmap input file")? };
 
         let regex = self.pattern.as_ref().unwrap();
         let matches = regex.find_iter(&data);

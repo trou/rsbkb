@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use crate::errors::{Result, ResultExt};
+use anyhow::{Context, Result};
 use clap::{arg, App, Command};
 use goblin::elf;
 use std::fs;
@@ -73,7 +73,7 @@ impl Applet for FindSoApplet {
             // parse ld.so.conf "like" file
             if args.is_present("ldconf") {
                 let ldpaths: Vec<PathBuf> = fs::read_to_string(args.value_of("ldconf").unwrap())
-                    .chain_err(|| "Could not read config file")?
+                    .with_context(|| "Could not read config file")?
                     .split('\n')
                     .filter(|p| p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
                     .map(|p| PathBuf::from_str(p).unwrap())
@@ -100,9 +100,9 @@ impl Applet for FindSoApplet {
         // Load dependencies from first file
         if self.is_ref {
             let f_data: Vec<u8> =
-                fs::read(sofiles[0].as_str()).chain_err(|| "Could not read file")?;
+                fs::read(sofiles[0].as_str()).with_context(|| "Could not read file")?;
             let elf_ref = elf::Elf::parse(f_data.as_slice())
-                .chain_err(|| "Could not parse reference as ELF")?;
+                .with_context(|| "Could not parse reference as ELF")?;
             sofiles.extend(
                 elf_ref
                     .libraries
@@ -126,9 +126,9 @@ impl Applet for FindSoApplet {
             }
         }
         for f in sofiles.iter() {
-            let f_data = fs::read(f).chain_err(|| format!("Could not read file {}", f))?;
+            let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f))?;
             let elf_file = elf::Elf::parse(f_data.as_slice())
-                .chain_err(|| format!("Could not parse {} as ELF", f))?;
+                .with_context(|| format!("Could not parse {} as ELF", f))?;
 
             let strtab = elf_file.dynstrtab;
 

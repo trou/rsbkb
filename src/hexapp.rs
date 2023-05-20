@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use crate::errors::{Result, ResultExt};
+use anyhow::{Context, Result};
 use clap::{arg, App, Command};
 
 pub struct HexApplet {}
@@ -36,7 +36,7 @@ impl UnHexApplet {
         let mut trimmed: Vec<u8> = val.trim().into();
         let res = hex::decode(&trimmed);
         if self.strict {
-            return res.chain_err(|| "Invalid hex input");
+            return res.with_context(|| "Invalid hex input");
         }
         /* remove spaces */
         trimmed.retain(|&x| x != 0x20);
@@ -77,7 +77,7 @@ impl UnHexApplet {
             };
 
             if (chr[0] as char).is_ascii_hexdigit() && (chr[1] as char).is_ascii_hexdigit() {
-                res.append(&mut hex::decode(chr).chain_err(|| "hex decoding failed")?);
+                res.append(&mut hex::decode(chr).with_context(|| "hex decoding failed")?);
                 /* make sure we dont miss the last char if we have something like
                  * "41 " as input */
                 let next_win = iter.next().unwrap_or(&[]);

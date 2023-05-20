@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::FromStrWithRadix;
-use crate::errors::Result;
+use anyhow::Result;
 use clap::{arg, App, Command};
 use std::char;
 

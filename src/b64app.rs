@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use crate::errors::{Result, ResultExt};
+use anyhow::{Context, Result};
 use base64::engine::general_purpose;
 use base64::engine::Engine;
 use clap::{arg, App, Command};
@@ -42,9 +42,9 @@ impl Applet for B64EncApplet {
             } else if args.is_present("alphabet") {
                 let custom = base64::alphabet::Alphabet::new(
                     args.value_of("alphabet")
-                        .chain_err(|| "alphabet is not specified")?,
+                        .with_context(|| "alphabet is not specified")?,
                 )
-                .chain_err(|| "Invalid alphabet")?;
+                .with_context(|| "Invalid alphabet")?;
                 base64::engine::GeneralPurpose::new(&custom, base64::engine::general_purpose::PAD)
             } else {
                 general_purpose::STANDARD
@@ -101,9 +101,9 @@ impl Applet for B64DecApplet {
         } else if args.is_present("alphabet") {
             base64::alphabet::Alphabet::new(
                 args.value_of("alphabet")
-                    .chain_err(|| "alphabet is not specified")?,
+                    .with_context(|| "alphabet is not specified")?,
             )
-            .chain_err(|| "Invalid alphabet")?
+            .with_context(|| "Invalid alphabet")?
         } else {
             base64::alphabet::STANDARD
         };
@@ -134,7 +134,7 @@ impl Applet for B64DecApplet {
             Ok(res) => Ok(res),
             Err(ref e) => {
                 if self.strict {
-                    decoded.chain_err(|| "Decoding base64 failed")
+                    decoded.with_context(|| "Decoding base64 failed")
                 } else {
                     match e {
                         base64::DecodeError::InvalidLastSymbol(offset, _)
@@ -149,10 +149,10 @@ impl Applet for B64DecApplet {
                         // Should not happen since we handle trailing data
                         // before in non-strict mode
                         base64::DecodeError::InvalidLength => {
-                            decoded.chain_err(|| "Decoding base64 failed")
+                            decoded.with_context(|| "Decoding base64 failed")
                         }
                         base64::DecodeError::InvalidPadding => {
-                            decoded.chain_err(|| "Decoding base64 failed: invalid padding")
+                            decoded.with_context(|| "Decoding base64 failed: invalid padding")
                         }
                     }
                 }

@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use crate::errors::{Result, ResultExt};
+use anyhow::{Context, Result};
 use clap::{arg, App, Command};
 use std::fs;
 
@@ -34,9 +34,9 @@ impl Applet for XorApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let key_bytes = if args.is_present("xorkey") {
             hex::decode(args.value_of("xorkey").unwrap().replace(' ', ""))
-                .chain_err(|| "Xor key decoding failed")?
+                .with_context(|| "Xor key decoding failed")?
         } else {
-            fs::read(args.value_of("keyfile").unwrap()).chain_err(|| "Could not read keyfile")?
+            fs::read(args.value_of("keyfile").unwrap()).with_context(|| "Could not read keyfile")?
         };
         Ok(Box::new(Self { key_bytes }))
     }

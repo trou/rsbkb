@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use crate::errors::Result;
+use anyhow::Result;
 
 pub struct UrlEncApplet {}
 

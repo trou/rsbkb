@@ -1,15 +1,7 @@
 //#![feature(trace_macros)]
 //trace_macros!(true);
 
-#[macro_use]
-extern crate error_chain;
-
-mod errors {
-    // Create the Error, ErrorKind, ResultExt, and Result types
-    error_chain! {}
-}
-
-pub use errors::*;
+use anyhow::{anyhow, Result};
 
 use std::io;
 use std::io::{Read, Write};
@@ -73,7 +65,7 @@ macro_rules! applets {
         };
 }
 
-fn main_with_errors() -> Result<()> {
+fn main() -> Result<()> {
     applets!(
         apps = HexApplet,
         UnHexApplet,
@@ -128,7 +120,7 @@ fn main_with_errors() -> Result<()> {
     // Get subcommand and args
     let (subcommand, sub_matches) = real_matches
         .subcommand()
-        .chain_err(|| "Subcommand required")?;
+        .ok_or_else(|| anyhow!("Subcommand required"))?;
 
     // list applets
     if subcommand == "list" {
@@ -180,18 +172,4 @@ fn main_with_errors() -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn main() {
-    let res = main_with_errors();
-    if let Err(ref e) = res {
-        use error_chain::ChainedError;
-        let stderr = &mut ::std::io::stderr();
-        let errmsg = "Error writing to stderr";
-
-        let msg = e.display_chain().to_string();
-
-        writeln!(stderr, "{}", msg.trim_end()).expect(errmsg);
-        ::std::process::exit(1);
-    }
 }

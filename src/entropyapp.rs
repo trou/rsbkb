@@ -1,5 +1,5 @@
 use crate::applet::Applet;
-use crate::errors::Result;
+use anyhow::Result;
 
 pub struct EntropyApplet {}
 

@@ -1,5 +1,5 @@
 use crate::applet::{Applet, FromStrWithRadix};
-use crate::errors::{Result, ResultExt};
+use anyhow::{bail, Context, Result};
 use clap::{arg, App, Command};
 use std::fs::OpenOptions;
 use std::io::{BufReader, Read, Seek, SeekFrom};
@@ -48,12 +48,12 @@ impl Applet for SliceApplet {
         let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix('-') {
             (
                 u64::from_str_with_radix(start_val_no_plus)
-                    .chain_err(|| "Invalid value for 'start'")?,
+                    .with_context(|| "Invalid value for 'start'")?,
                 true,
             )
         } else {
             (
-                u64::from_str_with_radix(start_val).chain_err(|| "Invalid value for 'start'")?,
+                u64::from_str_with_radix(start_val).with_context(|| "Invalid value for 'start'")?,
                 false,
             )
         };
@@ -62,10 +62,11 @@ impl Applet for SliceApplet {
             if let Some(end_val_no_plus) = end_val.strip_prefix('+') {
                 Some(
                     start
-                        + u64::from_str_with_radix(end_val_no_plus).chain_err(|| "Invalid end")?,
+                        + u64::from_str_with_radix(end_val_no_plus)
+                            .with_context(|| "Invalid end")?,
                 )
             } else {
-                Some(u64::from_str_with_radix(end_val).chain_err(|| "Invalid end")?)
+                Some(u64::from_str_with_radix(end_val).with_context(|| "Invalid end")?)
             }
         } else {
             None
@@ -87,15 +88,15 @@ impl Applet for SliceApplet {
                 .read(true)
                 .write(false)
                 .open(filename)
-                .chain_err(|| "can't open file")?,
+                .with_context(|| "can't open file")?,
         );
 
         if self.from_end {
             f.seek(SeekFrom::End(-(self.start as i64)))
-                .chain_err(|| "seek failed")?;
+                .with_context(|| "seek failed")?;
         } else {
             f.seek(SeekFrom::Start(self.start))
-                .chain_err(|| "seek failed")?;
+                .with_context(|| "seek failed")?;
         }
         let mut res = vec![];
         if self.end.is_some() {
@@ -105,9 +106,9 @@ impl Applet for SliceApplet {
             }
             let len: usize = (end - start) as usize;
             res.resize(len, 0);
-            f.read_exact(&mut res).chain_err(|| "Read failed")?;
+            f.read_exact(&mut res).with_context(|| "Read failed")?;
         } else {
-            f.read_to_end(&mut res).chain_err(|| "Read failed")?;
+            f.read_to_end(&mut res).with_context(|| "Read failed")?;
         }
         Ok(res.to_vec())
     }
