@@ -77,7 +77,7 @@ impl Applet for BofPattOffApplet {
         "bofpattoff"
     }
     fn description(&self) -> &'static str {
-        "Buffer overflow pattern offset finder"
+        "buffer overflow pattern offset finder"
     }
 
     fn new() -> Box<dyn Applet> {

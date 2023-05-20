@@ -56,7 +56,7 @@ impl Applet for TimeApplet {
         "tsdec"
     }
     fn description(&self) -> &'static str {
-        "TimeStamp decode"
+        "timestamp decoder"
     }
 
     fn clap_command(&self) -> App {

@@ -23,7 +23,7 @@ impl Applet for FindSoApplet {
     }
 
     fn description(&self) -> &'static str {
-        "Find which .so implements a given function"
+        "find which .so implements a given function"
     }
 
     fn returns_data(&self) -> bool {
