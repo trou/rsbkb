@@ -72,8 +72,9 @@ impl Applet for FindSoApplet {
 
             // parse ld.so.conf "like" file
             if args.is_present("ldconf") {
-                let ldpaths: Vec<PathBuf> = fs::read_to_string(args.value_of("ldconf").unwrap())
-                    .with_context(|| "Could not read config file")?
+                let ldconf = args.value_of("ldconf").unwrap();
+                let ldpaths: Vec<PathBuf> = fs::read_to_string(ldconf)
+                    .with_context(|| format!("Could not read config file \"{}\"", ldconf))?
                     .split('\n')
                     .filter(|p| p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
                     .map(|p| PathBuf::from_str(p).unwrap())
