@@ -137,7 +137,7 @@ impl Applet for FindSoApplet {
                 .iter()
                 .any(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun));
             if found {
-                print!("{}", f);
+                println!("{}", f);
             }
         }
         /* Return empty Vec as we output directly on stdout */
