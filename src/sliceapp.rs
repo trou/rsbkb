@@ -88,7 +88,7 @@ impl Applet for SliceApplet {
                 .read(true)
                 .write(false)
                 .open(filename)
-                .with_context(|| "can't open file")?,
+                .with_context(|| format!("can't open file \"{}\"", filename))?,
         );
 
         if self.from_end {
