@@ -4,6 +4,9 @@ version = "1.2.0"
 authors = ["Raphaël Rigo <devel@syscall.eu>"]
 edition = "2018"
 
+[profile.release]
+overflow-checks = true
+
 [dependencies]
 hex = "0.4"
 base64 = "0.21"
