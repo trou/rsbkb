@@ -100,8 +100,8 @@ impl Applet for FindSoApplet {
 
         // Load dependencies from first file
         if self.is_ref {
-            let f_data: Vec<u8> =
-                fs::read(sofiles[0].as_str()).with_context(|| format!("Could not read file \"{}\"", sofiles[0]))?;
+            let f_data: Vec<u8> = fs::read(sofiles[0].as_str())
+                .with_context(|| format!("Could not read file \"{}\"", sofiles[0]))?;
             let elf_ref = elf::Elf::parse(f_data.as_slice())
                 .with_context(|| "Could not parse reference as ELF")?;
             sofiles.extend(
