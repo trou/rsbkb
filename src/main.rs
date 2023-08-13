@@ -56,6 +56,10 @@ use bgrepapp::BgrepApplet;
 mod findsoapp;
 use findsoapp::FindSoApplet;
 
+mod flateapp;
+use flateapp::DeflateApplet;
+use flateapp::InflateApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -83,7 +87,9 @@ fn main() -> Result<()> {
         SliceApplet,
         BgrepApplet,
         FindSoApplet,
-        TimeApplet
+        TimeApplet,
+        DeflateApplet,
+        InflateApplet
     );
 
     // Define a busybox-like multicall binary
