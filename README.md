@@ -96,6 +96,8 @@ for i in $(rsbkb list) ; do ln -s rsbkb $i ; done
 * `entropy`: entropy of a file
 * `bgrep`: simple binary grep
 * `findso`: find which ELF shared library (.so) exports a given name/function
+* `inflate` and `deflate`: raw inflate/deflate compression, fault tolerant and with optional Zlib header support
+
 
 ### Getting help
 
@@ -113,18 +115,20 @@ APPLETS:
     b64           base64 encode
     bgrep         binary grep
     bofpatt       buffer overflow pattern generator
-    bofpattoff    Buffer overflow pattern offset finder
+    bofpattoff    buffer overflow pattern offset finder
     crc           flexible CRC computation
     crc16         compute CRC-16
     crc32         compute CRC-32
     d64           base64 decode
+    deflate       (raw) deflate compression
     entropy       compute file entropy
-    findso        Find which .so implements a given function
+    findso        find which .so implements a given function
     help          Print this message or the help of the given subcommand(s)
     hex           hex encode
+    inflate       (raw) inflate decompression
     list          list applets
     slice         slice
-    tsdec         TimeStamp decode
+    tsdec         timestamp decoder
     unhex         hex decode
     urldec        URL decode
     urlenc        URL encode

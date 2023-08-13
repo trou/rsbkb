@@ -1,4 +1,4 @@
-* XXX: v1.2: base64 update: support custom alphabet ; global: check if given value is potentially a file and warn user
+* 2023-08-13: v1.2: inflate/deflate applet ; base64 update: support custom alphabet ; global: check if given value is potentially a file and warn user
 * 2023-01-08: v1.1: better usage info and error reporting
 * 2022-08-20: v1.0: `findso` applet, clap update
 * 2022-06-25: v0.9: `time` crate update, basic implementation of binary grep in `bgrep`
