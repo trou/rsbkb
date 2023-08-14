@@ -1,7 +1,7 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
 use anyhow::{Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 
 pub struct HexApplet {}
 
@@ -109,7 +109,7 @@ impl Applet for UnHexApplet {
         })
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command()).about(self.description())
              .arg(arg!(-o --"hex-only"  "expect only hex data, stop at first non-hex byte (but copy the rest)"))
              .arg(arg!(-s --strict  "strict decoding, error on invalid data"))
@@ -119,8 +119,8 @@ impl Applet for UnHexApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
-            hexonly: args.is_present("hex-only") || args.is_present("strict"),
-            strict: args.is_present("strict"),
+            hexonly: args.contains_id("hex-only") || args.contains_id("strict"),
+            strict: args.contains_id("strict"),
         }))
     }
 

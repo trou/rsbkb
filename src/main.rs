@@ -143,14 +143,14 @@ fn main() -> Result<()> {
 
     if let Some(argname) = selected_app.arg_or_stdin() {
         /* Check if the given arg is present, else read from stdin */
-        if !sub_matches.is_present(argname) {
+        if !sub_matches.contains_id(argname) {
             io::stdin()
                 .read_to_end(&mut inputval)
                 .expect("Reading stdin failed");
         } else {
             /* Check if the given argument could be a filename, which is probably not
              * what the user wants */
-            let argname_val = sub_matches.value_of(argname).unwrap();
+            let argname_val : &String = sub_matches.get_one::<String>(argname).unwrap();
             if Path::new(argname_val).exists() {
                 let mut stderr = io::stderr();
                 writeln!(

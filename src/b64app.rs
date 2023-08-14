@@ -3,7 +3,7 @@ use crate::applet::SliceExt;
 use anyhow::{Context, Result};
 use base64::engine::general_purpose;
 use base64::engine::Engine;
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 
 pub struct B64EncApplet {
     engine: general_purpose::GeneralPurpose,
@@ -17,7 +17,7 @@ impl Applet for B64EncApplet {
         "base64 encode"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "Use URL-safe base64"))
@@ -37,11 +37,11 @@ impl Applet for B64EncApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
-            engine: if args.is_present("URL") {
+            engine: if args.contains_id("URL") {
                 general_purpose::URL_SAFE
-            } else if args.is_present("alphabet") {
+            } else if args.contains_id("alphabet") {
                 let custom = base64::alphabet::Alphabet::new(
-                    args.value_of("alphabet")
+                    args.get_one::<String>("alphabet")
                         .with_context(|| "alphabet is not specified")?,
                 )
                 .with_context(|| "Invalid alphabet")?;
@@ -71,7 +71,7 @@ impl Applet for B64DecApplet {
         "base64 decode"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --URL "use URL-safe base64"))
@@ -96,11 +96,11 @@ impl Applet for B64DecApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let engine_cfg =
             base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
-        let alphabet = if args.is_present("URL") {
+        let alphabet = if args.contains_id("URL") {
             base64::alphabet::URL_SAFE
-        } else if args.is_present("alphabet") {
+        } else if args.contains_id("alphabet") {
             base64::alphabet::Alphabet::new(
-                args.value_of("alphabet")
+                args.get_one::<String>("alphabet")
                     .with_context(|| "alphabet is not specified")?,
             )
             .with_context(|| "Invalid alphabet")?

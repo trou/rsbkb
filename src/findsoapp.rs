@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use anyhow::{Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
@@ -30,13 +30,11 @@ impl Applet for FindSoApplet {
         false
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
-            .arg_from_usage(
-                "-p, --ldpath [LDPATH] '\':\' separated list of paths to look for .so in'",
-            )
+            .arg(arg!(-p --ldpath [LDPATH] "'\':\' separated list of paths to look for .so in'"))
             .arg(arg!(-l --ldconf [CONF]  "use config file to get LD paths"))
             .arg(arg!(<function>  "function to search"))
             .arg(arg!(<files>...  "files to search in"))
@@ -57,22 +55,22 @@ impl Applet for FindSoApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filenames: Vec<String> = args
-            .values_of("files")
+            .get_many::<String>("files")
             .unwrap()
             .map(|x| x.to_string())
             .collect();
-        let function_val = args.value_of("function").unwrap();
-        let paths = if args.is_present("ldpath") || args.is_present("ldconf") {
+        let function_val = args.get_one::<String>("function").unwrap();
+        let paths = if args.contains_id("ldpath") || args.contains_id("ldconf") {
             let mut paths: Vec<PathBuf> = args
-                .value_of("ldpath")
-                .unwrap_or("")
+                .get_one::<String>("ldpath")
+                .unwrap_or(&"".to_string())
                 .split(':')
                 .map(|p| PathBuf::from_str(p).unwrap())
                 .collect();
 
             // parse ld.so.conf "like" file
-            if args.is_present("ldconf") {
-                let ldconf = args.value_of("ldconf").unwrap();
+            if args.contains_id("ldconf") {
+                let ldconf = args.get_one::<String>("ldconf").unwrap();
                 let ldpaths: Vec<PathBuf> = fs::read_to_string(ldconf)
                     .with_context(|| format!("Could not read config file \"{}\"", ldconf))?
                     .split('\n')
@@ -89,7 +87,7 @@ impl Applet for FindSoApplet {
         Ok(Box::new(Self {
             files: Some(filenames),
             function: Some(function_val.to_string()),
-            is_ref: args.is_present("ref"),
+            is_ref: args.contains_id("ref"),
             paths,
         }))
     }

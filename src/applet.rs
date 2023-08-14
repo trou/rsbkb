@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 
 pub trait Applet {
     fn command(&self) -> &'static str;
@@ -13,7 +13,7 @@ pub trait Applet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>>;
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!([value] "input value, reads from stdin in not present"))

@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use anyhow::{Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 use std::fs;
 
 pub struct XorApplet {
@@ -15,12 +15,12 @@ impl Applet for XorApplet {
         "xor value"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(
                 arg!(-x --xorkey [KEY]  "Xor key in hex format")
-                    .required_unless("keyfile")
+                    .required_unless_present("keyfile")
                     .conflicts_with("keyfile"),
             )
             .arg(arg!(-f --keyfile [keyfile]  "File to use as key"))
@@ -32,11 +32,11 @@ impl Applet for XorApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let key_bytes = if args.is_present("xorkey") {
-            hex::decode(args.value_of("xorkey").unwrap().replace(' ', ""))
+        let key_bytes = if args.contains_id("xorkey") {
+            hex::decode(args.get_one::<String>("xorkey").unwrap().replace(' ', ""))
                 .with_context(|| "Xor key decoding failed")?
         } else {
-            fs::read(args.value_of("keyfile").unwrap()).with_context(|| "Could not read keyfile")?
+            fs::read(args.get_one::<String>("keyfile").unwrap()).with_context(|| "Could not read keyfile")?
         };
         Ok(Box::new(Self { key_bytes }))
     }

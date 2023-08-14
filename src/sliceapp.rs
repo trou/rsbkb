@@ -1,6 +1,6 @@
 use crate::applet::{Applet, FromStrWithRadix};
 use anyhow::{bail, Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 use std::fs::OpenOptions;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 
@@ -19,7 +19,7 @@ impl Applet for SliceApplet {
         "slice"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(<file>    "file to slice"))
@@ -41,8 +41,8 @@ impl Applet for SliceApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let filename = args.value_of("file").unwrap();
-        let start_val = args.value_of("start").unwrap();
+        let filename = args.get_one::<String>("file").unwrap();
+        let start_val = args.get_one::<String>("start").unwrap();
 
         /* Negative start: offset from the end. */
         let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix('-') {
@@ -58,7 +58,7 @@ impl Applet for SliceApplet {
             )
         };
 
-        let end: Option<u64> = if let Some(end_val) = args.value_of("end") {
+        let end: Option<u64> = if let Some(end_val) = args.get_one::<String>("end") {
             if let Some(end_val_no_plus) = end_val.strip_prefix('+') {
                 Some(
                     start

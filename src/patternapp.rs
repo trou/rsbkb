@@ -1,7 +1,7 @@
 use crate::applet::Applet;
 use crate::applet::FromStrWithRadix;
 use anyhow::Result;
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 use std::char;
 
 pub struct BofPattGenApplet {
@@ -44,7 +44,7 @@ impl Applet for BofPattGenApplet {
         None
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(<length>  "Pattern length"))
@@ -52,7 +52,7 @@ impl Applet for BofPattGenApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let max_len: usize = UPPER.len() * LOWER.len() * DIGITS.len() * 3;
-        let len_s = args.value_of("length").unwrap();
+        let len_s = args.get_one::<String>("length").unwrap();
         let len = usize::from_str_with_radix(len_s)?;
         if len > max_len {
             eprintln!("Warning: pattern length's longer than max_len {}.", max_len);
@@ -90,7 +90,7 @@ impl Applet for BofPattOffApplet {
         None
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-b --"big-endian"  "Parse hex value as big endian"))
@@ -99,8 +99,8 @@ impl Applet for BofPattOffApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let mut extract = String::new();
-        let arg_val = args.value_of("extract").unwrap();
-        let big_endian = args.is_present("big-endian");
+        let arg_val = args.get_one::<String>("extract").unwrap();
+        let big_endian = args.contains_id("big-endian");
         if &arg_val[0..2] == "0x" {
             let mut arg_int = u64::from_str_with_radix(arg_val)?;
             while arg_int != 0 {

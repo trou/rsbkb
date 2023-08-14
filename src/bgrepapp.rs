@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use anyhow::{bail, Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 use memmap2::Mmap;
 use std::fs::File;
 
@@ -37,7 +37,7 @@ impl Applet for BgrepApplet {
         false
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-x --hex  "pattern is hex"))
@@ -57,12 +57,12 @@ impl Applet for BgrepApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let filename = args.value_of("file").unwrap();
-        let pattern_val = args.value_of("pattern").unwrap();
+        let filename = args.get_one::<String>("file").unwrap();
+        let pattern_val = args.get_one::<String>("pattern").unwrap();
 
         /* Convert hex pattern to "\x00" format if needed */
         let mut s = String::new();
-        let final_pat = if args.is_present("hex") {
+        let final_pat = if args.contains_id("hex") {
             if pattern_val.len() % 2 != 0 {
                 bail!("hex pattern length is not even");
             }

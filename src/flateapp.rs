@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use anyhow::Result;
-use clap::{arg, value_parser, App, Command};
+use clap::{arg, value_parser, Command};
 use miniz_oxide::{deflate, inflate, DataFormat};
 
 pub struct DeflateApplet {
@@ -13,7 +13,7 @@ impl Applet for DeflateApplet {
         "deflate"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(
@@ -30,7 +30,7 @@ impl Applet for DeflateApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let f = if args.is_present("zlib") {
+        let f = if args.contains_id("zlib") {
             DataFormat::Zlib
         } else {
             DataFormat::Raw
@@ -67,7 +67,7 @@ impl Applet for InflateApplet {
         "inflate"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-z --zlib "expect Zlib header"))
@@ -80,14 +80,14 @@ impl Applet for InflateApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let f = if args.is_present("zlib") {
+        let f = if args.contains_id("zlib") {
             DataFormat::Zlib
         } else {
             DataFormat::Raw
         };
         Ok(Box::new(Self {
             format: f,
-            quiet: args.is_present("quiet"),
+            quiet: args.contains_id("quiet"),
         }))
     }
 

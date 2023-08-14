@@ -1,6 +1,6 @@
 use crate::applet::{Applet, FromStrWithRadix};
 use anyhow::{Context, Result};
-use clap::{arg, App, Command};
+use clap::{arg, Command};
 use std::convert::TryFrom;
 use time::{format_description, Duration, OffsetDateTime, UtcOffset};
 
@@ -59,7 +59,7 @@ impl Applet for TimeApplet {
         "timestamp decoder"
     }
 
-    fn clap_command(&self) -> App {
+    fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-l --local  "show time in local time zone"))
@@ -72,7 +72,7 @@ impl Applet for TimeApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
-            local: args.is_present("local"),
+            local: args.contains_id("local"),
         }))
     }
 
