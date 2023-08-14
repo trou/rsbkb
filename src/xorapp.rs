@@ -36,7 +36,8 @@ impl Applet for XorApplet {
             hex::decode(args.get_one::<String>("xorkey").unwrap().replace(' ', ""))
                 .with_context(|| "Xor key decoding failed")?
         } else {
-            fs::read(args.get_one::<String>("keyfile").unwrap()).with_context(|| "Could not read keyfile")?
+            fs::read(args.get_one::<String>("keyfile").unwrap())
+                .with_context(|| "Could not read keyfile")?
         };
         Ok(Box::new(Self { key_bytes }))
     }
