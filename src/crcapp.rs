@@ -1,7 +1,7 @@
 extern crate crc;
 use crate::applet::Applet;
 use anyhow::{bail, Result};
-use clap::{arg, Arg, Command};
+use clap::{arg, Command};
 use crc::*;
 use std::process;
 
@@ -84,11 +84,7 @@ impl Applet for CRCApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-l --list  "List supported CRC algorithms"))
-            .arg(
-                Arg::new("type")
-                    .help("CRC type to compute")
-                    .required_unless_present("list"),
-            )
+            .arg(arg!([type] "CRC type to compute").required_unless_present("list"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
