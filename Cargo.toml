@@ -11,7 +11,7 @@ overflow-checks = true
 hex = "0.4"
 base64 = "0.21"
 percent-encoding = "2.2.0"
-clap = "3.2"
+clap = "4.3"
 crc = "3"
 atty = "0.2"
 time = {version = "0.3", features=["local-offset", "formatting"]}
