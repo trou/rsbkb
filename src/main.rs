@@ -153,21 +153,16 @@ fn main() -> Result<()> {
         } else {
             /* Check if the given argument could be a filename, which is probably not
              * what the user wants */
-            let argname_val : &String = sub_matches.get_one::<String>(argname).unwrap();
+            let argname_val: &String = sub_matches.get_one::<String>(argname).unwrap();
             if Path::new(argname_val).exists() {
-                let mut stderr = io::stderr();
-                writeln!(
-                    stderr,
+                eprintln!(
                     "'{}' is a file, maybe you want to pass it to stdin instead?",
                     argname_val
-                )
-                .expect("Error writing to stderr");
+                );
             }
             inputval = argname_val.as_bytes().to_vec();
         }
     };
-
-    let selected_app = selected_app.parse_args(sub_matches)?;
 
     let res = selected_app.process(inputval)?;
 
