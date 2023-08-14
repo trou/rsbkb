@@ -139,6 +139,9 @@ fn main() -> Result<()> {
     // Find corresponding app
     let selected_app = apps.iter().find(|a| a.command() == subcommand).unwrap();
 
+    // Parse applet args and get actual applte with options
+    let selected_app = selected_app.parse_args(sub_matches)?;
+
     let mut inputval = vec![];
 
     if let Some(argname) = selected_app.arg_or_stdin() {
