@@ -34,8 +34,8 @@ impl Applet for FindSoApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
-            .arg(arg!(-p --ldpath [LDPATH] "'\':\' separated list of paths to look for .so in'"))
-            .arg(arg!(-l --ldconf [CONF]  "use config file to get LD paths"))
+            .arg(arg!(-p --ldpath <LDPATH> "'\':\' separated list of paths to look for .so in'"))
+            .arg(arg!(-l --ldconf <CONF>  "use config file to get LD paths"))
             .arg(arg!(<function>  "function to search"))
             .arg(arg!(<files>...  "files to search in"))
     }

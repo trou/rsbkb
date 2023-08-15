@@ -19,11 +19,11 @@ impl Applet for XorApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(
-                arg!(-x --xorkey [KEY]  "Xor key in hex format")
+                arg!(-x --xorkey <KEY>  "Xor key in hex format")
                     .required_unless_present("keyfile")
                     .conflicts_with("keyfile"),
             )
-            .arg(arg!(-f --keyfile [keyfile]  "File to use as key"))
+            .arg(arg!(-f --keyfile <keyfile>  "File to use as key"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
