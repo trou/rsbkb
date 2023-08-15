@@ -61,12 +61,14 @@ impl Applet for FindSoApplet {
             .collect();
         let function_val = args.get_one::<String>("function").unwrap();
         let paths = if args.contains_id("ldpath") || args.contains_id("ldconf") {
-            let mut paths: Vec<PathBuf> = args
-                .get_one::<String>("ldpath")
-                .unwrap_or(&"".to_string())
-                .split(':')
-                .map(|p| PathBuf::from_str(p).unwrap())
-                .collect();
+            let mut paths: Vec<PathBuf> = if let Some(ldpaths) = args.get_one::<String>("ldpath") {
+                ldpaths
+                    .split(':')
+                    .map(|p| PathBuf::from_str(p).unwrap())
+                    .collect()
+            } else {
+                Vec::<PathBuf>::new()
+            };
 
             // parse ld.so.conf "like" file
             if args.contains_id("ldconf") {
@@ -79,6 +81,14 @@ impl Applet for FindSoApplet {
                     .collect::<Vec<PathBuf>>();
                 paths.extend(ldpaths);
             }
+
+            // check that paths are actually valid directories
+            for p in paths.iter() {
+                if !p.is_dir() {
+                    eprintln!("Warning: {} is not a valid directory", p.to_str().unwrap());
+                }
+            }
+
             Some(paths)
         } else {
             None
