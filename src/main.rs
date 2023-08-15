@@ -101,6 +101,14 @@ fn main() -> Result<()> {
         .propagate_version(true)
         .subcommand(
             Command::new("rsbkb")
+                .help_template(
+                    "\
+{before-help}{name} {version} ({about}) - by {author-with-newline}
+{usage-heading} {usage}
+
+{all-args}{after-help}
+",
+                )
                 .author("Raphaël Rigo <devel@syscall.eu>")
                 .about("Rust BlackBag")
                 .arg_required_else_help(true)
