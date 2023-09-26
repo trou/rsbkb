@@ -140,6 +140,13 @@ impl Applet for FindSoApplet {
             }
         }
         for f in sofiles.iter() {
+            // Skip directories
+            if fs::metadata(f)
+                .with_context(|| format!("Could not open {}", f))?
+                .is_dir()
+            {
+                continue;
+            }
             let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f))?;
             let elf_file = elf::Elf::parse(f_data.as_slice());
             if let Ok(elf_file) = elf_file {
