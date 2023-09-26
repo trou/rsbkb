@@ -37,7 +37,7 @@ impl Applet for B64EncApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
-            engine: if args.contains_id("URL") {
+            engine: if args.get_flag("URL") {
                 general_purpose::URL_SAFE
             } else if args.contains_id("alphabet") {
                 let custom = base64::alphabet::Alphabet::new(
@@ -96,7 +96,7 @@ impl Applet for B64DecApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let engine_cfg =
             base64::engine::GeneralPurposeConfig::new().with_decode_allow_trailing_bits(true);
-        let alphabet = if args.contains_id("URL") {
+        let alphabet = if args.get_flag("URL") {
             base64::alphabet::URL_SAFE
         } else if args.contains_id("alphabet") {
             base64::alphabet::Alphabet::new(

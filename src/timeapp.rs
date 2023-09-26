@@ -72,7 +72,7 @@ impl Applet for TimeApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
-            local: args.contains_id("local"),
+            local: args.get_flag("local"),
         }))
     }
 

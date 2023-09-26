@@ -100,7 +100,7 @@ impl Applet for BofPattOffApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let mut extract = String::new();
         let arg_val = args.get_one::<String>("extract").unwrap();
-        let big_endian = args.contains_id("big-endian");
+        let big_endian = args.get_flag("big-endian");
         if &arg_val[0..2] == "0x" {
             let mut arg_int = u64::from_str_with_radix(arg_val)?;
             while arg_int != 0 {

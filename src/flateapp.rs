@@ -30,7 +30,7 @@ impl Applet for DeflateApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let f = if args.contains_id("zlib") {
+        let f = if args.get_flag("zlib") {
             DataFormat::Zlib
         } else {
             DataFormat::Raw
@@ -80,14 +80,14 @@ impl Applet for InflateApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let f = if args.contains_id("zlib") {
+        let f = if args.get_flag("zlib") {
             DataFormat::Zlib
         } else {
             DataFormat::Raw
         };
         Ok(Box::new(Self {
             format: f,
-            quiet: args.contains_id("quiet"),
+            quiet: args.get_flag("quiet"),
         }))
     }
 

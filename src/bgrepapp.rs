@@ -62,7 +62,7 @@ impl Applet for BgrepApplet {
 
         /* Convert hex pattern to "\x00" format if needed */
         let mut s = String::new();
-        let final_pat = if args.contains_id("hex") {
+        let final_pat = if args.get_flag("hex") {
             if pattern_val.len() % 2 != 0 {
                 bail!("hex pattern length is not even");
             }

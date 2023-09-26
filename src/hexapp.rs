@@ -119,8 +119,8 @@ impl Applet for UnHexApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
-            hexonly: args.contains_id("hex-only") || args.contains_id("strict"),
-            strict: args.contains_id("strict"),
+            hexonly: args.get_flag("hex-only") || args.get_flag("strict"),
+            strict: args.get_flag("strict"),
         }))
     }
 

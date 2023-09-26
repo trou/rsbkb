@@ -89,7 +89,7 @@ impl Applet for CRCApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        if args.contains_id("list") {
+        if args.get_flag("list") {
             println!("Supported algorithms:");
             println!(
                 "CRC16:
