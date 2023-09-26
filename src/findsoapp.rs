@@ -15,6 +15,8 @@ pub struct FindSoApplet {
     is_ref: bool,
     // LD_LIBRARY_PATH equivalent
     paths: Option<Vec<PathBuf>>,
+    // don't show warnings
+    quiet: bool,
 }
 
 impl Applet for FindSoApplet {
@@ -34,6 +36,7 @@ impl Applet for FindSoApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
+            .arg(arg!(-q --quiet  "don't show warnings on invalid files"))
             .arg(arg!(-p --ldpath <LDPATH> "'\':\' separated list of paths to look for .so in'"))
             .arg(arg!(-l --ldconf <CONF>  "use config file to get LD paths"))
             .arg(arg!(<function>  "function to search"))
@@ -50,6 +53,7 @@ impl Applet for FindSoApplet {
             function: None,
             is_ref: false,
             paths: None,
+            quiet: false,
         })
     }
 
@@ -99,6 +103,7 @@ impl Applet for FindSoApplet {
             function: Some(function_val.to_string()),
             is_ref: args.get_flag("ref"),
             paths,
+            quiet: args.get_flag("quiet"),
         }))
     }
 
@@ -148,7 +153,9 @@ impl Applet for FindSoApplet {
                     println!("{}", f);
                 }
             } else {
-                eprintln!("Could not parse {} as ELF", f);
+                if !self.quiet {
+                    eprintln!("Could not parse {} as ELF", f);
+                }
             }
         }
         /* Return empty Vec as we output directly on stdout */
