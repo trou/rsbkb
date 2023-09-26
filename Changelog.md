@@ -1,3 +1,4 @@
+* 2023-09-26: v1.2.1: fix CLI flags parsing, add skipping of invalid files in findso
 * 2023-08-13: v1.2: inflate/deflate applet ; base64 update: support custom alphabet ; global: check if given value is potentially a file and warn user
 * 2023-01-08: v1.1: better usage info and error reporting
 * 2022-08-20: v1.0: `findso` applet, clap update
