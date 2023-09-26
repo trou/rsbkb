@@ -136,17 +136,19 @@ impl Applet for FindSoApplet {
         }
         for f in sofiles.iter() {
             let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f))?;
-            let elf_file = elf::Elf::parse(f_data.as_slice())
-                .with_context(|| format!("Could not parse {} as ELF", f))?;
+            let elf_file = elf::Elf::parse(f_data.as_slice());
+            if let Ok(elf_file) = elf_file {
+                let strtab = elf_file.dynstrtab;
 
-            let strtab = elf_file.dynstrtab;
-
-            let found = elf_file
-                .dynsyms
-                .iter()
-                .any(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun));
-            if found {
-                println!("{}", f);
+                let found = elf_file
+                    .dynsyms
+                    .iter()
+                    .any(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun));
+                if found {
+                    println!("{}", f);
+                }
+            } else {
+                eprintln!("Could not parse {} as ELF", f);
             }
         }
         /* Return empty Vec as we output directly on stdout */
