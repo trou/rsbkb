@@ -23,7 +23,7 @@ pub trait Applet {
      *   - an argument, named "value"
      *   - stdin, if value is not supplied
      * Applets can overload this method to have a different behaviour
-     * (for example if they have more args
+     * (for example if they have more args)
      * */
     fn arg_or_stdin(&self) -> Option<&'static str> {
         Some("value")
