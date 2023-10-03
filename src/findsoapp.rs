@@ -134,6 +134,7 @@ impl Applet for FindSoApplet {
                 }
             }
         }
+
         for f in sofiles.iter() {
             let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f))?;
             let elf_file = elf::Elf::parse(f_data.as_slice())
@@ -149,6 +150,7 @@ impl Applet for FindSoApplet {
                 println!("{}", f);
             }
         }
+
         /* Return empty Vec as we output directly on stdout */
         Ok(Vec::<u8>::new())
     }
