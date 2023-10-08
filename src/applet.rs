@@ -23,7 +23,7 @@ pub trait Applet {
      *   - an argument, named "value"
      *   - stdin, if value is not supplied
      * Applets can overload this method to have a different behaviour
-     * (for example if they have more args
+     * (for example if they have more args)
      * */
     fn arg_or_stdin(&self) -> Option<&'static str> {
         Some("value")
@@ -49,12 +49,8 @@ pub trait SliceExt {
 
 impl SliceExt for [u8] {
     fn trim(&self) -> &[u8] {
-        const fn is_whitespace(c: &u8) -> bool {
-            *c == b'\t' || *c == b' ' || *c == b'\n' || *c == b'\r'
-        }
-
         const fn is_not_whitespace(c: &u8) -> bool {
-            !is_whitespace(c)
+            !c.is_ascii_whitespace()
         }
 
         if let Some(first) = self.iter().position(is_not_whitespace) {
