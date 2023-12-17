@@ -50,6 +50,7 @@ fn decode_windows_filetime(ts: i64) -> Result<OffsetDateTime> {
 
 pub struct TimeApplet {
     local: bool,
+    verbose: bool,
 }
 impl Applet for TimeApplet {
     fn command(&self) -> &'static str {
@@ -63,16 +64,18 @@ impl Applet for TimeApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-l --local  "show time in local time zone"))
+            .arg(arg!(-v --verbose "show which type of timestamp was used for decoding"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self { local: false })
+        Box::new(Self { local: false, verbose: false })
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
             local: args.get_flag("local"),
+            verbose: args.get_flag("verbose"),
         }))
     }
 
@@ -87,36 +90,39 @@ impl Applet for TimeApplet {
             let ts_f: f64 = ts_int as f64;
             (ts_f.log10() as usize) + 1
         };
-        let ts = match (ts_len, ts_int) {
-            (10, _) => decode_epoch_seconds(ts_int),
+        let (ts, type_str) = match (ts_len, ts_int) {
+            (10, _) => (decode_epoch_seconds(ts_int), "Seconds since Epoch"),
             (12, _) =>
             /* Epoch centiseconds */
             {
-                decode_epoch_subseconds(ts_int, 100)
+                (decode_epoch_subseconds(ts_int, 100), "Centiseconds since Epoch")
             }
             (13, _) =>
             /* Epoch milliseconds */
             {
-                decode_epoch_subseconds(ts_int, 1000)
+                (decode_epoch_subseconds(ts_int, 1000), "Milliseconds since Epoch")
             }
             (16, _) =>
             /* Epoch microseconds */
             {
-                decode_epoch_subseconds(ts_int, 1_000_000)
+                (decode_epoch_subseconds(ts_int, 1_000_000), "Microseconds since Epoch")
             }
             (18, _) =>
             /* Windows FILETIME */
             {
-                decode_windows_filetime(ts_int)
+                (decode_windows_filetime(ts_int), "Windows FILETIME")
             }
-            _ => decode_epoch_seconds(ts_int),
+            _ => (decode_epoch_seconds(ts_int), "Seconds since Epoch")
+        };
+        let tse = ts.with_context(|| "Could not convert timestamp")?;
+        if self.verbose {
+            eprintln!("Used format: {}", type_str);            
         }
-        .with_context(|| "Could not convert timestamp")?;
         let ts = if self.local {
             let offset = UtcOffset::current_local_offset().unwrap_or(UtcOffset::UTC);
-            ts.to_offset(offset)
+            tse.to_offset(offset)
         } else {
-            ts
+            tse
         };
         let date_str = ts
             .format(&format_description::well_known::Rfc3339)
