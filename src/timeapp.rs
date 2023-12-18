@@ -7,7 +7,8 @@ use time::{format_description, Duration, OffsetDateTime, UtcOffset};
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.
 
-    An Epoch timestamp (1-10 digits) is an integer that counts the number of seconds since Jan 1 1970.
+    An Epoch timestamp (1-10 digits) is an integer that counts the number of seconds since Jan 1
+    1970.
 
     Useful values for ranges (all Jan-1 00:00:00):
       1970: 0
@@ -33,8 +34,8 @@ fn decode_epoch_subseconds(ts: i64, resolution: i64) -> Result<OffsetDateTime> {
 /*
     Decode a numeric timestamp in Windows FileTime format to a human-readable timestamp.
 
-    A Windows FileTime timestamp (18 digits) is a 64-bit value that represents the number of 100-nanosecond intervals
-    since 12:00AM Jan 1 1601 UTC.
+    A Windows FileTime timestamp (18 digits) is a 64-bit value that represents the number of
+    100-nanosecond intervals since 12:00AM Jan 1 1601 UTC.
 
     Useful values for ranges (all Jan-1 00:00:00):
       1970: 116444736000000000
