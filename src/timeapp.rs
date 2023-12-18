@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_decimal() {
-        let ts = TimeApplet { local: false };
+        let ts = TimeApplet { local: false, verbose: false };
         assert_eq!(run_decode(&ts, "0"), "1970-01-01T00:00:00Z");
         assert_eq!(run_decode(&ts, "1420070400"), "2015-01-01T00:00:00Z");
         assert_eq!(run_decode(&ts, "142007040000"), "2015-01-01T00:00:00Z");
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_hex() {
-        let ts = TimeApplet { local: false };
+        let ts = TimeApplet { local: false, verbose: false };
         assert_eq!(run_decode(&ts, "0x0"), "1970-01-01T00:00:00Z");
         assert_eq!(run_decode(&ts, "0x1"), "1970-01-01T00:00:01Z");
     }
