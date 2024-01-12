@@ -139,6 +139,7 @@ impl Applet for FindSoApplet {
                 }
             }
         }
+
         for f in sofiles.iter() {
             // Skip directories
             if fs::metadata(f)
@@ -165,6 +166,7 @@ impl Applet for FindSoApplet {
                 }
             }
         }
+
         /* Return empty Vec as we output directly on stdout */
         Ok(Vec::<u8>::new())
     }
