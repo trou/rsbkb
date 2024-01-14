@@ -138,6 +138,79 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_hex_cli_arg() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["hex", "aAé!"])
+            .assert()
+            .stdout("6141c3a921")
+            .success();
+    }
+
+    #[test]
+    fn test_hex_cli_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["hex"])
+            .write_stdin("aAé!\n")
+            .assert()
+            .stdout("6141c3a9210a")
+            .success();
+    }
+
+    #[test]
+    fn test_unhex_cli_arg() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["unhex", "6141210a00ff"])
+            .assert()
+            .stdout(&b"aA!\n\x00\xff"[..])
+            .success();
+    }
+
+    #[test]
+    fn test_unhex_cli_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["unhex"])
+            .write_stdin("41ff\n00FF")
+            .assert()
+            .stdout(&[0x41, 0xFF, 0x0A, 0x00, 0xFF][..])
+            .success();
+    }
+
+    #[test]
+    fn test_unhex_cli_stdin_hexonly() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["unhex", "-o"])
+            .write_stdin("41ff\n00FF")
+            .assert()
+            .stdout(&b"A\xFF\n00FF"[..])
+            .success();
+    }
+
+    #[test]
+    fn test_unhex_cli_stdin_strict() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["unhex", "-s"])
+            .write_stdin("41l")
+            .assert()
+            .stdout(&b""[..])
+            .stderr(predicates::str::contains("Odd number of digits"))
+            .failure();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["unhex", "-s"])
+            .write_stdin("41ll")
+            .assert()
+            .stdout(&b""[..])
+            .stderr(predicates::str::contains("Invalid character"))
+            .failure();
+    }
+
+    #[test]
     fn test_hex() {
         let hex = HexApplet {};
         assert_eq!(
