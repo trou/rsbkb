@@ -153,6 +153,18 @@ mod tests {
     }
 
     #[test]
+    fn test_verbose_cli_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsdec", "-v"])
+            .write_stdin("1")
+            .assert()
+            .stdout("1970-01-01T00:00:01Z")
+            .stderr("Used format: Seconds since Epoch\n")
+            .success();
+    }
+
+    #[test]
     fn test_decimal() {
         let ts = TimeApplet {
             local: false,
