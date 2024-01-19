@@ -1,8 +1,8 @@
 use crate::applet::{Applet, FromStrWithRadix};
 use anyhow::{bail, Context, Result};
 use clap::{arg, Command};
-use std::fs::OpenOptions;
-use std::io::{BufReader, Read, Seek, SeekFrom};
+use std::fs::{File, OpenOptions};
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 
 pub struct SliceApplet {
     file: Option<String>,
@@ -22,7 +22,7 @@ impl Applet for SliceApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
-            .arg(arg!(<file>    "file to slice"))
+            .arg(arg!(<file>    "file to slice, - for stdin"))
             .arg(arg!(<start>   "start of slice, relative to end of file if negative"))
             .arg(arg!([end]   "end of slice: absolute or relative if prefixed with +"))
     }
@@ -81,8 +81,58 @@ impl Applet for SliceApplet {
     }
 
     fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
-        let start = self.start;
         let filename = self.file.as_ref().unwrap();
+
+        if filename == "-"
+            || File::open(filename)
+                .with_context(|| format!("can't open file \"{}\"", filename))?
+                .rewind()
+                .is_ok()
+        {
+            if self.from_end {
+                bail!("Cannot seek from end in an unseekable file");
+            }
+            self.process_unseekable(filename)
+        } else {
+            self.process_seekable(filename)
+        }
+    }
+}
+
+impl SliceApplet {
+    fn process_unseekable(&self, filename: &str) -> Result<Vec<u8>> {
+        let mut f: Box<dyn BufRead> = if filename == "-" {
+            Box::new(BufReader::new(std::io::stdin()))
+        } else {
+            Box::new(BufReader::new(
+                OpenOptions::new()
+                    .read(true)
+                    .write(false)
+                    .open(filename)
+                    .with_context(|| format!("can't open file \"{}\"", filename))?,
+            ))
+        };
+
+        let mut res = vec![];
+        res.resize(self.start as usize, 0);
+        f.read_exact(&mut res)
+            .with_context(|| "Could not read until start")?;
+
+        if self.end.is_some() {
+            let end = self.end.unwrap();
+            if end < self.start {
+                bail!("specified end < start");
+            }
+            let len: usize = (end - self.start) as usize;
+            res.resize(len, 0);
+            f.read_exact(&mut res).with_context(|| "Read failed")?;
+        } else {
+            f.read_to_end(&mut res).with_context(|| "Read failed")?;
+        }
+        Ok(res.to_vec())
+    }
+
+    fn process_seekable(&self, filename: &str) -> Result<Vec<u8>> {
         let mut f = BufReader::new(
             OpenOptions::new()
                 .read(true)
@@ -101,10 +151,10 @@ impl Applet for SliceApplet {
         let mut res = vec![];
         if self.end.is_some() {
             let end = self.end.unwrap();
-            if end < start {
+            if end < self.start {
                 bail!("specified end < start");
             }
-            let len: usize = (end - start) as usize;
+            let len: usize = (end - self.start) as usize;
             res.resize(len, 0);
             f.read_exact(&mut res).with_context(|| "Read failed")?;
         } else {
