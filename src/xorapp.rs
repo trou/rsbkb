@@ -84,7 +84,11 @@ mod tests {
 
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
-            .args(&["xor", "-f", tmpkey.path().to_str().expect("Could not get path as str")])
+            .args(&[
+                "xor",
+                "-f",
+                tmpkey.path().to_str().expect("Could not get path as str"),
+            ])
             .write_stdin(rand_key)
             .assert()
             .stdout(&b"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"[..])
