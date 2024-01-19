@@ -51,6 +51,45 @@ impl Applet for XorApplet {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_hex_key_cli() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["xor", "-x", "41", "AAAA"])
+            .assert()
+            .stdout(&b"\0\0\0\0"[..])
+            .success();
+    }
+
+    #[test]
+    fn test_key_file_cli_stdin() {
+        let rand_key: [u8; 17] = [
+            0x7f, 0x5a, 0x88, 0x7b, 0xe8, 0x81, 0xd6, 0x5e, 0x39, 0xf4, 0x7e, 0x25, 0xf2, 0x05,
+            0xdc, 0x22, 0x86,
+        ];
+        let zero_data = [0u8; 32];
+
+        let mut tmpkey = tempfile::NamedTempFile::new().unwrap();
+        tmpkey.write(&rand_key.clone()).unwrap();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["xor", "-f", tmpkey.path().to_str().expect("Could not get path as str")])
+            .write_stdin(zero_data)
+            .assert()
+            .stdout(&b"\x7fZ\x88{\xE8\x81\xD6^9\xF4~%\xF2\x05\xDC\"\x86\x7fZ\x88{\xE8\x81\xD6^9\xF4~%\xF2\x05\xDC"[..])
+            .success();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["xor", "-f", tmpkey.path().to_str().expect("Could not get path as str")])
+            .write_stdin(rand_key)
+            .assert()
+            .stdout(&b"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"[..])
+            .success();
+    }
 
     #[test]
     fn test_simple() {
