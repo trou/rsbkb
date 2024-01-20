@@ -87,7 +87,7 @@ impl Applet for SliceApplet {
             || File::open(filename)
                 .with_context(|| format!("can't open file \"{}\"", filename))?
                 .rewind()
-                .is_ok()
+                .is_err()
         {
             if self.from_end {
                 bail!("Cannot seek from end in an unseekable file");
