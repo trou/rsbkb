@@ -239,4 +239,75 @@ mod tests {
 
         assert_eq!(d[(d.len() - 10)..], pat.process_test(Vec::new()));
     }
+
+    #[test]
+    fn test_cli_file() {
+        let mut data : [u8; 10] = [0; 10];
+        for i in (0..10).into_iter() {
+            data[i] = i as u8;
+        }
+
+        let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
+        tmpfile.write(&data).unwrap();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", &tmpfile.path().to_str().unwrap(), "2", "+0x3"])
+            .assert()
+            .stdout(&b"\x02\x03\x04"[..])
+            .success();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", &tmpfile.path().to_str().unwrap(), "2"])
+            .assert()
+            .stdout(&b"\x02\x03\x04\x05\x06\x07\x08\x09"[..])
+            .success();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "--", &tmpfile.path().to_str().unwrap(), "-2"])
+            .assert()
+            .stdout(&b"\x08\x09"[..])
+            .success();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "--", &tmpfile.path().to_str().unwrap(), "-0x2", "+1"])
+            .assert()
+            .stdout(&b"\x08"[..])
+            .success();
+    }
+
+    #[test]
+    fn test_cli_stdin() {
+        let mut data : [u8; 10] = [0; 10];
+        for i in (0..10).into_iter() {
+            data[i] = i as u8;
+        }
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "-", "2", "+3"])
+            .write_stdin(&data)
+            .assert()
+            .stdout(&b"\x02\x03\x04"[..])
+            .success();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "-", "2"])
+            .write_stdin(&data)
+            .assert()
+            .stdout(&b"\x02\x03\x04\x05\x06\x07\x08\x09"[..])
+            .success();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "-", "-2"])
+            .write_stdin(&data)
+            .assert()
+            .stdout("")
+            .failure();
+    }
 }
