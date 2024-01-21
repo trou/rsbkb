@@ -7,3 +7,5 @@ target/
 **/*.rs.bk
 
 *.swp
+/musl*
+launch.json
