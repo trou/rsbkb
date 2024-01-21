@@ -160,10 +160,8 @@ impl Applet for FindSoApplet {
                 if found {
                     println!("{}", f);
                 }
-            } else {
-                if !self.quiet {
-                    eprintln!("Could not parse {} as ELF", f);
-                }
+            } else if !self.quiet {
+                eprintln!("Could not parse {} as ELF", f);
             }
         }
 
