@@ -176,7 +176,18 @@ fn main() -> Result<()> {
 
     if selected_app.returns_data() {
         let mut stdout = io::stdout();
-        stdout.write_all(&res).expect("Write failed");
+        let write_res = stdout.write_all(&res);
+
+        // Ignore broken pipe
+        match write_res {
+            Err(err) if err.kind() != std::io::ErrorKind::BrokenPipe => {
+                return Err(err.into());
+            }
+            Err(_) => {
+                return Ok(());
+            }
+            Ok(_) => (),
+        };
 
         /* Only add a newline when outputing to a terminal */
         if atty::is(Stream::Stdout) {

@@ -242,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_cli_file() {
-        let mut data : [u8; 10] = [0; 10];
+        let mut data: [u8; 10] = [0; 10];
         for i in (0..10).into_iter() {
             data[i] = i as u8;
         }
@@ -273,7 +273,13 @@ mod tests {
 
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
-            .args(&["slice", "--", &tmpfile.path().to_str().unwrap(), "-0x2", "+1"])
+            .args(&[
+                "slice",
+                "--",
+                &tmpfile.path().to_str().unwrap(),
+                "-0x2",
+                "+1",
+            ])
             .assert()
             .stdout(&b"\x08"[..])
             .success();
@@ -281,7 +287,7 @@ mod tests {
 
     #[test]
     fn test_cli_stdin() {
-        let mut data : [u8; 10] = [0; 10];
+        let mut data: [u8; 10] = [0; 10];
         for i in (0..10).into_iter() {
             data[i] = i as u8;
         }
