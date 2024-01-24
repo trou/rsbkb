@@ -129,3 +129,48 @@ impl Applet for BgrepApplet {
         Ok(Vec::<u8>::new())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+
+    #[test]
+    fn test_cli() {
+        let mut data: [u8; 10] = [0; 10];
+        for i in (0..10).into_iter() {
+            data[i] = i as u8;
+        }
+
+        let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
+        tmpfile.write(&data).unwrap();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["bgrep", "-x", "020304", &tmpfile.path().to_str().unwrap()])
+            .assert()
+            .stdout("0x2\n")
+            .success();
+    }
+
+    #[test]
+    fn test_cli_multiple() {
+        let mut tmpfile1 = tempfile::NamedTempFile::new().unwrap();
+        tmpfile1.write(b"tmpfile1").unwrap();
+
+        let mut tmpfile2 = tempfile::NamedTempFile::new().unwrap();
+        tmpfile2.write(b"2tmpfile").unwrap();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&[
+                "bgrep",
+                "tmpfile",
+                &tmpfile1.path().to_str().unwrap(),
+                &tmpfile2.path().to_str().unwrap(),
+            ])
+            .assert()
+            .stdout(predicates::str::contains(": 0x0\n"))
+            .stdout(predicates::str::contains(": 0x1\n"))
+            .success();
+    }
+}
