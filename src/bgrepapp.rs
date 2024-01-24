@@ -2,7 +2,7 @@ use crate::applet::Applet;
 use anyhow::{bail, Context, Result};
 use clap::{arg, Command};
 use memmap2::Mmap;
-use std::fs::File;
+use std::fs::{self, File};
 
 use regex::bytes::{Regex, RegexBuilder};
 
@@ -20,8 +20,9 @@ fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
 }
 
 pub struct BgrepApplet {
-    file: Option<String>,
+    files: Option<Vec<String>>,
     pattern: Option<Regex>,
+    verbose: bool,
 }
 
 impl Applet for BgrepApplet {
@@ -40,9 +41,10 @@ impl Applet for BgrepApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
+            .arg(arg!(-v --verbose  "verbose"))
             .arg(arg!(-x --hex  "pattern is hex"))
             .arg(arg!(<pattern>  "pattern to search"))
-            .arg(arg!(<file>    "file to search"))
+            .arg(arg!(<file>    "file to search").num_args(1..))
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {
@@ -51,13 +53,18 @@ impl Applet for BgrepApplet {
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
-            file: None,
+            files: None,
             pattern: None,
+            verbose: false,
         })
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let filename = args.get_one::<String>("file").unwrap();
+        let filenames = args
+            .get_many::<String>("file")
+            .unwrap()
+            .map(|s| s.to_string())
+            .collect();
         let pattern_val = args.get_one::<String>("pattern").unwrap();
 
         /* Convert hex pattern to "\x00" format if needed */
@@ -78,27 +85,92 @@ impl Applet for BgrepApplet {
         let pattern = build_pattern(&final_pat)?;
 
         Ok(Box::new(Self {
-            file: Some(filename.to_string()),
+            files: Some(filenames),
             pattern: Some(pattern),
+            verbose: args.get_flag("verbose"),
         }))
     }
 
     fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
-        let filename = self.file.as_ref().unwrap();
-        let f = File::open(filename).with_context(|| "Could not open file")?;
+        let filenames = self.files.as_ref().unwrap();
+        let many = filenames.len() > 1;
+        for filename in filenames.iter() {
+            if !fs::metadata(filename).is_ok_and(|f| f.is_file()) {
+                if self.verbose {
+                    eprintln!("Skipping non-file {}", filename);
+                }
+                continue;
+            };
 
-        /* Mmap is necessarily unsafe as data can change unexpectedly */
-        let data = unsafe { Mmap::map(&f).with_context(|| "Could not mmap input file")? };
+            let f = File::open(filename);
+            match f {
+                Ok(f) => {
+                    /* Mmap is necessarily unsafe as data can change unexpectedly */
+                    let data =
+                        unsafe { Mmap::map(&f).with_context(|| "Could not mmap input file")? };
 
-        let regex = self.pattern.as_ref().unwrap();
-        let matches = regex.find_iter(&data);
+                    let regex = self.pattern.as_ref().unwrap();
+                    let matches = regex.find_iter(&data);
 
-        /* Print offsets on stdout directly, to avoid buffering */
-        for m in matches {
-            println!("0x{:x}", m.start());
+                    /* Print offsets on stdout directly, to avoid buffering */
+                    for m in matches {
+                        if many {
+                            println!("{}: 0x{:x}", filename, m.start());
+                        } else {
+                            println!("0x{:x}", m.start());
+                        }
+                    }
+                }
+                Err(e) => eprintln!("Could not open {}: {}", filename, e),
+            }
         }
 
         /* Return empty Vec as we output directly on stdout */
         Ok(Vec::<u8>::new())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::io::Write;
+
+    #[test]
+    fn test_cli() {
+        let mut data: [u8; 10] = [0; 10];
+        for i in (0..10).into_iter() {
+            data[i] = i as u8;
+        }
+
+        let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
+        tmpfile.write(&data).unwrap();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["bgrep", "-x", "020304", &tmpfile.path().to_str().unwrap()])
+            .assert()
+            .stdout("0x2\n")
+            .success();
+    }
+
+    #[test]
+    fn test_cli_multiple() {
+        let mut tmpfile1 = tempfile::NamedTempFile::new().unwrap();
+        tmpfile1.write(b"tmpfile1").unwrap();
+
+        let mut tmpfile2 = tempfile::NamedTempFile::new().unwrap();
+        tmpfile2.write(b"2tmpfile").unwrap();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&[
+                "bgrep",
+                "tmpfile",
+                &tmpfile1.path().to_str().unwrap(),
+                &tmpfile2.path().to_str().unwrap(),
+            ])
+            .assert()
+            .stdout(predicates::str::contains(": 0x0\n"))
+            .stdout(predicates::str::contains(": 0x1\n"))
+            .success();
     }
 }
