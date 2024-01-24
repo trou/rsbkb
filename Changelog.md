@@ -1,4 +1,4 @@
-* 2024-XX-XX: v1.3 : `slice` now supports non-seekable files. `tsdec` verbose mode. `bgrep` multiple args. Tests now cover real CLI invocations.
+* 2024-01-24: v1.3 : `slice` now supports non-seekable files. `tsdec` verbose mode. `bgrep` multiple args. Tests now cover real CLI invocations.
 * 2023-09-26: v1.2.1: fix CLI flags parsing, add skipping of invalid files in findso
 * 2023-08-13: v1.2: inflate/deflate applet ; base64 update: support custom alphabet ; global: check if given value is potentially a file and warn user
 * 2023-01-08: v1.1: better usage info and error reporting
