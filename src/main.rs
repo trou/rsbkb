@@ -3,7 +3,7 @@
 
 use anyhow::{anyhow, Result};
 
-use std::io;
+use std::io::{self, IsTerminal};
 use std::io::{Read, Write};
 use std::path::Path;
 extern crate base64;
@@ -12,7 +12,6 @@ use clap::Command;
 extern crate crc;
 extern crate hex;
 extern crate percent_encoding;
-use atty::Stream;
 
 mod applet;
 use applet::Applet;
@@ -190,7 +189,7 @@ fn main() -> Result<()> {
         };
 
         /* Only add a newline when outputing to a terminal */
-        if atty::is(Stream::Stdout) {
+        if std::io::stdout().is_terminal() {
             println!();
         }
     }
