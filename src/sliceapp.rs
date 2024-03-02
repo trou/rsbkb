@@ -114,7 +114,7 @@ impl SliceApplet {
         };
 
         // Read initial data
-        let mut res = Vec::with_capacity(self.start as usize);
+        let mut res = vec![0; self.start as usize];
 
         f.read_exact(&mut res)
             .with_context(|| "Could not read until start")?;
