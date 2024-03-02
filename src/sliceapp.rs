@@ -152,6 +152,7 @@ impl SliceApplet {
             f.seek(SeekFrom::Start(self.start))
                 .with_context(|| "seek failed")?;
         }
+
         let mut res = vec![];
         if self.end.is_some() {
             let end = self.end.unwrap();
@@ -315,5 +316,13 @@ mod tests {
             .assert()
             .stdout("")
             .failure();
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "-", "0", "0"])
+            .write_stdin(&data)
+            .assert()
+            .stdout(&b""[..])
+            .success();
     }
 }
