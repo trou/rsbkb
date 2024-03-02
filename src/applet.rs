@@ -1,3 +1,4 @@
+#![allow(clippy::new_ret_no_self)]
 use anyhow::{Context, Result};
 use clap::{arg, Command};
 
@@ -36,7 +37,6 @@ pub trait Applet {
     fn process_test(&self, val: Vec<u8>) -> Vec<u8> {
         self.process(val).unwrap()
     }
-
     fn new() -> Box<dyn Applet>
     where
         Self: Sized;
