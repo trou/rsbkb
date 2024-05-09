@@ -24,7 +24,7 @@ fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
 }
 
 pub struct BgrepApplet {
-    files: Option<Vec<String>>,
+    paths: Option<Vec<String>>,
     pattern: Option<Regex>,
     verbose: bool,
     recursive: bool,
@@ -50,7 +50,7 @@ impl Applet for BgrepApplet {
             .arg(arg!(-x --hex  "pattern is hex"))
             .arg(arg!(-r --recursive "search in subfolders"))
             .arg(arg!(<pattern>  "pattern to search"))
-            .arg(arg!(<file>    "file to search").num_args(1..))
+            .arg(arg!(<path>    "file(s) or directory(ies) to search in").num_args(1..))
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {
@@ -59,7 +59,7 @@ impl Applet for BgrepApplet {
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
-            files: None,
+            paths: None,
             pattern: None,
             verbose: false,
             recursive: false,
@@ -68,7 +68,7 @@ impl Applet for BgrepApplet {
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filenames = args
-            .get_many::<String>("file")
+            .get_many::<String>("path")
             .unwrap()
             .map(|s| s.to_string())
             .collect();
@@ -92,7 +92,7 @@ impl Applet for BgrepApplet {
         let pattern = build_pattern(&final_pat)?;
 
         Ok(Box::new(Self {
-            files: Some(filenames),
+            paths: Some(filenames),
             pattern: Some(pattern),
             verbose: args.get_flag("verbose"),
             recursive: args.get_flag("recursive"),
@@ -100,7 +100,7 @@ impl Applet for BgrepApplet {
     }
 
     fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
-        let input_paths = self.files.as_ref().unwrap();
+        let input_paths = self.paths.as_ref().unwrap();
         let many = input_paths.len() > 1 || self.recursive;
         // Make sure we keep the search order based on what is given first as the input
         for input_path in input_paths.iter() {
