@@ -2,7 +2,11 @@ use crate::applet::Applet;
 use anyhow::{bail, Context, Result};
 use clap::{arg, Command};
 use memmap2::Mmap;
-use std::{collections::BTreeSet, fs::{self, read_dir, File}, path::PathBuf};
+use std::{
+    collections::BTreeSet,
+    fs::{self, read_dir, File},
+    path::PathBuf,
+};
 
 use regex::bytes::{Regex, RegexBuilder};
 
@@ -23,7 +27,7 @@ pub struct BgrepApplet {
     files: Option<Vec<String>>,
     pattern: Option<Regex>,
     verbose: bool,
-    recursive: bool
+    recursive: bool,
 }
 
 impl Applet for BgrepApplet {
@@ -58,7 +62,7 @@ impl Applet for BgrepApplet {
             files: None,
             pattern: None,
             verbose: false,
-            recursive: false
+            recursive: false,
         })
     }
 
@@ -91,7 +95,7 @@ impl Applet for BgrepApplet {
             files: Some(filenames),
             pattern: Some(pattern),
             verbose: args.get_flag("verbose"),
-            recursive: args.get_flag("recursive")
+            recursive: args.get_flag("recursive"),
         }))
     }
 
@@ -108,7 +112,11 @@ impl Applet for BgrepApplet {
                 let path_metadata = match fs::metadata(&path) {
                     Ok(x) => x,
                     Err(err) => {
-                        eprintln!("Skiping {} with non-obtainable metadata ({})", path.to_string_lossy(), err);
+                        eprintln!(
+                            "Skiping {} with non-obtainable metadata ({})",
+                            path.to_string_lossy(),
+                            err
+                        );
                         continue;
                     }
                 };
@@ -118,8 +126,9 @@ impl Applet for BgrepApplet {
                     match f {
                         Ok(f) => {
                             /* Mmap is necessarily unsafe as data can change unexpectedly */
-                            let data =
-                                unsafe { Mmap::map(&f).with_context(|| "Could not mmap input file")? };
+                            let data = unsafe {
+                                Mmap::map(&f).with_context(|| "Could not mmap input file")?
+                            };
 
                             let regex = self.pattern.as_ref().unwrap();
                             let matches = regex.find_iter(&data);
@@ -146,7 +155,11 @@ impl Applet for BgrepApplet {
                     let dir_read = match read_dir(&path) {
                         Ok(x) => x,
                         Err(err) => {
-                            eprintln!("Skipping directory {}, failed to list childs ({})", path.to_string_lossy(), err);
+                            eprintln!(
+                                "Skipping directory {}, failed to list childs ({})",
+                                path.to_string_lossy(),
+                                err
+                            );
                             continue;
                         }
                     };
@@ -221,7 +234,7 @@ mod tests {
     #[test]
     fn test_recursive() {
         let tmp_dir = tempfile::TempDir::new().unwrap();
-        
+
         {
             let mut tmp_file = File::create(&tmp_dir.path().join("test_file.bin")).unwrap();
             tmp_file.write(b"2tmpfile").unwrap();
@@ -233,13 +246,13 @@ mod tests {
                 "bgrep",
                 "--recursive",
                 "tmpfile",
-                tmp_dir.path().to_str().expect("Could not convert temp path to unicode")
+                tmp_dir
+                    .path()
+                    .to_str()
+                    .expect("Could not convert temp path to unicode"),
             ])
             .assert()
             .stdout(predicates::str::contains(": 0x1\n"))
             .success();
-
-
-        
     }
 }
