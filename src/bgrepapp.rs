@@ -2,7 +2,11 @@ use crate::applet::Applet;
 use anyhow::{bail, Context, Result};
 use clap::{arg, Command};
 use memmap2::Mmap;
-use std::fs::{self, File};
+use std::{
+    collections::BTreeSet,
+    fs::{self, read_dir, File},
+    path::PathBuf,
+};
 
 use regex::bytes::{Regex, RegexBuilder};
 
@@ -20,9 +24,10 @@ fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
 }
 
 pub struct BgrepApplet {
-    files: Option<Vec<String>>,
+    paths: Option<Vec<String>>,
     pattern: Option<Regex>,
     verbose: bool,
+    recursive: bool,
 }
 
 impl Applet for BgrepApplet {
@@ -43,8 +48,9 @@ impl Applet for BgrepApplet {
             .about(self.description())
             .arg(arg!(-v --verbose  "verbose"))
             .arg(arg!(-x --hex  "pattern is hex"))
+            .arg(arg!(-r --recursive "search in subfolders"))
             .arg(arg!(<pattern>  "pattern to search"))
-            .arg(arg!(<file>    "file to search").num_args(1..))
+            .arg(arg!(<path>    "file(s) or directory(ies) to search in").num_args(1..))
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {
@@ -53,15 +59,16 @@ impl Applet for BgrepApplet {
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
-            files: None,
+            paths: None,
             pattern: None,
             verbose: false,
+            recursive: false,
         })
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filenames = args
-            .get_many::<String>("file")
+            .get_many::<String>("path")
             .unwrap()
             .map(|s| s.to_string())
             .collect();
@@ -85,43 +92,93 @@ impl Applet for BgrepApplet {
         let pattern = build_pattern(&final_pat)?;
 
         Ok(Box::new(Self {
-            files: Some(filenames),
+            paths: Some(filenames),
             pattern: Some(pattern),
             verbose: args.get_flag("verbose"),
+            recursive: args.get_flag("recursive"),
         }))
     }
 
     fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
-        let filenames = self.files.as_ref().unwrap();
-        let many = filenames.len() > 1;
-        for filename in filenames.iter() {
-            if !fs::metadata(filename).is_ok_and(|f| f.is_file()) {
-                if self.verbose {
-                    eprintln!("Skipping non-file {}", filename);
-                }
-                continue;
-            };
+        let input_paths = self.paths.as_ref().unwrap();
+        let many = input_paths.len() > 1 || self.recursive;
+        // Make sure we keep the search order based on what is given first as the input
+        for input_path in input_paths.iter() {
+            // A BTreeSet ensure we get a consistant order
+            let mut paths_to_explore = BTreeSet::new();
+            paths_to_explore.insert(PathBuf::from(input_path));
 
-            let f = File::open(filename);
-            match f {
-                Ok(f) => {
-                    /* Mmap is necessarily unsafe as data can change unexpectedly */
-                    let data =
-                        unsafe { Mmap::map(&f).with_context(|| "Could not mmap input file")? };
-
-                    let regex = self.pattern.as_ref().unwrap();
-                    let matches = regex.find_iter(&data);
-
-                    /* Print offsets on stdout directly, to avoid buffering */
-                    for m in matches {
-                        if many {
-                            println!("{}: 0x{:x}", filename, m.start());
-                        } else {
-                            println!("0x{:x}", m.start());
-                        }
+            while let Some(path) = paths_to_explore.pop_first() {
+                let path_metadata = match fs::metadata(&path) {
+                    Ok(x) => x,
+                    Err(err) => {
+                        eprintln!(
+                            "Skiping {} with non-obtainable metadata ({})",
+                            path.to_string_lossy(),
+                            err
+                        );
+                        continue;
                     }
+                };
+
+                if path_metadata.is_file() {
+                    let f = File::open(&path);
+                    match f {
+                        Ok(f) => {
+                            /* Mmap is necessarily unsafe as data can change unexpectedly */
+                            let data = unsafe {
+                                Mmap::map(&f).with_context(|| "Could not mmap input file")?
+                            };
+
+                            let regex = self.pattern.as_ref().unwrap();
+                            let matches = regex.find_iter(&data);
+
+                            /* Print offsets on stdout directly, to avoid buffering */
+                            for m in matches {
+                                if many {
+                                    println!("{}: 0x{:x}", path.to_string_lossy(), m.start());
+                                } else {
+                                    println!("0x{:x}", m.start());
+                                }
+                            }
+                        }
+                        Err(e) => eprintln!("Could not open {}: {}", path.to_string_lossy(), e),
+                    }
+                } else if path_metadata.is_dir() {
+                    if !self.recursive {
+                        if self.verbose {
+                            eprintln!("Skipping directory {}", path.to_string_lossy())
+                        }
+                        continue;
+                    }
+
+                    let dir_read = match read_dir(&path) {
+                        Ok(x) => x,
+                        Err(err) => {
+                            eprintln!(
+                                "Skipping directory {}, failed to list childs ({})",
+                                path.to_string_lossy(),
+                                err
+                            );
+                            continue;
+                        }
+                    };
+                    for sub_path_unchecked in dir_read {
+                        let sub_path = match sub_path_unchecked {
+                            Ok(x) => x,
+                            Err(err) => {
+                                eprintln!("Skipping a sub-path of directory {}, failed to list a child ({})", path.to_string_lossy(), err);
+                                continue;
+                            }
+                        };
+                        paths_to_explore.insert(sub_path.path());
+                    }
+                } else {
+                    if self.verbose {
+                        eprintln!("Skipping non-file {}", path.to_string_lossy());
+                    }
+                    continue;
                 }
-                Err(e) => eprintln!("Could not open {}: {}", filename, e),
             }
         }
 
@@ -132,7 +189,7 @@ impl Applet for BgrepApplet {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Write;
+    use std::{fs::File, io::Write};
 
     #[test]
     fn test_cli() {
@@ -170,6 +227,31 @@ mod tests {
             ])
             .assert()
             .stdout(predicates::str::contains(": 0x0\n"))
+            .stdout(predicates::str::contains(": 0x1\n"))
+            .success();
+    }
+
+    #[test]
+    fn test_recursive() {
+        let tmp_dir = tempfile::TempDir::new().unwrap();
+
+        {
+            let mut tmp_file = File::create(&tmp_dir.path().join("test_file.bin")).unwrap();
+            tmp_file.write(b"2tmpfile").unwrap();
+        }
+
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&[
+                "bgrep",
+                "--recursive",
+                "tmpfile",
+                tmp_dir
+                    .path()
+                    .to_str()
+                    .expect("Could not convert temp path to unicode"),
+            ])
+            .assert()
             .stdout(predicates::str::contains(": 0x1\n"))
             .success();
     }
