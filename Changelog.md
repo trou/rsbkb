@@ -1,4 +1,4 @@
-* 2024-XX-XX: v1.4 : `crc` can now compute all known types, alg list updated.
+* 2024-XX-XX: v1.4 : `crc` can now compute all known types, alg list updated. Add `--recursive` option to `bgrep`, thanks @marius851000!
 * 2024-01-24: v1.3 : `slice` now supports non-seekable files. `tsdec` verbose mode. `bgrep` multiple args. Tests now cover real CLI invocations.
 * 2023-09-26: v1.2.1: fix CLI flags parsing, add skipping of invalid files in findso
 * 2023-08-13: v1.2: inflate/deflate applet ; base64 update: support custom alphabet ; global: check if given value is potentially a file and warn user
