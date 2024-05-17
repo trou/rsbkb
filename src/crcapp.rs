@@ -198,7 +198,10 @@ impl Applet for CRCApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-l --list  "List supported CRC algorithms"))
-            .arg(arg!([type] "CRC type to compute. Use 'all' to compute all known algorithms.").required_unless_present("list"))
+            .arg(
+                arg!([type] "CRC type to compute. Use 'all' to compute all known algorithms.")
+                    .required_unless_present("list"),
+            )
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
