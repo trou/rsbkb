@@ -113,3 +113,64 @@ impl Applet for UrlDecApplet {
         Ok(decoded)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_urlenc_cli_arg() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["urlenc", "aAé!,"])
+            .assert()
+            .stdout("aA%c3%a9%21%2c")
+            .success();
+    }
+
+    #[test]
+    fn test_urlenc_cli_arg_exclude() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["urlenc", "-e", "!,", "aAé!,"])
+            .assert()
+            .stdout("aA%c3%a9!,")
+            .success();
+    }
+
+    #[test]
+    fn test_urlenc_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["urlenc"])
+            .write_stdin("aAé!,")
+            .assert()
+            .stdout("aA%c3%a9%21%2c")
+            .success();
+    }
+
+    #[test]
+    fn test_urlenc() {
+        let urlenc = UrlEncApplet {
+            excluded: "".to_string(),
+        };
+        let encoded = urlenc
+            .process("aA!,é".as_bytes().to_vec())
+            .expect("encoding failed");
+        assert_eq!(String::from_utf8(encoded).unwrap(), "aA%21%2c%c3%a9");
+    }
+
+    #[test]
+    fn test_urlencdec() {
+        let urlenc = UrlEncApplet {
+            excluded: "".to_string(),
+        };
+        let urldec = UrlDecApplet {};
+        let test_string = "aA!,é";
+        let encoded = urlenc
+            .process(test_string.as_bytes().to_vec())
+            .expect("encoding failed");
+        let decoded = urldec.process(encoded).expect("decoding failed");
+        assert_eq!(String::from_utf8(decoded).unwrap(), test_string);
+    }
+}
