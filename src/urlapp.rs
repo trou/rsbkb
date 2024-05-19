@@ -4,7 +4,60 @@ use anyhow::Result;
 use clap::{arg, Command};
 
 pub struct UrlEncApplet {
-    excluded: String,
+    table: [bool; 256],
+}
+
+// Encoding table according to RFC 3986
+fn build_url_table(excluded: &String, table: &mut [bool; 256]) -> () {
+    for i in 0..255 {
+        let c = char::from_u32(i).unwrap();
+        if !c.is_ascii_graphic() {
+            table[i as usize] = true;
+        } else {
+            if matches!(
+                c,
+                '!' | '#'
+                    | '$'
+                    | '%'
+                    | '&'
+                    | '\''
+                    | '('
+                    | ')'
+                    | '*'
+                    | '+'
+                    | ','
+                    | '/'
+                    | ':'
+                    | ';'
+                    | '='
+                    | '?'
+                    | '@'
+                    | '['
+                    | ']'
+            ) && !excluded.contains(c)
+            {
+                table[i as usize] = true;
+            } else {
+                table[i as usize] = false;
+            }
+        }
+    }
+}
+
+// Default is to encode non alpha-numeric (ASCII) chars
+fn build_default_table(excluded: &String, table: &mut [bool; 256]) -> () {
+    for i in 0..255 {
+        let c = char::from_u32(i).unwrap();
+        if c.is_ascii_alphanumeric() {
+            table[i as usize] = false;
+        } else {
+            if excluded.contains(c) {
+                table[i as usize] = false;
+            } else {
+                table[i as usize] = true;
+            }
+        }
+    }
 }
 
 impl Applet for UrlEncApplet {
@@ -17,69 +70,39 @@ impl Applet for UrlEncApplet {
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
-            excluded: "".to_string(),
+            table: [false; 256],
         })
     }
 
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
+            .arg(arg!(-u --"rfc3986" "use RFC3986 (URL) list of chars to encode"))
             .arg(arg!(-e --"exclude-chars" <chars>  "a string of chars to exclude from encoding"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
             .after_help("By default, encode all non alphanumeric characters in the input.")
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        if args.contains_id("exclude-chars") {
-            let chars: &String = args.get_one::<String>("exclude-chars").unwrap();
-
-            Ok(Box::new(Self {
-                excluded: chars.to_string(),
-            }))
+        let empty_exclude = "".to_string();
+        let excluded = if args.contains_id("exclude-chars") {
+            args.get_one::<String>("exclude-chars").unwrap()
         } else {
-            Ok(Box::new(Self {
-                excluded: "".to_string(),
-            }))
-        }
+            &empty_exclude
+        };
+        let mut table = [false; 256];
+        if args.get_flag("rfc3986") {
+            build_url_table(&excluded, &mut table);
+        } else {
+            build_default_table(&excluded, &mut table);
+        };
+        Ok(Box::new(Self { table: table }))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        let mut table = [false; 256];
-
-        for i in 0..255 {
-            let c = char::from_u32(i).unwrap();
-            if !c.is_ascii_graphic() {
-                table[i as usize] = true;
-            } else {
-                if matches!(
-                    c,
-                    '!' | '#'
-                        | '$'
-                        | '%'
-                        | '&'
-                        | '\''
-                        | '('
-                        | ')'
-                        | '*'
-                        | '+'
-                        | ','
-                        | '/'
-                        | ':'
-                        | ';'
-                        | '='
-                        | '?'
-                        | '@'
-                        | '['
-                        | ']'
-                ) && !self.excluded.contains(c)
-                {
-                    table[i as usize] = true;
-                }
-            }
-        }
         let mut encoded = Vec::with_capacity(val.len());
         for b in val.iter() {
-            if table[*b as usize] {
+            if self.table[*b as usize] {
                 encoded.extend_from_slice(format!("%{:02x}", *b).as_bytes());
             } else {
                 encoded.push(*b);
@@ -151,9 +174,9 @@ mod tests {
 
     #[test]
     fn test_urlenc() {
-        let urlenc = UrlEncApplet {
-            excluded: "".to_string(),
-        };
+        let mut table = [false; 256];
+        build_default_table(&"".to_string(), &mut table);
+        let urlenc = UrlEncApplet { table: table };
         let encoded = urlenc
             .process("aA!,é".as_bytes().to_vec())
             .expect("encoding failed");
@@ -162,9 +185,9 @@ mod tests {
 
     #[test]
     fn test_urlencdec() {
-        let urlenc = UrlEncApplet {
-            excluded: "".to_string(),
-        };
+        let mut table = [false; 256];
+        build_default_table(&"".to_string(), &mut table);
+        let urlenc = UrlEncApplet { table: table };
         let urldec = UrlDecApplet {};
         let test_string = "aA!,é";
         let encoded = urlenc
