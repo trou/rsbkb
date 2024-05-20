@@ -1,4 +1,4 @@
-* 2024-XX-XX: v1.4 :
+* 2024-05-20: v1.4 :
   * `crc` can now compute all known types, alg list updated.
   * Add `--recursive` option to `bgrep`, thanks @marius851000!.
   * `urlenc`:
