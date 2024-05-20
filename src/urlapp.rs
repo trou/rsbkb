@@ -44,6 +44,21 @@ fn build_url_table(excluded: &String, table: &mut [bool; 256]) -> () {
     }
 }
 
+fn build_custom_table(excluded: &String, custom: &String, table: &mut [bool; 256]) -> () {
+    for i in 0..255 {
+        let c = char::from_u32(i).unwrap();
+        if custom.contains(c) {
+            if excluded.contains(c) {
+                table[i as usize] = false;
+            } else {
+                table[i as usize] = true;
+            }
+        } else {
+            table[i as usize] = false;
+        }
+    }
+}
+
 // Default is to encode non alpha-numeric (ASCII) chars
 fn build_default_table(excluded: &String, table: &mut [bool; 256]) -> () {
     for i in 0..255 {
@@ -78,6 +93,10 @@ impl Applet for UrlEncApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-u --"rfc3986" "use RFC3986 (URL) list of chars to encode"))
+            .arg(
+                arg!(-c --"custom" <custom> "string specifying chars to encode")
+                    .conflicts_with("rfc3986"),
+            )
             .arg(arg!(-e --"exclude-chars" <chars>  "a string of chars to exclude from encoding"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
             .after_help("By default, encode all non alphanumeric characters in the input.")
@@ -93,6 +112,9 @@ impl Applet for UrlEncApplet {
         let mut table = [false; 256];
         if args.get_flag("rfc3986") {
             build_url_table(&excluded, &mut table);
+        } else if args.contains_id("custom") {
+            let custom = args.get_one::<String>("custom").unwrap();
+            build_custom_table(&excluded, &custom, &mut table);
         } else {
             build_default_table(&excluded, &mut table);
         };
@@ -158,6 +180,16 @@ mod tests {
             .args(&["urlenc", "-e", "!,", "aAé!,"])
             .assert()
             .stdout("aA%c3%a9!,")
+            .success();
+    }
+
+    #[test]
+    fn test_urlenc_cli_arg_custom() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["urlenc", "-e", "!,", "-c", "aA,", "aAé!,"])
+            .assert()
+            .stdout("%61%41é!,")
             .success();
     }
 
