@@ -4,11 +4,42 @@ use clap::{arg, Command};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
 
+#[derive(Debug)]
+struct Position {
+    offset: u64,
+    relative: bool,
+    from_end: bool,
+}
+
 pub struct SliceApplet {
     file: Option<String>,
-    start: u64,
-    from_end: bool,
-    end: Option<u64>,
+    start: Position,
+    end: Option<Position>,
+}
+
+/* Helper to parse "start" and "end".
+ * return value: value, plus_prefix, minus_prefix
+ */
+fn parse_value_with_prefix(s: &String) -> Result<Position> {
+    if s.len() < 1 {
+        bail!("Invalid length for value");
+    }
+
+    let first = s.chars().nth(0).unwrap();
+
+    let (from_end, relative, str_strip): (bool, bool, &String) = if first == '-' {
+        (true, false, &s[1..].to_string())
+    } else if first == '+' {
+        (false, true, &s[1..].to_string())
+    } else {
+        (false, false, s)
+    };
+    let offset = u64::from_str_with_radix(&str_strip).with_context(|| "Invalid offset value")?;
+    Ok(Position {
+        offset,
+        relative,
+        from_end,
+    })
 }
 
 impl Applet for SliceApplet {
@@ -24,7 +55,7 @@ impl Applet for SliceApplet {
             .about(self.description())
             .arg(arg!(<file>    "file to slice, - for stdin"))
             .arg(arg!(<start>   "start of slice, relative to end of file if negative"))
-            .arg(arg!([end]   "end of slice: absolute or relative if prefixed with +"))
+            .arg(arg!([end]     "end of slice: absolute, relative to <start> if prefixed with +, relative to end of file if negative"))
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {
@@ -34,8 +65,11 @@ impl Applet for SliceApplet {
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
             file: None,
-            start: 0,
-            from_end: false,
+            start: Position {
+                offset: 0,
+                relative: false,
+                from_end: false,
+            },
             end: None,
         })
     }
@@ -43,39 +77,18 @@ impl Applet for SliceApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         let filename = args.get_one::<String>("file").unwrap();
         let start_val = args.get_one::<String>("start").unwrap();
+        let end_opt = args.get_one::<String>("end");
 
-        /* Negative start: offset from the end. */
-        let (start, from_end) = if let Some(start_val_no_plus) = start_val.strip_prefix('-') {
-            (
-                u64::from_str_with_radix(start_val_no_plus)
-                    .with_context(|| "Invalid value for 'start'")?,
-                true,
-            )
-        } else {
-            (
-                u64::from_str_with_radix(start_val).with_context(|| "Invalid value for 'start'")?,
-                false,
-            )
-        };
+        let start = parse_value_with_prefix(start_val)?;
 
-        let end: Option<u64> = if let Some(end_val) = args.get_one::<String>("end") {
-            if let Some(end_val_no_plus) = end_val.strip_prefix('+') {
-                Some(
-                    start
-                        + u64::from_str_with_radix(end_val_no_plus)
-                            .with_context(|| "Invalid end")?,
-                )
-            } else {
-                Some(u64::from_str_with_radix(end_val).with_context(|| "Invalid end")?)
-            }
-        } else {
-            None
+        let end = match end_opt {
+            None => None,
+            Some(end_val) => Some(parse_value_with_prefix(end_val)?),
         };
 
         Ok(Box::new(Self {
             file: Some(filename.to_string()),
             start,
-            from_end,
             end,
         }))
     }
@@ -89,7 +102,7 @@ impl Applet for SliceApplet {
                 .rewind()
                 .is_err()
         {
-            if self.from_end {
+            if self.start.from_end || self.end.as_ref().is_some_and(|e| e.from_end) {
                 bail!("Cannot seek from end in an unseekable file");
             }
             self.process_unseekable(filename)
@@ -114,7 +127,7 @@ impl SliceApplet {
         };
 
         // Read initial data
-        let mut res = vec![0; self.start as usize];
+        let mut res = vec![0; self.start.offset as usize];
 
         f.read_exact(&mut res)
             .with_context(|| "Could not read until start")?;
@@ -122,12 +135,21 @@ impl SliceApplet {
         // Drop it
         res.clear();
 
+        let start = self.start.offset;
+
         if self.end.is_some() {
-            let end = self.end.unwrap();
-            if end < self.start {
+            let end_pos = self.end.as_ref().unwrap();
+
+            let end = if end_pos.relative {
+                start + end_pos.offset
+            } else {
+                end_pos.offset
+            };
+
+            if end < start {
                 bail!("specified end < start");
             }
-            let len: usize = (end - self.start) as usize;
+            let len: usize = (end - start) as usize;
             res.resize(len, 0);
             f.read_exact(&mut res).with_context(|| "Read failed")?;
         } else {
@@ -137,33 +159,49 @@ impl SliceApplet {
     }
 
     fn process_seekable(&self, filename: &str) -> Result<Vec<u8>> {
-        let mut f = BufReader::new(
-            OpenOptions::new()
-                .read(true)
-                .write(false)
-                .open(filename)
-                .with_context(|| format!("can't open file \"{}\"", filename))?,
-        );
+        let f = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .open(filename)
+            .with_context(|| format!("can't open file \"{}\"", filename))?;
+        let flen = f
+            .metadata()
+            .with_context(|| format!("Could not get file len for {}", filename))?
+            .len();
+        let mut fbuf = BufReader::new(&f);
 
-        if self.from_end {
-            f.seek(SeekFrom::End(-(self.start as i64)))
-                .with_context(|| "seek failed")?;
+        let start = if self.start.from_end {
+            flen - self.start.offset
         } else {
-            f.seek(SeekFrom::Start(self.start))
-                .with_context(|| "seek failed")?;
+            self.start.offset
+        };
+        if start > flen {
+            bail!("start is after end of file");
         }
+        fbuf.seek(SeekFrom::Start(start))
+            .with_context(|| "seek failed")?;
 
         let mut res = vec![];
         if self.end.is_some() {
-            let end = self.end.unwrap();
-            if end < self.start {
+            let end_pos = self.end.as_ref().unwrap();
+            let end = if end_pos.from_end {
+                flen - end_pos.offset
+            } else if end_pos.relative {
+                start + end_pos.offset
+            } else {
+                end_pos.offset
+            };
+
+            if end < start {
                 bail!("specified end < start");
+            } else if end > flen {
+                eprintln!("Warning: end is after end of file");
             }
-            let len: usize = (end - self.start) as usize;
+            let len: usize = (end - start) as usize;
             res.resize(len, 0);
-            f.read_exact(&mut res).with_context(|| "Read failed")?;
+            fbuf.read_exact(&mut res).with_context(|| "Read failed")?;
         } else {
-            f.read_to_end(&mut res).with_context(|| "Read failed")?;
+            fbuf.read_to_end(&mut res).with_context(|| "Read failed")?;
         }
         Ok(res.to_vec())
     }
@@ -191,9 +229,16 @@ mod tests {
         let filepath = tmpfile.path().to_str().unwrap().to_string();
         let pat = SliceApplet {
             file: Some(filepath),
-            end: Some(0),
-            start: 0,
-            from_end: false,
+            start: Position {
+                offset: 0,
+                relative: false,
+                from_end: false,
+            },
+            end: Some(Position {
+                offset: 0,
+                relative: false,
+                from_end: false,
+            }),
         };
 
         assert_eq!(d[0..0], pat.process_test(Vec::new()));
@@ -205,9 +250,16 @@ mod tests {
         let filepath = tmpfile.path().to_str().unwrap().to_string();
         let pat = SliceApplet {
             file: Some(filepath),
-            end: Some(10),
-            start: 0,
-            from_end: false,
+            start: Position {
+                offset: 0,
+                relative: false,
+                from_end: false,
+            },
+            end: Some(Position {
+                offset: 10,
+                relative: false,
+                from_end: false,
+            }),
         };
 
         assert_eq!(d[0..10], pat.process_test(Vec::new()));
@@ -219,26 +271,36 @@ mod tests {
         let filepath = tmpfile.path().to_str().unwrap().to_string();
         let pat = SliceApplet {
             file: Some(filepath),
+            start: Position {
+                offset: 10,
+                relative: false,
+                from_end: false,
+            },
             end: None,
-            start: 10,
-            from_end: false,
         };
 
         assert_eq!(d[10..], pat.process_test(Vec::new()));
     }
 
     #[test]
-    fn test_slice_from_end() {
+    fn test_slice_end_from_end() {
         let (tmpfile, d) = setup();
         let filepath = tmpfile.path().to_str().unwrap().to_string();
         let pat = SliceApplet {
             file: Some(filepath),
-            end: None,
-            start: 10,
-            from_end: true,
+            start: Position {
+                offset: 10,
+                relative: false,
+                from_end: false,
+            },
+            end: Some(Position {
+                offset: 10,
+                relative: false,
+                from_end: true,
+            }),
         };
 
-        assert_eq!(d[(d.len() - 10)..], pat.process_test(Vec::new()));
+        assert_eq!(d[10..(d.len() - 10)], pat.process_test(Vec::new()));
     }
 
     #[test]
