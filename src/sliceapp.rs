@@ -49,7 +49,7 @@ impl Applet for SliceApplet {
         "slice"
     }
     fn description(&self) -> &'static str {
-        "slice"
+        "cut slices from file or stdin"
     }
 
     fn clap_command(&self) -> Command {
