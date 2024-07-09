@@ -332,6 +332,20 @@ mod tests {
             .stdout(&b"\x02\x03\x04\x05\x06\x07\x08\x09"[..])
             .success();
 
+        /* Should fail because "start" is before beginning of file */
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", &tmpfile.path().to_str().unwrap(), "-200"])
+            .assert()
+            .failure();
+
+        /* Should fail because "end" is before "start */
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", &tmpfile.path().to_str().unwrap(), "0", "-300"])
+            .assert()
+            .failure();
+
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
             .args(&["slice", "--", &tmpfile.path().to_str().unwrap(), "-2"])
@@ -376,9 +390,19 @@ mod tests {
             .stdout(&b"\x02\x03\x04\x05\x06\x07\x08\x09"[..])
             .success();
 
+        /* Should fail because stdin is not seekable */
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
             .args(&["slice", "-", "-2"])
+            .write_stdin(*&data)
+            .assert()
+            .stdout("")
+            .failure();
+
+        /* Should fail because stdin is not seekable */
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["slice", "-", "0", "-10"])
             .write_stdin(*&data)
             .assert()
             .stdout("")
