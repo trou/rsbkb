@@ -173,12 +173,15 @@ impl SliceApplet {
         let mut fbuf = BufReader::new(&f);
 
         let start = if self.start.from_end {
+            if self.start.offset > flen {
+                    bail!("start is before beginning of file");
+            }
             flen - self.start.offset
         } else {
             self.start.offset
         };
         if start > flen {
-            bail!("start is after end of file");
+            bail!("start (0x{:X}) is after end of file (0x{:X})", start, flen);
         }
         fbuf.seek(SeekFrom::Start(start))
             .with_context(|| "seek failed")?;
@@ -197,7 +200,7 @@ impl SliceApplet {
             if end < start {
                 bail!("specified end < start");
             } else if end > flen {
-                eprintln!("Warning: end is after end of file");
+                bail!("end (0x{:X}) is after end of file (0x{:X})", end, flen);
             }
             let len: usize = (end - start) as usize;
             res.resize(len, 0);
