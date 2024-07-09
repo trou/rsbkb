@@ -27,10 +27,12 @@ fn parse_value_with_prefix(s: &String) -> Result<Position> {
 
     let first = s.chars().nth(0).unwrap();
 
+    let str_stripped = &s[1..].to_string();
+
     let (from_end, relative, str_strip): (bool, bool, &String) = if first == '-' {
-        (true, false, &s[1..].to_string())
+        (true, false, str_stripped)
     } else if first == '+' {
-        (false, true, &s[1..].to_string())
+        (false, true, str_stripped)
     } else {
         (false, false, s)
     };
