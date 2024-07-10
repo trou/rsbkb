@@ -9,3 +9,4 @@ target/
 *.swp
 /musl*
 launch.json
+tags
