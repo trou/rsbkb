@@ -125,6 +125,7 @@ impl Applet for UrlEncApplet {
         let mut encoded = Vec::with_capacity(val.len());
         for b in val.iter() {
             if self.table[*b as usize] {
+                // format! is not the fastest, but we are encoding URLs, not gigabytes of data
                 encoded.extend_from_slice(format!("%{:02x}", *b).as_bytes());
             } else {
                 encoded.push(*b);
