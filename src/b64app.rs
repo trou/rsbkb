@@ -148,7 +148,7 @@ impl Applet for B64DecApplet {
                         }
                         // Should not happen since we handle trailing data
                         // before in non-strict mode
-                        base64::DecodeError::InvalidLength => {
+                        base64::DecodeError::InvalidLength(_) => {
                             decoded.with_context(|| "Decoding base64 failed")
                         }
                         base64::DecodeError::InvalidPadding => {
