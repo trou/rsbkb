@@ -174,7 +174,7 @@ impl SliceApplet {
 
         let start = if self.start.from_end {
             if self.start.offset > flen {
-                    bail!("start is before beginning of file");
+                bail!("start is before beginning of file");
             }
             flen - self.start.offset
         } else {
