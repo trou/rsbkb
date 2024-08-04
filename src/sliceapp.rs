@@ -21,11 +21,11 @@ pub struct SliceApplet {
  * return value: value, plus_prefix, minus_prefix
  */
 fn parse_value_with_prefix(s: &String) -> Result<Position> {
-    if s.len() < 1 {
+    if s.is_empty() {
         bail!("Invalid length for value");
     }
 
-    let first = s.chars().nth(0).unwrap();
+    let first = s.chars().next().unwrap();
 
     let str_stripped = &s[1..].to_string();
 
@@ -36,7 +36,7 @@ fn parse_value_with_prefix(s: &String) -> Result<Position> {
     } else {
         (false, false, s)
     };
-    let offset = u64::from_str_with_radix(&str_strip).with_context(|| "Invalid offset value")?;
+    let offset = u64::from_str_with_radix(str_strip).with_context(|| "Invalid offset value")?;
     Ok(Position {
         offset,
         relative,

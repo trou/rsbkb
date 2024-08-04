@@ -232,11 +232,11 @@ impl Applet for CRCApplet {
 }
 
 impl CRCApplet {
-    fn do_crc(&self, alg_name: &str, val: &Vec<u8>) -> Result<String> {
-        let alg_size: u8 = (*alg_name.split("_").collect::<Vec<&str>>().get(1).unwrap())
+    fn do_crc(&self, alg_name: &str, val: &[u8]) -> Result<String> {
+        let alg_size: u8 = (*alg_name.split('_').collect::<Vec<&str>>().get(1).unwrap())
             .parse()
             .unwrap();
-        return match alg_size {
+        match alg_size {
             0..=8 => {
                 let crc8 = algs!(alg_name; u8;
                     CRC_3_GSM, CRC_3_ROHC, CRC_4_G_704, CRC_4_INTERLAKEN, CRC_5_EPC_C1G2, CRC_5_G_704, CRC_5_USB,
@@ -245,7 +245,7 @@ impl CRCApplet {
                     CRC_8_GSM_B, CRC_8_HITAG, CRC_8_I_432_1, CRC_8_I_CODE, CRC_8_LTE, CRC_8_MAXIM_DOW,
                     CRC_8_MIFARE_MAD, CRC_8_NRSC_5, CRC_8_OPENSAFETY, CRC_8_ROHC, CRC_8_SAE_J1850, CRC_8_SMBUS,
                     CRC_8_TECH_3250, CRC_8_WCDMA);
-                Ok(format!("{:02x}", crc8.checksum(&val)))
+                Ok(format!("{:02x}", crc8.checksum(val)))
             }
             9..=16 => {
                 let crc16 = algs!(alg_name; u16;
@@ -260,7 +260,7 @@ impl CRCApplet {
                             CRC_16_OPENSAFETY_B, CRC_16_PROFIBUS, CRC_16_RIELLO,
                             CRC_16_SPI_FUJITSU, CRC_16_T10_DIF, CRC_16_TELEDISK, CRC_16_TMS37157,
                             CRC_16_UMTS, CRC_16_USB, CRC_16_XMODEM);
-                Ok(format!("{:04x}", crc16.checksum(&val)))
+                Ok(format!("{:04x}", crc16.checksum(val)))
             }
             17..=32 => {
                 let crc32 = algs!(alg_name; u32;
@@ -268,20 +268,20 @@ impl CRCApplet {
                         CRC_24_LTE_A, CRC_24_LTE_B, CRC_24_OPENPGP, CRC_24_OS_9, CRC_30_CDMA, CRC_31_PHILIPS, CRC_32_AIXM,
                         CRC_32_AUTOSAR, CRC_32_BASE91_D, CRC_32_BZIP2, CRC_32_CD_ROM_EDC, CRC_32_CKSUM, CRC_32_ISCSI,
                         CRC_32_ISO_HDLC, CRC_32_JAMCRC, CRC_32_MEF, CRC_32_MPEG_2, CRC_32_XFER);
-                Ok(format!("{:08x}", crc32.checksum(&val)))
+                Ok(format!("{:08x}", crc32.checksum(val)))
             }
             33..=64 => {
                 let crc64 = algs!(alg_name; u64; CRC_40_GSM, CRC_64_ECMA_182, CRC_64_GO_ISO, CRC_64_MS, CRC_64_REDIS, CRC_64_WE, CRC_64_XZ);
-                Ok(format!("{:016x}", crc64.checksum(&val)))
+                Ok(format!("{:016x}", crc64.checksum(val)))
             }
             65..=128 => {
                 let crc128 = algs!(alg_name; u128; CRC_82_DARC);
-                Ok(format!("{:032x}", crc128.checksum(&val)))
+                Ok(format!("{:032x}", crc128.checksum(val)))
             }
             _ => {
                 bail!("Unknown CRC algorithm");
             }
-        };
+        }
     }
 }
 
