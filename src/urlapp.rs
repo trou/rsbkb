@@ -8,47 +8,43 @@ pub struct UrlEncApplet {
 }
 
 // Encoding table according to RFC 3986
-fn build_url_table(excluded: &str, table: &mut [bool; 256]) -> () {
+fn build_url_table(excluded: &str, table: &mut [bool; 256]) {
     for i in 0..255 {
         let c = char::from_u32(i).unwrap();
-        if !c.is_ascii_graphic() {
-            table[i as usize] = true;
-        } else if matches!(
-            c,
-            '!' | '#'
-                | '$'
-                | '%'
-                | '&'
-                | '\''
-                | '('
-                | ')'
-                | '*'
-                | '+'
-                | ','
-                | '/'
-                | ':'
-                | ';'
-                | '='
-                | '?'
-                | '@'
-                | '['
-                | ']'
-        ) && !excluded.contains(c)
+        if !c.is_ascii_graphic()
+            || (!excluded.contains(c)
+                && matches!(
+                    c,
+                    '!' | '#'
+                        | '$'
+                        | '%'
+                        | '&'
+                        | '\''
+                        | '('
+                        | ')'
+                        | '*'
+                        | '+'
+                        | ','
+                        | '/'
+                        | ':'
+                        | ';'
+                        | '='
+                        | '?'
+                        | '@'
+                        | '['
+                        | ']'
+                ))
         {
             table[i as usize] = true;
         }
     }
 }
 
-fn build_custom_table(excluded: &str, custom: &String, table: &mut [bool; 256]) -> () {
+fn build_custom_table(excluded: &str, custom: &str, table: &mut [bool; 256]) {
     for i in 0..255 {
         let c = char::from_u32(i).unwrap();
         if custom.contains(c) {
-            if excluded.contains(c) {
-                table[i as usize] = false;
-            } else {
-                table[i as usize] = true;
-            }
+            table[i as usize] = !excluded.contains(c);
         } else {
             table[i as usize] = false;
         }
@@ -56,17 +52,13 @@ fn build_custom_table(excluded: &str, custom: &String, table: &mut [bool; 256]) 
 }
 
 // Default is to encode non alpha-numeric (ASCII) chars
-fn build_default_table(excluded: &str, table: &mut [bool; 256]) -> () {
+fn build_default_table(excluded: &str, table: &mut [bool; 256]) {
     for i in 0..255 {
         let c = char::from_u32(i).unwrap();
         if c.is_ascii_alphanumeric() {
             table[i as usize] = false;
         } else {
-            if excluded.contains(c) {
-                table[i as usize] = false;
-            } else {
-                table[i as usize] = true;
-            }
+            table[i as usize] = !excluded.contains(c);
         }
     }
 }
@@ -114,7 +106,7 @@ impl Applet for UrlEncApplet {
         } else {
             build_default_table(excluded, &mut table);
         };
-        Ok(Box::new(Self { table: table }))
+        Ok(Box::new(Self { table }))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
