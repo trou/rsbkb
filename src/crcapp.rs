@@ -5,7 +5,7 @@ use clap::{arg, Command};
 use crc::*;
 use std::process;
 
-const ALL_CRCS: [&'static str; 111] = [
+const ALL_CRCS: [&str; 111] = [
     "CRC_3_GSM",
     "CRC_3_ROHC",
     "CRC_4_G_704",
