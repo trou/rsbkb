@@ -4,6 +4,7 @@ use anyhow::Result;
 use clap::{arg, Command};
 
 pub struct UrlEncApplet {
+    // true: should be encoded
     table: [bool; 256],
 }
 
