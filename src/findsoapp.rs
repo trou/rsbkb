@@ -1,6 +1,7 @@
 use crate::applet::Applet;
 use anyhow::{Context, Result};
 use clap::{arg, Command};
+use glob;
 use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
@@ -17,6 +18,32 @@ pub struct FindSoApplet {
     paths: Option<Vec<PathBuf>>,
     // don't show warnings
     quiet: bool,
+}
+
+fn parse_ld_so_conf(ldconf_path: &str) -> Result<Vec<PathBuf>> {
+    let conf_file = fs::read_to_string(ldconf_path)
+        .with_context(|| format!("Could not read config file \"{}\"", ldconf_path))?;
+    let conf_lines = conf_file.split('\n');
+    let mut ldpaths: Vec<PathBuf> = conf_lines
+        .clone()
+        .filter(|p| !p.starts_with("include ") && p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
+        .map(|p| PathBuf::from_str(p).unwrap())
+        .collect::<Vec<PathBuf>>();
+    // Handle includes
+    let includes = conf_lines
+        .filter(|l| l.starts_with("include "))
+        .map(|p| p.replace("include ", ""));
+    for inc_path in includes.into_iter() {
+        for inc_match in glob::glob(inc_path.as_str()).unwrap() {
+            match inc_match {
+                Ok(resolved_path) => {
+                    ldpaths.extend(parse_ld_so_conf(resolved_path.to_str().unwrap())?);
+                }
+                _ => (),
+            }
+        }
+    }
+    Ok(ldpaths)
 }
 
 impl Applet for FindSoApplet {
@@ -77,12 +104,7 @@ impl Applet for FindSoApplet {
             // parse ld.so.conf "like" file
             if args.contains_id("ldconf") {
                 let ldconf = args.get_one::<String>("ldconf").unwrap();
-                let ldpaths: Vec<PathBuf> = fs::read_to_string(ldconf)
-                    .with_context(|| format!("Could not read config file \"{}\"", ldconf))?
-                    .split('\n')
-                    .filter(|p| p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
-                    .map(|p| PathBuf::from_str(p).unwrap())
-                    .collect::<Vec<PathBuf>>();
+                let ldpaths = parse_ld_so_conf(ldconf)?;
                 paths.extend(ldpaths);
             }
 
