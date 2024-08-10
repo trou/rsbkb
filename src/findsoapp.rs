@@ -24,15 +24,19 @@ fn parse_ld_so_conf(ldconf_path: &str) -> Result<Vec<PathBuf>> {
     let conf_file = fs::read_to_string(ldconf_path)
         .with_context(|| format!("Could not read config file \"{}\"", ldconf_path))?;
     let conf_lines = conf_file.split('\n');
+
+    // Handle "normal" lines: skip comments and includes
     let mut ldpaths: Vec<PathBuf> = conf_lines
         .clone()
         .filter(|p| !p.starts_with("include ") && p.get(0..1).unwrap_or("#") != "#") // Skip empty lines and comments
         .map(|p| PathBuf::from_str(p).unwrap())
         .collect::<Vec<PathBuf>>();
-    // Handle includes
+
+    // Handle includes: get a list of included paths
     let includes = conf_lines
         .filter(|l| l.starts_with("include "))
         .map(|p| p.replace("include ", ""));
+
     for inc_path in includes.into_iter() {
         for inc_match in glob::glob(inc_path.as_str()).unwrap() {
             match inc_match {
@@ -62,12 +66,16 @@ impl Applet for FindSoApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
+            .arg(arg!(-a --all "search in all .so files found in LDPATH").conflicts_with("ref"))
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
             .arg(arg!(-q --quiet  "don't show warnings on invalid files"))
             .arg(arg!(-p --ldpath <LDPATH> "'\':\' separated list of paths to look for .so in'"))
             .arg(arg!(-l --ldconf <CONF>  "use config file to get LD paths"))
             .arg(arg!(<function>  "function to search"))
-            .arg(arg!(<files>...  "files to search in"))
+            .arg(
+                arg!([files]...  "files to search in, optional if --all is set")
+                    .required_unless_present("all"),
+            )
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {
@@ -85,11 +93,7 @@ impl Applet for FindSoApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let filenames: Vec<String> = args
-            .get_many::<String>("files")
-            .unwrap()
-            .map(|x| x.to_string())
-            .collect();
+        let mut filenames: Vec<String> = Vec::new();
         let function_val = args.get_one::<String>("function").unwrap();
         let paths = if args.contains_id("ldpath") || args.contains_id("ldconf") {
             let mut paths: Vec<PathBuf> = if let Some(ldpaths) = args.get_one::<String>("ldpath") {
@@ -109,16 +113,31 @@ impl Applet for FindSoApplet {
             }
 
             // check that paths are actually valid directories
-            for p in paths.iter() {
-                if !p.is_dir() {
-                    eprintln!("Warning: {} is not a valid directory", p.to_str().unwrap());
-                }
-            }
+            paths.retain(|p| p.is_dir());
 
             Some(paths)
         } else {
             None
         };
+
+        if args.contains_id("all") {
+            if let Some(paths_v) = &paths {
+                for p in paths_v {
+                    let paths_str: Vec<String> = glob::glob(p.join("*.so.*").to_str().unwrap())?
+                        .map(|p| p.unwrap().to_str().unwrap().to_string())
+                        .collect();
+                    filenames.extend(paths_str);
+                }
+            } else {
+                anyhow::bail!("--all without any paths");
+            }
+        } else {
+            filenames.extend(
+                args.get_many::<String>("files")
+                    .unwrap()
+                    .map(|x| x.to_string()),
+            );
+        }
 
         Ok(Box::new(Self {
             files: Some(filenames),
