@@ -11,7 +11,7 @@ pub struct FindSoApplet {
     // Function we are looking for
     function: Option<String>,
     // .so files
-    files: Option<Vec<String>>,
+    files: Option<Vec<PathBuf>>,
     // First .so is a binary to look for dependencies in
     is_ref: bool,
     // LD_LIBRARY_PATH equivalent
@@ -93,7 +93,7 @@ impl Applet for FindSoApplet {
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let mut filenames: Vec<String> = Vec::new();
+        let mut filenames: Vec<PathBuf> = Vec::new();
         let function_val = args.get_one::<String>("function").unwrap();
         let paths = if args.contains_id("ldpath") || args.contains_id("ldconf") {
             let mut paths: Vec<PathBuf> = if let Some(ldpaths) = args.get_one::<String>("ldpath") {
@@ -123,11 +123,12 @@ impl Applet for FindSoApplet {
         if args.contains_id("all") {
             if let Some(paths_v) = &paths {
                 for p in paths_v {
-                    let paths_str: Vec<String> = glob::glob(p.join("*.so.*").to_str().unwrap())?
-                        .map(|p| p.unwrap().to_str().unwrap().to_string())
-                        .collect();
-                    filenames.extend(paths_str);
+                    println!("{:?}", p);
+                    let so_files: Vec<PathBuf> = glob::glob(p.join("*.so.*").to_str().unwrap())
+                        .with_context(|| format!("Could not find .so files in {}", p.display()))?.map(|p| p.expect("could not find so")).collect();
+                    filenames.extend(so_files);
                 }
+                println!("{:?}", filenames);
             } else {
                 anyhow::bail!("--all without any paths");
             }
@@ -135,7 +136,7 @@ impl Applet for FindSoApplet {
             filenames.extend(
                 args.get_many::<String>("files")
                     .unwrap()
-                    .map(|x| x.to_string()),
+                    .map(|x| PathBuf::from_str(x).unwrap()),
             );
         }
 
@@ -150,31 +151,30 @@ impl Applet for FindSoApplet {
 
     fn process(&self, _val: Vec<u8>) -> Result<Vec<u8>> {
         let fun = self.function.as_ref().unwrap();
-        let mut sofiles: Vec<String> = Vec::from(self.files.as_ref().unwrap().as_slice());
+        let mut sofiles: Vec<PathBuf> = Vec::from(self.files.as_ref().unwrap().as_slice());
 
         // Load dependencies from first file
         if self.is_ref {
-            let f_data: Vec<u8> = fs::read(sofiles[0].as_str())
-                .with_context(|| format!("Could not read file \"{}\"", sofiles[0]))?;
+            let f_data: Vec<u8> = fs::read(&sofiles[0])
+                .with_context(|| format!("Could not read file \"{}\"", sofiles[0].display()))?;
             let elf_ref = elf::Elf::parse(f_data.as_slice())
                 .with_context(|| "Could not parse reference as ELF")?;
             sofiles.extend(
                 elf_ref
                     .libraries
                     .iter()
-                    .map(|l| String::from_str(l).unwrap()),
+                    .map(|l| PathBuf::from_str(l).unwrap())
             );
         };
 
         /* if ld paths were specified, try to resolve file names */
         if let Some(paths) = &self.paths {
-            for so in sofiles.iter_mut() {
-                let so_path = PathBuf::from_str(so).unwrap();
+            for so_path in sofiles.iter_mut() {
                 if so_path.is_relative() {
                     for p in paths.iter() {
                         let full_path = p.join(&so_path);
                         if full_path.is_file() {
-                            *so = String::from_str(full_path.to_str().unwrap()).unwrap();
+                            *so_path = full_path;
                         }
                     }
                 }
@@ -184,12 +184,12 @@ impl Applet for FindSoApplet {
         for f in sofiles.iter() {
             // Skip directories
             if fs::metadata(f)
-                .with_context(|| format!("Could not open {}", f))?
+                .with_context(|| format!("Could not open {}", f.display()))?
                 .is_dir()
             {
                 continue;
             }
-            let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f))?;
+            let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f.display()))?;
             let elf_file = elf::Elf::parse(f_data.as_slice());
             if let Ok(elf_file) = elf_file {
                 let strtab = elf_file.dynstrtab;
@@ -199,10 +199,10 @@ impl Applet for FindSoApplet {
                     .iter()
                     .any(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun));
                 if found {
-                    println!("{}", f);
+                    println!("{}", f.display());
                 }
             } else if !self.quiet {
-                eprintln!("Could not parse {} as ELF", f);
+                eprintln!("Could not parse {} as ELF", f.display());
             }
         }
 
