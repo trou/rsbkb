@@ -1,7 +1,6 @@
 use crate::applet::Applet;
 use anyhow::{Context, Result};
 use clap::{arg, Command};
-use glob;
 use goblin::elf;
 use std::fs;
 use std::path::PathBuf;
@@ -38,13 +37,8 @@ fn parse_ld_so_conf(ldconf_path: &str) -> Result<Vec<PathBuf>> {
         .map(|p| p.replace("include ", ""));
 
     for inc_path in includes.into_iter() {
-        for inc_match in glob::glob(inc_path.as_str()).unwrap() {
-            match inc_match {
-                Ok(resolved_path) => {
-                    ldpaths.extend(parse_ld_so_conf(resolved_path.to_str().unwrap())?);
-                }
-                _ => (),
-            }
+        for inc_match in glob::glob(inc_path.as_str()).unwrap().flatten() {
+                ldpaths.extend(parse_ld_so_conf(inc_match.to_str().unwrap())?);
         }
     }
     Ok(ldpaths)
@@ -123,12 +117,10 @@ impl Applet for FindSoApplet {
         if args.contains_id("all") {
             if let Some(paths_v) = &paths {
                 for p in paths_v {
-                    println!("{:?}", p);
                     let so_files: Vec<PathBuf> = glob::glob(p.join("*.so.*").to_str().unwrap())
                         .with_context(|| format!("Could not find .so files in {}", p.display()))?.map(|p| p.expect("could not find so")).collect();
                     filenames.extend(so_files);
                 }
-                println!("{:?}", filenames);
             } else {
                 anyhow::bail!("--all without any paths");
             }
