@@ -60,11 +60,11 @@ impl Applet for FindSoApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
-            .arg(arg!(-a --all "search in all .so files found in LDPATH").conflicts_with("ref"))
+            .arg(arg!(-a --all "search in all '*.so.*' files found in LDPATH").conflicts_with("ref"))
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
             .arg(arg!(-q --quiet  "don't show warnings on invalid files"))
             .arg(arg!(-p --ldpath <LDPATH> "'\':\' separated list of paths to look for .so in'"))
-            .arg(arg!(-l --ldconf <CONF>  "use config file to get LD paths"))
+            .arg(arg!(-l --ldconf [CONF]  "use config file to get LD paths, /etc/ld.so.conf is used if not specified"))
             .arg(arg!(<function>  "function to search"))
             .arg(
                 arg!([files]...  "files to search in, optional if --all is set")
@@ -101,8 +101,9 @@ impl Applet for FindSoApplet {
 
             // parse ld.so.conf "like" file
             if args.contains_id("ldconf") {
-                let ldconf = args.get_one::<String>("ldconf").unwrap();
-                let ldpaths = parse_ld_so_conf(ldconf)?;
+                let ld_so_conf = "/etc/ld.so.conf".to_string();
+                let ldconf = args.get_one::<String>("ldconf").or(Some(&ld_so_conf));
+                let ldpaths = parse_ld_so_conf(ldconf.unwrap())?;
                 paths.extend(ldpaths);
             }
 
