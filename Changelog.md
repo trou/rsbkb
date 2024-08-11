@@ -1,4 +1,8 @@
-* 2024-XX-XX: v1.5: `slice` now supports specifying `end` relative to end of file
+* 2024-XX-XX: v1.5:
+  * `slice` now supports specifying `end` relative to end of file
+  * `findso`: 
+    * add `-a` to look for the given function in all `.so` files in specified paths
+    * improve `ld.so.conf` parser to handle `include` directives
 * 2024-05-20: v1.4:
   * `crc` can now compute all known types, alg list updated.
   * Add `--recursive` option to `bgrep`, thanks @marius851000!.

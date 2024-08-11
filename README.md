@@ -48,6 +48,11 @@ $ bgrep "\x45\x4c..\x01" /bin/ls
 0x1
 $ findso -p /lib/x86_64-linux-gnu/ -r memcpy /bin/ls
 /lib/x86_64-linux-gnu/libc.so.6
+$ findso -l /etc/ld.so.conf -a memcpy
+/lib/i386-linux-gnu/libc.so.6
+/usr/lib/i386-linux-gnu/libc.so.6
+/lib/x86_64-linux-gnu/libasan.so.6
+[...]
 ```
 
 ## How to use
