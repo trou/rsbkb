@@ -38,7 +38,7 @@ fn parse_ld_so_conf(ldconf_path: &str) -> Result<Vec<PathBuf>> {
 
     for inc_path in includes.into_iter() {
         for inc_match in glob::glob(inc_path.as_str()).unwrap().flatten() {
-                ldpaths.extend(parse_ld_so_conf(inc_match.to_str().unwrap())?);
+            ldpaths.extend(parse_ld_so_conf(inc_match.to_str().unwrap())?);
         }
     }
     Ok(ldpaths)
@@ -119,7 +119,9 @@ impl Applet for FindSoApplet {
             if let Some(paths_v) = &paths {
                 for p in paths_v {
                     let so_files: Vec<PathBuf> = glob::glob(p.join("*.so.*").to_str().unwrap())
-                        .with_context(|| format!("Could not find .so files in {}", p.display()))?.map(|p| p.expect("could not find so")).collect();
+                        .with_context(|| format!("Could not find .so files in {}", p.display()))?
+                        .map(|p| p.expect("could not find so"))
+                        .collect();
                     filenames.extend(so_files);
                 }
             } else {
@@ -156,7 +158,7 @@ impl Applet for FindSoApplet {
                 elf_ref
                     .libraries
                     .iter()
-                    .map(|l| PathBuf::from_str(l).unwrap())
+                    .map(|l| PathBuf::from_str(l).unwrap()),
             );
         };
 
@@ -182,7 +184,8 @@ impl Applet for FindSoApplet {
             {
                 continue;
             }
-            let f_data = fs::read(f).with_context(|| format!("Could not read file {}", f.display()))?;
+            let f_data =
+                fs::read(f).with_context(|| format!("Could not read file {}", f.display()))?;
             let elf_file = elf::Elf::parse(f_data.as_slice());
             if let Ok(elf_file) = elf_file {
                 let strtab = elf_file.dynstrtab;
