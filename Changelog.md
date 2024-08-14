@@ -1,4 +1,4 @@
-* 2024-XX-XX: v1.5:
+* 2024-08-14: v1.5:
   * `slice` now supports specifying `end` relative to end of file
   * `findso`: 
     * add `-a` to look for the given function in all `.so` files in specified paths
