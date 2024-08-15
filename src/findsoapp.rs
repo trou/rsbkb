@@ -60,7 +60,7 @@ impl Applet for FindSoApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
-            .arg(arg!(-a --all "search in all '*.so.*' files found in LDPATH").conflicts_with("ref"))
+            .arg(arg!(-a --all "search in all '*.so*' files found in LDPATH").conflicts_with("ref"))
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
             .arg(arg!(-q --quiet  "don't show warnings on invalid files"))
             .arg(arg!(-p --ldpath <LDPATH> "'\':\' separated list of paths to look for .so in'"))
@@ -115,10 +115,10 @@ impl Applet for FindSoApplet {
             None
         };
 
-        if args.contains_id("all") {
+        if args.get_flag("all") {
             if let Some(paths_v) = &paths {
                 for p in paths_v {
-                    let so_files: Vec<PathBuf> = glob::glob(p.join("*.so.*").to_str().unwrap())
+                    let so_files: Vec<PathBuf> = glob::glob(p.join("*.so*").to_str().unwrap())
                         .with_context(|| format!("Could not find .so files in {}", p.display()))?
                         .map(|p| p.expect("could not find so"))
                         .collect();
