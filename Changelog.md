@@ -1,3 +1,4 @@
+* 2024-08-15: v1.5.1: small fix for `findso`
 * 2024-08-14: v1.5:
   * `slice` now supports specifying `end` relative to end of file
   * `findso`: 
