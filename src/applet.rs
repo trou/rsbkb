@@ -1,6 +1,8 @@
 #![allow(clippy::new_ret_no_self)]
 use anyhow::{Context, Result};
 use clap::{arg, Command};
+use num_bigint::BigUint;
+use num_traits::Num;
 
 pub trait Applet {
     fn command(&self) -> &'static str;
@@ -65,41 +67,33 @@ impl SliceExt for [u8] {
     }
 }
 
+// We cannot use a default implementation for trait as from_str_radix is not defined
+// in a trait but as a function of for most base types
 pub trait FromStrWithRadix {
     fn from_str_with_radix(s: &str) -> Result<Self>
     where
         Self: Sized;
 }
 
-impl FromStrWithRadix for u64 {
+// Helper to add "from_str_with_radix" to given types
+macro_rules! from_str_with_radix_for_types {
+    ($($x:ident),* )  =>
+        {
+$(
+impl FromStrWithRadix for $x {
     fn from_str_with_radix(s: &str) -> Result<Self> {
         if s.len() > 2 && &s[0..2] == "0x" {
             Self::from_str_radix(&s[2..], 16)
+        } else if s.len() > 2 && &s[0..2] == "0o" {
+            Self::from_str_radix(&s[2..], 8)
         } else {
             s.parse()
         }
-        .with_context(|| "Could not convert str")
+        .context("Could not convert str")
     }
+})*
+
+        };
 }
 
-impl FromStrWithRadix for i64 {
-    fn from_str_with_radix(s: &str) -> Result<Self> {
-        if s.len() > 2 && &s[0..2] == "0x" {
-            Self::from_str_radix(&s[2..], 16)
-        } else {
-            s.parse()
-        }
-        .with_context(|| "Could not convert str")
-    }
-}
-
-impl FromStrWithRadix for usize {
-    fn from_str_with_radix(s: &str) -> Result<Self> {
-        if s.len() > 2 && &s[0..2] == "0x" {
-            Self::from_str_radix(&s[2..], 16)
-        } else {
-            s.parse()
-        }
-        .with_context(|| "Could not convert str")
-    }
-}
+from_str_with_radix_for_types!(u64, i64, usize, BigUint);
