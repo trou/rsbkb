@@ -102,7 +102,7 @@ for i in $(rsbkb list) ; do ln -s rsbkb $i ; done
 * `bgrep`: simple binary grep
 * `findso`: find which ELF shared library (.so) exports a given name/function
 * `inflate` and `deflate`: raw inflate/deflate compression, fault tolerant and with optional Zlib header support
-
+* `base`: easy radix conversion of big integers
 
 ### Getting help
 

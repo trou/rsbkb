@@ -1,7 +1,9 @@
+* 202X-XX-XX: v1.6:
+  * new `base` applet for easy radix conversion
 * 2024-08-15: v1.5.1: small fix for `findso`
 * 2024-08-14: v1.5:
   * `slice` now supports specifying `end` relative to end of file
-  * `findso`: 
+  * `findso`:
     * add `-a` to look for the given function in all `.so` files in specified paths
     * improve `ld.so.conf` parser to handle `include` directives
 * 2024-05-20: v1.4:
