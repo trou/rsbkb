@@ -12,6 +12,8 @@ pub struct UrlEncApplet {
 fn build_url_table(excluded: &str, table: &mut [bool; 256]) {
     for i in 0..255 {
         let c = char::from_u32(i).unwrap();
+        // encode non graphic chars and signs from the RFC3986 list, excepted
+        // explicitly excluded
         if !c.is_ascii_graphic()
             || (!excluded.contains(c)
                 && matches!(
