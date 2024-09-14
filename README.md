@@ -116,47 +116,43 @@ for i in $(rsbkb list) ; do ln -s rsbkb $i ; done
 
 ```console
 $ rsbkb help
-rsbkb 
+rsbkb 1.6.0-beta2 (Rust BlackBag) - by Raphaël Rigo <devel@syscall.eu>
 
-USAGE:
-    rsbkb [APPLET]
-
-OPTIONS:
-    -h, --help    Print help information
+Usage: rsbkb [APPLET]
 
 APPLETS:
-    b64           base64 encode
-    bgrep         binary grep
-    bofpatt       buffer overflow pattern generator
-    bofpattoff    buffer overflow pattern offset finder
-    crc           flexible CRC computation
-    crc16         compute CRC-16
-    crc32         compute CRC-32
-    d64           base64 decode
-    deflate       (raw) deflate compression
-    entropy       compute file entropy
-    findso        find which .so implements a given function
-    help          Print this message or the help of the given subcommand(s)
-    hex           hex encode
-    inflate       (raw) inflate decompression
-    list          list applets
-    slice         slice
-    tsdec         timestamp decoder
-    unhex         hex decode
-    urldec        URL decode
-    urlenc        URL encode
-    xor           xor value
+  list        list applets
+  hex         hex encode
+  unhex       hex decode
+  urlenc      URL encode
+  urldec      URL decode
+  crc16       compute CRC-16
+  crc32       compute CRC-32
+  crc         flexible CRC computation
+  b64         base64 encode
+  d64         base64 decode
+  bofpattoff  buffer overflow pattern offset finder
+  bofpatt     buffer overflow pattern generator
+  xor         xor value
+  entropy     compute file entropy
+  slice       cut slices from file or stdin
+  bgrep       binary grep
+  findso      find which .so implements a given function
+  tsdec       timestamp decoder
+  deflate     (raw) deflate compression
+  inflate     (raw) inflate decompression
+  base        convert integer between different bases
+  help        Print this message or the help of the given subcommand(s)
 
 $ rsbkb help slice
-slice
+cut slices from file or stdin
 
-USAGE:
-    rsbkb slice <file> <start> [end]
+Usage: rsbkb slice <file> <start> [end]
 
-ARGS:
-    <file>     file to slice
-    <start>    start of slice, relative to end of file if negative
-    <end>      end of slice: absolute or relative if prefixed with +
+Arguments:
+  <file>   file to slice, - for stdin
+  <start>  start of slice, relative to end of file if negative
+  [end]    end of slice: absolute, relative to <start> if prefixed with +, relative to end of file if negative
 ```
 
 ## Credits and heritage
