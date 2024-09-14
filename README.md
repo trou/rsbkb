@@ -8,6 +8,14 @@ CyberChef but through pipes.
 
 It also includes various practical tools like `entropy` or a timestamp decoder.
 
+
+## Quick start
+
+1. install with `cargo install rsbkb`
+2. run `rsbkb` to list applets
+3. run `rsbkb help <applet>` to learn more
+4. optionally create symlinks to call applets directly (e.g.: `ln -s rsbkb slice`)
+
 ## Examples
 
 Read 10 bytes from `/etc/passwd` starting at offset `0x2f`, then `xor` with

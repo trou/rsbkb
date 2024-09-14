@@ -1,5 +1,6 @@
-* 202X-XX-XX: v1.6:
+* 2024-09-14: v1.6:
   * new `base` applet for easy radix conversion
+  * crate published for easy install
 * 2024-08-15: v1.5.1: small fix for `findso`
 * 2024-08-14: v1.5:
   * `slice` now supports specifying `end` relative to end of file
