@@ -44,7 +44,7 @@ impl Applet for BaseIntApplet {
         };
         Ok(Box::new(Self {
             source_radix,
-            target_radix: target_radix,
+            target_radix,
         }))
     }
 
