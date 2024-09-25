@@ -5,33 +5,39 @@ use num_bigint::BigUint;
 use num_traits::Num;
 
 pub trait Applet {
+    /// The string which will define the subcommand.
     fn command(&self) -> &'static str;
+
+    /// Simple description of the applet.
     fn description(&self) -> &'static str;
 
-    /* Overload to return "false" if the applet directly
-     * outputs data to stdout */
+    /// Overload to return "false" if the applet directly
+    /// outputs data to stdout.
     fn returns_data(&self) -> bool {
         true
     }
 
+    /// Receives the arguments as understood by `clap` and builds the resulting `Applet`.
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>>;
 
+    /// Define the applet's arguments.
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!([value] "input value, reads from stdin in not present"))
     }
 
-    /* By default, applets accept the input as:
-     *   - an argument, named "value"
-     *   - stdin, if value is not supplied
-     * Applets can overload this method to have a different behaviour
-     * (for example if they have more args)
-     * */
+    /// By default, applets accept the input as:
+    ///   - an argument, named "value"
+    ///   - stdin, if value is not supplied
+    ///
+    /// Applets can overload this method to have a different behaviour
+    /// (for example if they have more args).
     fn arg_or_stdin(&self) -> Option<&'static str> {
         Some("value")
     }
 
+    /// Called by `main` to process the data in `val`
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>>;
 
     /* No error wrapping to make it easier to test */
@@ -39,12 +45,15 @@ pub trait Applet {
     fn process_test(&self, val: Vec<u8>) -> Vec<u8> {
         self.process(val).unwrap()
     }
+
     fn new() -> Box<dyn Applet>
     where
         Self: Sized;
 }
 
-/* Helper to trim whitespace */
+/* Helper to trim whitespace 
+ * Note: trim_ascii does this in Rust 1.80
+ * */
 pub trait SliceExt {
     fn trim(&self) -> &Self;
 }

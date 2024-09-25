@@ -12,7 +12,7 @@ use regex::bytes::{Regex, RegexBuilder};
 
 /// Build the regex pattern with the given options.
 /// By default, the `unicode` flag is set to false, and `dot_matches_new_line` set to true.
-/// Code borrowed from gahag's bgrep (https://github.com/gahag/bgrep)
+/// Code borrowed from gahag's bgrep <https://github.com/gahag/bgrep>
 fn build_pattern<P: AsRef<str>>(pattern: &P) -> Result<Regex> {
     let mut builder = RegexBuilder::new(pattern.as_ref());
 
