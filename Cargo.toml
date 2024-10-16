@@ -34,9 +34,9 @@ crc = "3"
 time = {version = "0.3", features=["local-offset", "formatting"]}
 regex = {version = "1.10", default-features=false, features=["std", "perf"]}
 memmap2 = "0.9"
-goblin = {version = "0.5.4", features=["elf32", "elf64", "endian_fd"]}
+goblin = {version = "0.8", features=["elf32", "elf64", "endian_fd"]}
 anyhow = "1.0.86"
-miniz_oxide = "0.7.4"
+miniz_oxide = "0.8.0"
 glob = "0.3.1"
 num-bigint = "0.4.6"
 num-traits = "0.2.19"
