@@ -1,7 +1,8 @@
-use crate::applet::{Applet, FromStrWithRadix};
+use crate::applet::Applet;
 use anyhow::{Context, Result};
 use clap::{arg, Command};
 use num_bigint::BigUint;
+use num_traits::Num;
 
 pub struct BaseIntApplet {
     source_radix: Option<u32>,
@@ -27,7 +28,7 @@ impl Applet for BaseIntApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-f --from <radix> "source radix, by default, parse standard prefixes (0x, 0b, 0o)"))
-            .arg(arg!(-t --to <radix> "target radix, defaults to decimal"))
+            .arg(arg!(-t --to <radix> "target radix, defaults to decimal, except if input was decimal, then default to hex"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
@@ -49,18 +50,58 @@ impl Applet for BaseIntApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        let int = if let Some(src) = self.source_radix {
-            BigUint::parse_bytes(&val, src).context("Could not convert input")?
+        let (srcrad, int) = if let Some(src) = self.source_radix {
+            (
+                src,
+                BigUint::parse_bytes(&val, src).context("Could not convert input")?,
+            )
         } else {
             let int_str = String::from_utf8(val).context("Could not convert value to string")?;
-            BigUint::from_str_with_radix(int_str.as_str())?
+
+            // Base was not specified, check standard prefixes
+            if int_str.len() > 2 && &int_str[0..2] == "0x" {
+                (
+                    16,
+                    BigUint::from_str_radix(&int_str[2..], 16)
+                        .context("Could not parse argument as hex integer")?,
+                )
+            } else if int_str.len() > 2 && &int_str[0..2] == "0o" {
+                (
+                    8,
+                    BigUint::from_str_radix(&int_str[2..], 8)
+                        .context("Could not parse argument as octal integer")?,
+                )
+            } else {
+                (
+                    10,
+                    int_str
+                        .parse()
+                        .context("Could not parse argument as integer")?,
+                )
+            }
         };
-        Ok(int.to_str_radix(self.target_radix).as_bytes().to_vec())
+
+        // If both source and target radices are equal to 10, actually output hex
+        if srcrad == 10 && self.target_radix == 10 {
+            Ok((format!("0x{}", int.to_str_radix(16))).as_bytes().to_vec())
+        } else {
+            Ok(int.to_str_radix(self.target_radix).as_bytes().to_vec())
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn test_base_cli_no_radix() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["base", "10"])
+            .assert()
+            .stdout("0xa")
+            .success();
+    }
+
     #[test]
     fn test_base_cli_arg() {
         assert_cmd::Command::cargo_bin("rsbkb")

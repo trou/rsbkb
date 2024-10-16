@@ -1,8 +1,6 @@
 #![allow(clippy::new_ret_no_self)]
 use anyhow::{Context, Result};
 use clap::{arg, Command};
-use num_bigint::BigUint;
-use num_traits::Num;
 
 pub trait Applet {
     /// The string which will define the subcommand.
@@ -51,7 +49,7 @@ pub trait Applet {
         Self: Sized;
 }
 
-/* Helper to trim whitespace 
+/* Helper to trim whitespace
  * Note: trim_ascii does this in Rust 1.80
  * */
 pub trait SliceExt {
@@ -105,4 +103,4 @@ impl FromStrWithRadix for $x {
         };
 }
 
-from_str_with_radix_for_types!(u64, i64, usize, BigUint);
+from_str_with_radix_for_types!(u64, i64, usize);
