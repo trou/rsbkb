@@ -1,3 +1,6 @@
+* 2024-XX-XX: v1.7:
+  * `base`: default to hex output for decimal input
+  * improve code documentation
 * 2024-09-14: v1.6:
   * new `base` applet for easy radix conversion
   * crate published for easy install
