@@ -29,24 +29,21 @@ impl Applet for BaseIntApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
-            .arg(arg!(-f --from <radix> "source radix, by default, parse standard prefixes (0x, 0b, 0o)"))
-            .arg(arg!(-t --to <radix> "target radix, defaults to decimal, except if input was decimal, then default to hex"))
+            .arg(arg!(-f --from <radix> "source radix, by default, parse standard prefixes (0x, 0b, 0o)")
+                 .value_parser(clap::value_parser!(u32).range(2..37)))
+            .arg(arg!(-t --to <radix> "target radix, defaults to decimal, except if input was decimal, then default to hex")
+                 .value_parser(clap::value_parser!(u32).range(2..37)))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        let source_radix: Option<u32> = if let Some(src) = args.get_one::<String>("from") {
-            Some(src.parse::<u32>().context("Could not parse 'from' radix")?)
-        } else {
-            None
-        };
-        let target_radix: u32 = if let Some(target) = args.get_one::<String>("to") {
-            target.parse().context("Could not parse 'to' radix")?
+        let target_radix: u32 = if let Some(target) = args.get_one::<u32>("to") {
+            *target
         } else {
             10
         };
         Ok(Box::new(Self {
-            source_radix,
+            source_radix: args.get_one::<u32>("from").copied(),
             target_radix,
         }))
     }
