@@ -4,6 +4,8 @@ use clap::{arg, Command};
 use num_bigint::BigUint;
 use num_traits::Num;
 
+use crate::applet::SliceExt;
+
 pub struct BaseIntApplet {
     source_radix: Option<u32>,
     target_radix: u32,
@@ -50,13 +52,16 @@ impl Applet for BaseIntApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
+        // Remove whitespace to make conversions work with stdin input
+        let val = val.trim();
+
         let (srcrad, int) = if let Some(src) = self.source_radix {
             (
                 src,
                 BigUint::parse_bytes(&val, src).context("Could not convert input")?,
             )
         } else {
-            let int_str = String::from_utf8(val).context("Could not convert value to string")?;
+            let int_str = String::from_utf8_lossy(val);
 
             // Base was not specified, check standard prefixes
             if int_str.len() > 2 && &int_str[0..2] == "0x" {
@@ -117,6 +122,17 @@ mod tests {
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
             .args(&["base", "-f", "2", "-t", "16", "10000"])
+            .assert()
+            .stdout("10")
+            .success();
+    }
+
+    #[test]
+    fn test_base_cli_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["base"])
+            .write_stdin("0xA\n")
             .assert()
             .stdout("10")
             .success();
