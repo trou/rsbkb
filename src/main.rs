@@ -62,6 +62,9 @@ use flateapp::InflateApplet;
 mod baseapp;
 use baseapp::BaseIntApplet;
 
+mod escapeapp;
+use escapeapp::EscapeApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -92,7 +95,8 @@ fn main() -> Result<()> {
         TimeApplet,
         DeflateApplet,
         InflateApplet,
-        BaseIntApplet
+        BaseIntApplet,
+        EscapeApplet
     );
 
     // Define a busybox-like multicall binary

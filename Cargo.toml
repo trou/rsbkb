@@ -29,7 +29,7 @@ strip = true        # Strip symbols from binary
 hex = "0.4"
 base64 = "0.22"
 percent-encoding = "2.2.0"
-clap = "~4.4"
+clap = {version = "~4.4", features = ["derive"]}
 crc = "3"
 time = {version = "0.3", features=["local-offset", "formatting"]}
 regex = {version = "1.10", default-features=false, features=["std", "perf"]}
