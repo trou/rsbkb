@@ -1,6 +1,7 @@
 use crate::applet::Applet;
-use anyhow::{Context, Result};
+use anyhow::{Result};
 use clap::{arg, Command};
+use crate::applet::SliceExt;
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum EscType {
@@ -57,6 +58,7 @@ impl SliceEsc for [u8] {
 
 pub struct EscapeApplet {
     esc_type: EscType,
+    no_quote: bool
 }
 
 impl Applet for EscapeApplet {
@@ -70,6 +72,7 @@ impl Applet for EscapeApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
+            .arg(arg!(-n --"no-quote" "do not wrap output in quotes"))
             .arg(
                 arg!(-t --type [type] "type of escape")
                     .value_parser(clap::builder::EnumValueParser::<EscType>::new())
@@ -81,16 +84,31 @@ impl Applet for EscapeApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
             esc_type: args.get_one::<EscType>("type").unwrap().clone(),
+            no_quote: args.get_flag("no-quote")
         }))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        Ok(val.escape(&self.esc_type))
+        let escaped = val.trim().escape(&self.esc_type);
+        if self.no_quote {
+            return Ok(escaped)
+        } else {
+            let quote = match self.esc_type {
+                EscType::BashSingle => b'\'',
+                _ => b'"'
+            };
+            let mut res = Vec::<u8>::with_capacity(escaped.len()+2);
+            res.push(quote);
+            res.extend(escaped);
+            res.push(quote);
+            return Ok(res)
+        }
     }
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
             esc_type: EscType::Default,
+            no_quote: false
         })
     }
 }
@@ -109,7 +127,7 @@ impl Applet for UnEscapeApplet {
         Box::new(Self {})
     }
 
-    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+    fn parse_args(&self, _args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {}))
     }
 
