@@ -1,12 +1,13 @@
 use crate::applet::Applet;
-use anyhow::{Result};
-use clap::{arg, Command};
 use crate::applet::SliceExt;
+use anyhow::Result;
+use clap::{arg, Command};
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum EscType {
     #[default]
     Default,
+    Single,
     PosixShell,
     Bash,
     BashSingle,
@@ -24,7 +25,7 @@ trait SliceEsc {
 impl SliceEsc for [u8] {
     fn escape(&self, esc_type: &EscType) -> Vec<u8> {
         match esc_type {
-            EscType::Default => self.escape_ascii().collect(),
+            EscType::Default | EscType::Single => self.escape_ascii().collect(),
             EscType::PosixShell => self.escape_chars(SHELL_CHARS),
             EscType::Bash => self.escape_chars(BASH_CHARS),
             EscType::BashSingle => self.escape_bash_single(),
@@ -58,7 +59,8 @@ impl SliceEsc for [u8] {
 
 pub struct EscapeApplet {
     esc_type: EscType,
-    no_quote: bool
+    no_quote: bool,
+    multiline: bool,
 }
 
 impl Applet for EscapeApplet {
@@ -72,6 +74,7 @@ impl Applet for EscapeApplet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
+            .arg(arg!(-m --multiline "expect multiline string, do not trim input"))
             .arg(arg!(-n --"no-quote" "do not wrap output in quotes"))
             .arg(
                 arg!(-t --type [type] "type of escape")
@@ -84,31 +87,34 @@ impl Applet for EscapeApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
             esc_type: args.get_one::<EscType>("type").unwrap().clone(),
-            no_quote: args.get_flag("no-quote")
+            no_quote: args.get_flag("no-quote"),
+            multiline: args.get_flag("multiline"),
         }))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        let escaped = val.trim().escape(&self.esc_type);
+        let to_escape = if self.multiline { val} else { val.trim().into()};
+        let escaped = to_escape.escape(&self.esc_type);
         if self.no_quote {
-            return Ok(escaped)
+            return Ok(escaped);
         } else {
             let quote = match self.esc_type {
-                EscType::BashSingle => b'\'',
-                _ => b'"'
+                EscType::BashSingle | EscType::Single => b'\'',
+                _ => b'"',
             };
-            let mut res = Vec::<u8>::with_capacity(escaped.len()+2);
+            let mut res = Vec::<u8>::with_capacity(escaped.len() + 2);
             res.push(quote);
             res.extend(escaped);
             res.push(quote);
-            return Ok(res)
+            return Ok(res);
         }
     }
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
             esc_type: EscType::Default,
-            no_quote: false
+            no_quote: false,
+            multiline: false,
         })
     }
 }
