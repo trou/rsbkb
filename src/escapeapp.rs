@@ -6,21 +6,27 @@ use clap::{arg, Command};
 enum EscType {
     #[default]
     Default,
-    Shell,
+    PosixShell,
+    Bash,
+    BashSingle,
 }
 
-const SHELL_CHARS: &[u8; 2] = b"'$";
+const SHELL_CHARS: &[u8; 4] = b"`$\"\\";
+const BASH_CHARS: &[u8; 5] = b"`$\"\\!";
 
 trait SliceEsc {
     fn escape(&self, esc_type: &EscType) -> Vec<u8>;
     fn escape_chars(&self, chars: &[u8]) -> Vec<u8>;
+    fn escape_bash_single(&self) -> Vec<u8>;
 }
 
 impl SliceEsc for [u8] {
     fn escape(&self, esc_type: &EscType) -> Vec<u8> {
         match esc_type {
             EscType::Default => self.escape_ascii().collect(),
-            EscType::Shell => self.escape_chars(SHELL_CHARS),
+            EscType::PosixShell => self.escape_chars(SHELL_CHARS),
+            EscType::Bash => self.escape_chars(BASH_CHARS),
+            EscType::BashSingle => self.escape_bash_single(),
         }
     }
 
@@ -31,6 +37,19 @@ impl SliceEsc for [u8] {
                 res.push(b'\\');
             }
             res.push(*c);
+        }
+        res
+    }
+
+    fn escape_bash_single(&self) -> Vec<u8> {
+        let mut res = Vec::<u8>::with_capacity(self.len());
+        let mut parts = self.split(|b| *b == b'\'').peekable();
+        while let Some(part) = parts.next() {
+            res.extend_from_slice(part);
+            if !parts.peek().is_none() {
+                // https://stackoverflow.com/a/1250279
+                res.extend_from_slice(b"'\"'\"'")
+            }
         }
         res
     }
