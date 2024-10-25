@@ -6,7 +6,7 @@ use clap::{arg, Command};
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum EscType {
     #[default]
-    Default,
+    Generic,
     Single,
     PosixShell,
     Bash,
@@ -25,7 +25,7 @@ trait SliceEsc {
 impl SliceEsc for [u8] {
     fn escape(&self, esc_type: &EscType) -> Vec<u8> {
         match esc_type {
-            EscType::Default | EscType::Single => self.escape_ascii().collect(),
+            EscType::Generic | EscType::Single => self.escape_ascii().collect(),
             EscType::PosixShell => self.escape_chars(SHELL_CHARS),
             EscType::Bash => self.escape_chars(BASH_CHARS),
             EscType::BashSingle => self.escape_bash_single(),
@@ -79,7 +79,7 @@ impl Applet for EscapeApplet {
             .arg(
                 arg!(-t --type [type] "type of escape")
                     .value_parser(clap::builder::EnumValueParser::<EscType>::new())
-                    .default_value("default"),
+                    .default_value("generic"),
             )
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
@@ -93,7 +93,11 @@ impl Applet for EscapeApplet {
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        let to_escape = if self.multiline { val} else { val.trim().into()};
+        let to_escape = if self.multiline {
+            val
+        } else {
+            val.trim().into()
+        };
         let escaped = to_escape.escape(&self.esc_type);
         if self.no_quote {
             return Ok(escaped);
@@ -112,7 +116,7 @@ impl Applet for EscapeApplet {
 
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
-            esc_type: EscType::Default,
+            esc_type: EscType::Generic,
             no_quote: false,
             multiline: false,
         })
