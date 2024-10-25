@@ -14,6 +14,11 @@ enum EscType {
 }
 
 const SHELL_CHARS: &[u8; 4] = b"`$\"\\";
+// Note that bash is crazy regarding '!'
+// echo "\!" will output \!
+// ref: https://www.gnu.org/software/bash/manual/html_node/Double-Quotes.html
+// > If enabled, history expansion will be performed unless an ‘!’ appearing in double quotes is
+// > escaped using a backslash. The backslash preceding the ‘!’ is not removed.
 const BASH_CHARS: &[u8; 5] = b"`$\"\\!";
 
 trait SliceEsc {
