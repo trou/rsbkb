@@ -53,7 +53,7 @@ impl SliceEsc for [u8] {
         let mut parts = self.split(|b| *b == b'\'').peekable();
         while let Some(part) = parts.next() {
             res.extend_from_slice(part);
-            if !parts.peek().is_none() {
+            if parts.peek().is_some() {
                 // https://stackoverflow.com/a/1250279
                 res.extend_from_slice(b"'\"'\"'")
             }
@@ -105,7 +105,7 @@ impl Applet for EscapeApplet {
         };
         let escaped = to_escape.escape(&self.esc_type);
         if self.no_quote {
-            return Ok(escaped);
+            Ok(escaped)
         } else {
             let quote = match self.esc_type {
                 EscType::BashSingle | EscType::Single => b'\'',
@@ -115,7 +115,7 @@ impl Applet for EscapeApplet {
             res.push(quote);
             res.extend(escaped);
             res.push(quote);
-            return Ok(res);
+            Ok(res)
         }
     }
 

@@ -55,7 +55,7 @@ impl Applet for BaseIntApplet {
         let (srcrad, int) = if let Some(src) = self.source_radix {
             (
                 src,
-                BigUint::parse_bytes(&val, src).context("Could not convert input")?,
+                BigUint::parse_bytes(val, src).context("Could not convert input")?,
             )
         } else {
             let int_str = String::from_utf8_lossy(val);
