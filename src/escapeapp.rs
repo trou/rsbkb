@@ -1,6 +1,6 @@
 use crate::applet::Applet;
 use crate::applet::SliceExt;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{arg, Command};
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
@@ -116,38 +116,38 @@ impl Applet for EscapeApplet {
             let first = *to_escape.first().unwrap_or(&b' ');
             let last = *to_escape.last().unwrap_or(&b'*');
 
-            if first != last || (first != b'\''  && first != b'"') {
+            if first != last || (first != b'\'' && first != b'"') {
                 match self.esc_type {
                     EscType::BashSingle | EscType::Single => (Some(b'\''), to_escape),
                     _ => (Some(b'"'), to_escape),
                 }
-                } else {
-                    let end_pos = to_escape.len() - 1;
-                    match first {
-                        b'\'' => (Some(b'\''), to_escape[1..end_pos].to_vec()),
-                        b'"' => (Some(b'"'), to_escape[1..end_pos].to_vec()),
-                        _ => (None, to_escape),
-                    }
-                }
             } else {
-                match self.esc_type {
-                    EscType::BashSingle | EscType::Single => (Some(b'\''), to_escape),
-                    _ => (Some(b'"'), to_escape),
+                let end_pos = to_escape.len() - 1;
+                match first {
+                    b'\'' => (Some(b'\''), to_escape[1..end_pos].to_vec()),
+                    b'"' => (Some(b'"'), to_escape[1..end_pos].to_vec()),
+                    _ => (None, to_escape),
                 }
-            };
-            let escaped = to_escape_nq.escape(&self.esc_type);
-            if self.no_quote || quote.is_none() {
-                Ok(escaped)
-            } else {
-                let mut res = Vec::<u8>::with_capacity(escaped.len() + 2);
-                res.push(quote.unwrap());
-                res.extend(escaped);
-                res.push(quote.unwrap());
-                Ok(res)
             }
+        } else {
+            match self.esc_type {
+                EscType::BashSingle | EscType::Single => (Some(b'\''), to_escape),
+                _ => (Some(b'"'), to_escape),
+            }
+        };
+        let escaped = to_escape_nq.escape(&self.esc_type);
+        if self.no_quote || quote.is_none() {
+            Ok(escaped)
+        } else {
+            let mut res = Vec::<u8>::with_capacity(escaped.len() + 2);
+            res.push(quote.unwrap());
+            res.extend(escaped);
+            res.push(quote.unwrap());
+            Ok(res)
         }
+    }
 
-        fn new() -> Box<dyn Applet> {
+    fn new() -> Box<dyn Applet> {
         Box::new(Self {
             esc_type: EscType::Generic,
             no_quote: false,
@@ -157,7 +157,9 @@ impl Applet for EscapeApplet {
     }
 }
 
-pub struct UnEscapeApplet {}
+pub struct UnEscapeApplet {
+    multiline: bool,
+}
 
 impl Applet for UnEscapeApplet {
     fn command(&self) -> &'static str {
@@ -168,15 +170,82 @@ impl Applet for UnEscapeApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self {})
+        Box::new(Self { multiline: false })
     }
 
-    fn parse_args(&self, _args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
-        Ok(Box::new(Self {}))
+    fn clap_command(&self) -> Command {
+        Command::new(self.command())
+            .about(self.description())
+            .arg(arg!(-m --multiline "expect multiline string, do not trim input"))
+            .arg(arg!([value]  "input value, reads from stdin in not present"))
+    }
+
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {
+            multiline: args.get_flag("multiline"),
+        }))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        Ok(val)
+        enum EscapeState {
+            Backslash,
+            Hex1,
+            Hex2,
+            Normal,
+        }
+
+        let to_unescape = if self.multiline {
+            val
+        } else {
+            val.trim().into()
+        };
+
+        let mut res = Vec::with_capacity(to_unescape.len());
+        let mut state = EscapeState::Normal;
+        let mut hexchars: [u8; 2] = [0, 0];
+        for c in to_unescape.iter() {
+            state = match (state, c) {
+                (EscapeState::Normal, b'\\') => EscapeState::Backslash,
+                (EscapeState::Normal, c) => {
+                    res.push(*c);
+                    EscapeState::Normal
+                }
+                (EscapeState::Backslash, b'x') => EscapeState::Hex1,
+                (EscapeState::Backslash, b't') => {
+                    res.push(0x9);
+                    EscapeState::Normal
+                }
+                (EscapeState::Backslash, b'n') => {
+                    res.push(0xA);
+                    EscapeState::Normal
+                }
+                (EscapeState::Backslash, b'r') => {
+                    res.push(0xD);
+                    EscapeState::Normal
+                }
+                (EscapeState::Backslash, c) => {
+                    res.push(*c);
+                    EscapeState::Normal
+                }
+                (EscapeState::Hex1, c) => {
+                    hexchars[0] = *c;
+                    EscapeState::Hex2
+                }
+                (EscapeState::Hex2, c) => {
+                    hexchars[1] = *c;
+                    res.push(
+                        u8::from_str_radix(
+                            std::str::from_utf8(&hexchars)
+                                .context("invalid hex chars in escaped string")?,
+                            16,
+                        )
+                        .context("invalid hex char in escaped string")?,
+                    );
+                    EscapeState::Normal
+                }
+            };
+        }
+        Ok(res)
     }
 }
 

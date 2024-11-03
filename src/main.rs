@@ -64,6 +64,7 @@ use baseapp::BaseIntApplet;
 
 mod escapeapp;
 use escapeapp::EscapeApplet;
+use escapeapp::UnEscapeApplet;
 
 // Helper to "register" applets
 macro_rules! applets {
@@ -96,7 +97,8 @@ fn main() -> Result<()> {
         DeflateApplet,
         InflateApplet,
         BaseIntApplet,
-        EscapeApplet
+        EscapeApplet,
+        UnEscapeApplet
     );
 
     // Define a busybox-like multicall binary
