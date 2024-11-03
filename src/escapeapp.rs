@@ -179,3 +179,107 @@ impl Applet for UnEscapeApplet {
         Ok(val)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_base_escape_arg_auto() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", r"te'st"])
+            .assert()
+            .stdout(r#""te\'st""#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_auto() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape"])
+            .write_stdin("'te'st'\n") // by default, trim input so '\n' will be removed
+            .assert()
+            .stdout(r"'te\'st'")
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_no_detect() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-d"])
+            // no detect mode will not try to determine enclosing quote type,
+            // just escape them
+            .write_stdin(r"'test'")
+            .assert()
+            .stdout(r#""\'test\'""#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_auto_multiline() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-m"])
+            // multiline mode will not trim '\n', escaping them instead
+            .write_stdin("te'st\nte\"st\n")
+            .assert()
+            .stdout(r#""te\'st\nte\"st\n""#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_bash_single() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-t", "bash-single"])
+            .write_stdin("te'st")
+            .assert()
+            .stdout(r#"'te'"'"'st'"#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_bash() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-t", "bash"])
+            .write_stdin(r#""!t"e`s$t""#)
+            .assert()
+            .stdout(r#""\!t\"e\`s\$t""#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_posix_shell() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-t", "posix-shell"])
+            .write_stdin(r#""!t"e`s$t""#)
+            .assert()
+            .stdout(r#""!t\"e\`s\$t""#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_single() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-t", "single"])
+            .write_stdin(r#"sin'gle"#)
+            .assert()
+            .stdout(r#"'sin\'gle'"#)
+            .success();
+    }
+
+    #[test]
+    fn test_base_escape_stdin_single_noquote() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["escape", "-t", "single", "-n"])
+            .write_stdin(r#"sin'gle"#)
+            .assert()
+            .stdout(r#"sin\'gle"#)
+            .success();
+    }
+}
