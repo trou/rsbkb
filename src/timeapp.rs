@@ -140,7 +140,7 @@ impl Applet for TimeApplet {
         let date_str = ts
             .format(&format_description::well_known::Rfc3339)
             .with_context(|| "Date formatting failed")?;
-        return Ok(date_str.as_bytes().to_vec());
+        Ok(date_str.as_bytes().to_vec())
     }
 }
 

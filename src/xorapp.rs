@@ -44,7 +44,7 @@ impl Applet for XorApplet {
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
         let inf_key = self.key_bytes.iter().cycle(); // Iterate endlessly over key bytes
-        return Ok(val.iter().zip(inf_key).map(|(x, k)| x ^ k).collect());
+        Ok(val.iter().zip(inf_key).map(|(x, k)| x ^ k).collect())
     }
 }
 

@@ -224,9 +224,9 @@ impl Applet for CRCApplet {
             for alg in ALL_CRCS.iter() {
                 res.push_str(format!("{}: 0x{}\n", alg, self.do_crc(alg, &val)?.as_str()).as_str());
             }
-            return Ok(res.as_bytes().to_vec());
+            Ok(res.as_bytes().to_vec())
         } else {
-            return Ok(self.do_crc(alg_name, &val)?.as_bytes().to_vec());
+            Ok(self.do_crc(alg_name, &val)?.as_bytes().to_vec())
         }
     }
 }
