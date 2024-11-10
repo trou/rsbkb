@@ -8,7 +8,7 @@ enum EscType {
     #[default]
     Generic,
     Single,
-    PosixShell,
+    Shell,
     Bash,
     BashSingle,
 }
@@ -32,7 +32,7 @@ impl SliceEsc for [u8] {
     fn escape(&self, esc_type: &EscType) -> Vec<u8> {
         match esc_type {
             EscType::Generic | EscType::Single => self.escape_ascii().collect(),
-            EscType::PosixShell => self.escape_chars(SHELL_CHARS),
+            EscType::Shell => self.escape_chars(SHELL_CHARS),
             EscType::Bash => self.escape_chars(BASH_CHARS),
             EscType::BashSingle => self.escape_bash_single(),
         }
@@ -323,7 +323,7 @@ mod tests {
     fn test_base_escape_stdin_posix_shell() {
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
-            .args(&["escape", "-t", "posix-shell"])
+            .args(&["escape", "-t", "shell"])
             .write_stdin(r#""!t"e`s$t""#)
             .assert()
             .stdout(r#""!t\"e\`s\$t""#)
