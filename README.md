@@ -111,12 +111,14 @@ for i in $(rsbkb list) ; do ln -s rsbkb $i ; done
 * `findso`: find which ELF shared library (.so) exports a given name/function
 * `inflate` and `deflate`: raw inflate/deflate compression, fault tolerant and with optional Zlib header support
 * `base`: easy radix conversion of big integers
+* `escape`: backslash-escape special characters in strings (generic, single quote, shell, bash, bash single)
+* `unescape`: unescape `\` escaped chars in strings 
 
 ### Getting help
 
 ```console
 $ rsbkb help
-rsbkb 1.6.0-beta2 (Rust BlackBag) - by Raphaël Rigo <devel@syscall.eu>
+rsbkb 1.7.0 (Rust BlackBag) - by Raphaël Rigo <devel@syscall.eu>
 
 Usage: rsbkb [APPLET]
 
@@ -142,6 +144,8 @@ APPLETS:
   deflate     (raw) deflate compression
   inflate     (raw) inflate decompression
   base        convert integer between different bases
+  escape      backslash-escape input strings
+  unescape    (backslash) unescape input strings
   help        Print this message or the help of the given subcommand(s)
 
 $ rsbkb help slice
