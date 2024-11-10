@@ -75,7 +75,7 @@ impl Applet for EscapeApplet {
         "escape"
     }
     fn description(&self) -> &'static str {
-        "escape input strings"
+        "backslash-escape input strings"
     }
 
     fn clap_command(&self) -> Command {
@@ -166,7 +166,7 @@ impl Applet for UnEscapeApplet {
         "unescape"
     }
     fn description(&self) -> &'static str {
-        "unescape input strings"
+        "(backslash) unescape input strings"
     }
 
     fn new() -> Box<dyn Applet> {
