@@ -1,4 +1,4 @@
-* 2024-XX-XX: v1.7:
+* 2024-11-11: v1.7:
   * new `escape` and `unescape` applets for easy string (un)escaping
   * `base`: default to hex output for decimal input
   * improve code documentation
