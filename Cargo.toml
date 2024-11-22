@@ -1,6 +1,6 @@
 [package]
 name = "rsbkb"
-version = "1.7.0"
+version = "1.8.0-beta"
 authors = ["Raphaël Rigo <devel@syscall.eu>"]
 edition = "2018"
 rust-version = "1.70"
