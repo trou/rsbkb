@@ -167,6 +167,8 @@ impl Applet for FindSoApplet {
             );
         };
 
+        let mut resolved_sofiles: Vec<PathBuf> = Vec::new();
+
         /* if ld paths were specified, try to resolve file names */
         if let Some(paths) = &self.paths {
             for so_path in sofiles.iter_mut() {
@@ -174,14 +176,16 @@ impl Applet for FindSoApplet {
                     for p in paths.iter() {
                         let full_path = p.join(&so_path);
                         if full_path.is_file() {
-                            *so_path = full_path;
+                            resolved_sofiles.push(full_path);
                         }
                     }
                 }
             }
+        } else {
+            resolved_sofiles.extend(sofiles);
         }
 
-        for f in sofiles.iter() {
+        for f in resolved_sofiles.iter() {
             // Skip directories
             if fs::metadata(f)
                 .with_context(|| format!("Could not open {}", f.display()))?
