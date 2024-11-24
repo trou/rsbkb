@@ -1,5 +1,6 @@
 * XXXXX: v1.8:
   * `findso`: better help, fixes.
+  * `tsdec`: add Chome/WebKit timestamp support.
 * 2024-11-11: v1.7:
   * new `escape` and `unescape` applets for easy string (un)escaping
   * `base`: default to hex output for decimal input
