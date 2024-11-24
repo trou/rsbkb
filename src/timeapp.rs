@@ -120,6 +120,14 @@ impl Applet for TimeApplet {
                     "Microseconds since Epoch",
                 )
             }
+            (17, _) =>
+            /* Chrome/WebKit timestamp: microseconds since 1601-01-01 */
+            {
+                (
+                    decode_windows_filetime(ts_int * 10),
+                    "Chrome/WebKit timestamp",
+                )
+            }
             (18, _) =>
             /* Windows FILETIME */
             {
