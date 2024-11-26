@@ -3,7 +3,7 @@
 ## What is it?
 
 `rsbkb` has multiple tools which are designed to be called directly (through
-symlinks). This allows various operations on data to be chained easily like
+symlinks, like `busybox`). This allows various operations on data to be chained easily like
 CyberChef but through pipes.
 
 It also includes various practical tools like `entropy` or a timestamp decoder.
