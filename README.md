@@ -6,7 +6,8 @@
 symlinks, like `busybox`). This allows various operations on data to be chained easily like
 CyberChef but through pipes.
 
-It also includes various practical tools like `entropy` or a timestamp decoder.
+It also includes various practical tools like `entropy`, a binary `grep`, a
+timestamp decoder, etc.
 
 
 ## Quick start
