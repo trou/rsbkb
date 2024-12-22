@@ -18,7 +18,7 @@ pub struct FindSoApplet {
     // don't show warnings
     quiet: bool,
     // skip symbolic links in results
-    skip_symlinks: bool
+    skip_symlinks: bool,
 }
 
 fn parse_ld_so_conf(ldconf_path: &str) -> Result<Vec<PathBuf>> {
@@ -73,11 +73,11 @@ impl Applet for FindSoApplet {
                 arg!([files]...  "files to search in, optional if --all is set")
                     .required_unless_present("all"),
             )
-            .after_long_help("Examples:\n
-                            'findso -a memcpy -l': search for 'memcpy' in all .so files in paths defined in /etc/ld.so.conf\n
-                            'findso -r memcpy /bin/ls -l': search for memcpy in all .so files referenced in /bin/ls in system paths\n
-                            'findso -q memcpy /usr/lib32/*.so*': search for memcpy in all given files
-                            'findso -p /usr/lib32/:/usr/lib64/ -a -q memcpy': search for memcpy in given paths")
+            .after_long_help("Examples:
+  'findso -a memcpy -l': search for 'memcpy' in all .so files in paths defined in /etc/ld.so.conf
+  'findso -r memcpy /bin/ls -l': search for memcpy in all .so files referenced in /bin/ls in system paths
+  'findso -q memcpy /usr/lib32/*.so*': search for memcpy in all given files
+  'findso -p /usr/lib32/:/usr/lib64/ -a -q memcpy': search for memcpy in given paths")
     }
 
     fn arg_or_stdin(&self) -> Option<&'static str> {
@@ -180,10 +180,8 @@ impl Applet for FindSoApplet {
                 if so_path.is_relative() {
                     for p in paths.iter() {
                         let full_path = p.join(&so_path);
-                        if full_path.is_file() {
-                            if self.skip_symlinks && !full_path.is_symlink() {
-                                resolved_sofiles.push(full_path);
-                            }
+                        if full_path.is_file() && self.skip_symlinks && !full_path.is_symlink() {
+                            resolved_sofiles.push(full_path);
                         }
                     }
                 }
