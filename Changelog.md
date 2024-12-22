@@ -1,5 +1,5 @@
 * XXXXX: v1.8:
-  * `findso`: better help, fixes.
+  * `findso`: better help, fixes. `-s` flag to skip symlinks.
   * `tsdec`: add Chome/WebKit timestamp support.
 * 2024-11-11: v1.7:
   * new `escape` and `unescape` applets for easy string (un)escaping
