@@ -112,7 +112,7 @@ fn main() -> Result<()> {
             Command::new("rsbkb")
                 .help_template(
                     "\
-{before-help}{name} {version} ({about}) - by {author-with-newline}
+{before-help}{name} {version} ({about}) -- GPL v3 -- by {author-with-newline}
 {usage-heading} {usage}
 
 {all-args}{after-help}
