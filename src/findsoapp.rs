@@ -17,6 +17,8 @@ pub struct FindSoApplet {
     paths: Option<Vec<PathBuf>>,
     // don't show warnings
     quiet: bool,
+    // skip symbolic links in results
+    skip_symlinks: bool
 }
 
 fn parse_ld_so_conf(ldconf_path: &str) -> Result<Vec<PathBuf>> {
@@ -61,6 +63,7 @@ impl Applet for FindSoApplet {
         Command::new(self.command())
             .about(self.description())
             .arg(arg!(-a --all "search in all '*.so*' files found in LDPATH").conflicts_with("ref"))
+            .arg(arg!(-s --"skip-symlinks" "ignore symbolic links"))
             .arg(arg!(-r --ref  "use first file as reference ELF to get .so list from"))
             .arg(arg!(-q --quiet  "don't show warnings on invalid files"))
             .arg(arg!(-p --ldpath <LDPATH> "'\':\' separated list of paths to look for .so in'"))
@@ -88,6 +91,7 @@ impl Applet for FindSoApplet {
             is_ref: false,
             paths: None,
             quiet: false,
+            skip_symlinks: false,
         })
     }
 
@@ -146,6 +150,7 @@ impl Applet for FindSoApplet {
             is_ref: args.get_flag("ref"),
             paths,
             quiet: args.get_flag("quiet"),
+            skip_symlinks: args.get_flag("skip-symlinks"),
         }))
     }
 
@@ -176,7 +181,9 @@ impl Applet for FindSoApplet {
                     for p in paths.iter() {
                         let full_path = p.join(&so_path);
                         if full_path.is_file() {
-                            resolved_sofiles.push(full_path);
+                            if self.skip_symlinks && !full_path.is_symlink() {
+                                resolved_sofiles.push(full_path);
+                            }
                         }
                     }
                 }
@@ -203,7 +210,7 @@ impl Applet for FindSoApplet {
                     .dynsyms
                     .iter()
                     .any(|s| !s.is_import() && strtab.get_at(s.st_name) == Some(fun));
-                if found {
+                if found && !(self.skip_symlinks && f.is_symlink()) {
                     println!("{}", f.display());
                 }
             } else if !self.quiet {
