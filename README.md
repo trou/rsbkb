@@ -15,7 +15,7 @@ timestamp decoder, etc.
 1. install with `cargo install rsbkb`
 2. run `rsbkb` to list applets
 3. run `rsbkb help <applet>` to learn more
-4. optionally create symlinks to call applets directly (e.g.: `ln -s rsbkb slice`)
+4. optionally create symlinks to call applets directly: `rsbkb symlink`
 
 ## Examples
 
@@ -82,10 +82,10 @@ or:
 
 * All tools take values as an argument on the command line or if not present, read stdin
 * Tool name can be specified on the command line `rsbkb TOOL`
-* Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`
+* Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`. Create symlinks with:
 
 ```
-for i in $(rsbkb list) ; do ln -s rsbkb $i ; done
+rsbkb symlink
 ```
 
 ## Included tools

@@ -1,7 +1,7 @@
 //#![feature(trace_macros)]
 //trace_macros!(true);
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 
 use std::io::{self, IsTerminal};
 use std::io::{Read, Write};
@@ -122,6 +122,7 @@ fn main() -> Result<()> {
                 .about("Rust BlackBag")
                 .arg_required_else_help(true)
                 .subcommands([Command::new("list").about("list applets")])
+                .subcommands([Command::new("symlink").about("create symbolic links for applets (Unix only)")])
                 .subcommand_value_name("APPLET")
                 .subcommand_help_heading("APPLETS")
                 .subcommands(apps.iter().map(|app| app.clap_command())),
@@ -149,6 +150,26 @@ fn main() -> Result<()> {
     if subcommand == "list" {
         for app in apps.iter() {
             println!("{}", app.command());
+        }
+        return Ok(());
+    } else if subcommand == "symlink" {
+        if cfg!(unix) {
+            let exe = std::env::current_exe().context("Could not determine rsbkb binary path")?;
+            let exe_base = exe
+                .file_name()
+                .ok_or_else(|| anyhow!("Could not determine rsbkb exe name"))?;
+            let dir = exe
+                .parent()
+                .ok_or_else(|| anyhow!("Could not determine rsbkb binary folder"))?;
+            println!("Symlinking applets to {:?} in folder {:?}", exe_base, dir);
+            for app in apps.iter() {
+                let res = std::os::unix::fs::symlink(&exe, dir.join(app.command()));
+                if res.is_err() {
+                    println!("Could not symlink {}: {:?}", app.command(), res);
+                }
+            }
+        } else {
+            println!("symlink command is only supported on Unix-like operating systems.");
         }
         return Ok(());
     }
