@@ -3,8 +3,8 @@
 ## What is it?
 
 `rsbkb` has multiple tools which are designed to be called directly (through
-symlinks, like `busybox`). This allows various operations on data to be chained easily like
-CyberChef but through pipes.
+symlinks, like `busybox`). This allows various operations on data to be chained
+easily like CyberChef but through pipes.
 
 It also includes various practical tools like `entropy`, a binary `grep`, a
 timestamp decoder, etc.
@@ -12,7 +12,7 @@ timestamp decoder, etc.
 
 ## Quick start
 
-1. install with `cargo install rsbkb`
+1. install with `cargo install rsbkb` or download the binary from the [releases](https://github.com/trou/rsbkb/releases) page
 2. run `rsbkb` to list applets
 3. run `rsbkb help <applet>` to learn more
 4. optionally create symlinks to call applets directly: `rsbkb symlink`
@@ -59,28 +59,26 @@ $ findso -p /lib/x86_64-linux-gnu/ -r memcpy /bin/ls
 /lib/x86_64-linux-gnu/libc.so.6
 $ findso -l /etc/ld.so.conf -a memcpy
 /lib/i386-linux-gnu/libc.so.6
-/usr/lib/i386-linux-gnu/libc.so.6
-/lib/x86_64-linux-gnu/libasan.so.6
 [...]
+$ base 0x14
+20
+$ echo "echo 'test'" | escape -t bash-single
+'echo '"'"'test'"'"''
 ```
 
 ## How to use
 
 ### Build it / Get it
 
-```
-$ cargo rustc --release
-```
-
-or:
-
-* get the binary from the [release page](https://github.com/trou/rsbkb/releases).
+* `cargo build --release`
+* `cargo install rsbkb`
+* get the binary from the [releases page](https://github.com/trou/rsbkb/releases).
 * get the latest artifact from the [Actions](https://github.com/trou/rsbkb/actions) page.
 
 ### Usage
 
 
-* All tools take values as an argument on the command line or if not present, read stdin
+* Almost all tools take values as an argument on the command line or if not present, read from `stdin`
 * Tool name can be specified on the command line `rsbkb TOOL`
 * Or can be called busybox-style: `ln -s rsbkb unhex ; unhex 4142`. Create symlinks with:
 
@@ -94,18 +92,18 @@ rsbkb symlink
 * `unhex`: decode hex data (either in the middle of arbitrary data, or strictly)
 * `b64`: base64 encode (use `-u` or `--URL` for URL-safe b64)
 * `d64`: base64 decode (use `-u` or `--URL` for URL-safe b64)
-* `urlenc`: url encode
+* `urlenc`: url encode (see `--help` for advanced options)
 * `urldec`: url decode
 * `xor`: xor (use `-x` to specify the key, in hex, `-f` to specify a file)
-* `crc`: all CRC algorithms implemented in the [Crc](https://docs.rs/crc/2.1.0/crc/) crate
+* `crc`: all CRC algorithms implemented in the [Crc](https://docs.rs/crc/3.2.1/crc/) crate
 * `crc16`: CRC-16
 * `crc32`: CRC-32
 * `bofpatt` / `boffpattoff`: buffer overflow pattern generator / offset calculator
 * `tsdec`: decode various timestamps (Epoch with different resolutions, Windows FILETIME)
-* `slice`: slice of a file: :
- * `slice input_file 10` will print `input_file` from offset 10 on stdout.
- * `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded).
- * `slice input_file 0x10 +0xFF` will copy `0xFF` bytes starting at `0x10`.
+* `slice`: take a "slice" of a file (like `dd`) :
+ * `slice input_file 10` will output `input_file` from offset 10 on `stdout`
+ * `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded)
+ * `slice input_file 0x10 +0xFF` will copy `0xFF` bytes starting at `0x10`
  * `slice input_file -0x10` will the last 0x10 bytes from `input_file`
 * `entropy`: entropy of a file
 * `bgrep`: simple binary grep
@@ -113,13 +111,13 @@ rsbkb symlink
 * `inflate` and `deflate`: raw inflate/deflate compression, fault tolerant and with optional Zlib header support
 * `base`: easy radix conversion of big integers
 * `escape`: backslash-escape special characters in strings (generic, single quote, shell, bash, bash single)
-* `unescape`: unescape `\` escaped chars in strings 
+* `unescape`: unescape `\` escaped chars in strings
 
 ### Getting help
 
 ```console
 $ rsbkb help
-rsbkb 1.7.0 (Rust BlackBag) - by Raphaël Rigo <devel@syscall.eu>
+rsbkb 1.8.0 (Rust BlackBag) - by Raphaël Rigo <devel@syscall.eu>
 
 Usage: rsbkb [APPLET]
 
