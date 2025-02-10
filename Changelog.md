@@ -1,3 +1,5 @@
+* XXXX-XX-XX: v1.X:
+  * `(un)escape`: add HTML entities support
 * 2025-01-03: v1.8, the "Happy New Year" release:
   * `findso`: better help, fixes. `-s` flag to skip symlinks.
   * `tsdec`: add Chome/WebKit timestamp support.

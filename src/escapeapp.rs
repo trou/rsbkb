@@ -2,6 +2,7 @@ use crate::applet::Applet;
 use crate::applet::SliceExt;
 use anyhow::{Context, Result};
 use clap::{arg, Command};
+use htmlentity::entity::{decode, encode, CharacterSet, EncodeType};
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum EscType {
@@ -11,6 +12,7 @@ enum EscType {
     Shell,
     Bash,
     BashSingle,
+    HTMLEntities,
 }
 
 const SHELL_CHARS: &[u8; 4] = b"`$\"\\";
@@ -35,6 +37,12 @@ impl SliceEsc for [u8] {
             EscType::Shell => self.escape_chars(SHELL_CHARS),
             EscType::Bash => self.escape_chars(BASH_CHARS),
             EscType::BashSingle => self.escape_bash_single(),
+            EscType::HTMLEntities => encode(
+                &self,
+                &EncodeType::NamedOrHex,
+                &CharacterSet::SpecialCharsAndNonASCII,
+            )
+            .into_bytes(),
         }
     }
 
@@ -113,15 +121,20 @@ impl Applet for EscapeApplet {
         //  - escape
         //  - restore them
         let (quote, to_escape_nq) = if !self.no_detect {
+            // set unwrap_or result to other chars, just for
+            // simpler code
             let first = *to_escape.first().unwrap_or(&b' ');
             let last = *to_escape.last().unwrap_or(&b'*');
 
+            // If quotes don't match or start/end chars are not quote,
+            // return quote char according to escape type
             if first != last || (first != b'\'' && first != b'"') {
                 match self.esc_type {
                     EscType::BashSingle | EscType::Single => (Some(b'\''), to_escape),
                     _ => (Some(b'"'), to_escape),
                 }
             } else {
+                // if we have matching quotes, return quote char and remove them
                 let end_pos = to_escape.len() - 1;
                 match first {
                     b'\'' => (Some(b'\''), to_escape[1..end_pos].to_vec()),
@@ -130,11 +143,13 @@ impl Applet for EscapeApplet {
                 }
             }
         } else {
+            // no_detect
             match self.esc_type {
                 EscType::BashSingle | EscType::Single => (Some(b'\''), to_escape),
                 _ => (Some(b'"'), to_escape),
             }
         };
+
         let escaped = to_escape_nq.escape(&self.esc_type);
         if self.no_quote || quote.is_none() {
             Ok(escaped)
@@ -159,6 +174,7 @@ impl Applet for EscapeApplet {
 
 pub struct UnEscapeApplet {
     multiline: bool,
+    html_entities: bool,
 }
 
 impl Applet for UnEscapeApplet {
@@ -170,12 +186,16 @@ impl Applet for UnEscapeApplet {
     }
 
     fn new() -> Box<dyn Applet> {
-        Box::new(Self { multiline: false })
+        Box::new(Self {
+            multiline: false,
+            html_entities: false,
+        })
     }
 
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
+            .arg(arg!(-t --html "unescape HTML entities"))
             .arg(arg!(-m --multiline "expect multiline string, do not trim input"))
             .arg(arg!([value]  "input value, reads from stdin in not present"))
     }
@@ -183,6 +203,7 @@ impl Applet for UnEscapeApplet {
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
             multiline: args.get_flag("multiline"),
+            html_entities: args.get_flag("html"),
         }))
     }
 
@@ -198,6 +219,11 @@ impl Applet for UnEscapeApplet {
             val
         } else {
             val.trim().into()
+        };
+
+        // Special case for HTMLEntities
+        if self.html_entities {
+            return Ok(decode(&to_unescape).into_bytes());
         };
 
         let mut res = Vec::with_capacity(to_unescape.len());
