@@ -38,7 +38,7 @@ impl SliceEsc for [u8] {
             EscType::Bash => self.escape_chars(BASH_CHARS),
             EscType::BashSingle => self.escape_bash_single(),
             EscType::HTMLEntities => encode(
-                &self,
+                self,
                 &EncodeType::NamedOrHex,
                 &CharacterSet::SpecialCharsAndNonASCII,
             )
