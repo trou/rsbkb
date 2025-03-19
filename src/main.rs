@@ -122,7 +122,9 @@ fn main() -> Result<()> {
                 .about("Rust BlackBag")
                 .arg_required_else_help(true)
                 .subcommands([Command::new("list").about("list applets")])
-                .subcommands([Command::new("symlink").about("create symbolic links for applets (Unix only)")])
+                .subcommands([
+                    Command::new("symlink").about("create symbolic links for applets (Unix only)")
+                ])
                 .subcommand_value_name("APPLET")
                 .subcommand_help_heading("APPLETS")
                 .subcommands(apps.iter().map(|app| app.clap_command())),
