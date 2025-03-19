@@ -208,6 +208,17 @@ mod tests {
     }
 
     #[test]
+    fn test_urlenc_00_ff() {
+        let mut table = [false; 256];
+        build_default_table(&"".to_string(), &mut table);
+        let urlenc = UrlEncApplet { table: table };
+        let encoded = urlenc
+            .process([0, 0xFF].to_vec())
+            .expect("encoding failed");
+        assert_eq!(String::from_utf8(encoded).unwrap(), "%00%ff");
+    }
+
+    #[test]
     fn test_urlencdec() {
         let mut table = [false; 256];
         build_default_table(&"".to_string(), &mut table);
