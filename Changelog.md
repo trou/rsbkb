@@ -1,5 +1,6 @@
-* XXXX-XX-XX: v1.X:
+* 2025-03-19: v1.8.1:
   * `(un)escape`: add HTML entities support
+  * `urlenc`: fix encoding of "0xFF", thanks sha5010!
 * 2025-01-03: v1.8, the "Happy New Year" release:
   * `findso`: better help, fixes. `-s` flag to skip symlinks.
   * `tsdec`: add Chome/WebKit timestamp support.
