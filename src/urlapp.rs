@@ -10,7 +10,7 @@ pub struct UrlEncApplet {
 
 // Encoding table according to RFC 3986
 fn build_url_table(excluded: &str, table: &mut [bool; 256]) {
-    for i in 0..255 {
+    for i in 0..256 {
         let c = char::from_u32(i).unwrap();
         // encode non graphic chars and signs from the RFC3986 list, excepted
         // explicitly excluded
@@ -44,7 +44,7 @@ fn build_url_table(excluded: &str, table: &mut [bool; 256]) {
 }
 
 fn build_custom_table(excluded: &str, custom: &str, table: &mut [bool; 256]) {
-    for i in 0..255 {
+    for i in 0..256 {
         let c = char::from_u32(i).unwrap();
         if custom.contains(c) {
             table[i as usize] = !excluded.contains(c);
@@ -56,7 +56,7 @@ fn build_custom_table(excluded: &str, custom: &str, table: &mut [bool; 256]) {
 
 // Default is to encode non alpha-numeric (ASCII) chars
 fn build_default_table(excluded: &str, table: &mut [bool; 256]) {
-    for i in 0..255 {
+    for i in 0..256 {
         let c = char::from_u32(i).unwrap();
         if c.is_ascii_alphanumeric() {
             table[i as usize] = false;
