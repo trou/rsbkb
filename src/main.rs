@@ -1,6 +1,3 @@
-//#![feature(trace_macros)]
-//trace_macros!(true);
-
 use anyhow::{anyhow, Context, Result};
 
 use std::io::{self, IsTerminal};
