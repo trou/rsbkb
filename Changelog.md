@@ -3,7 +3,7 @@
   * `urlenc`: fix encoding of "0xFF", thanks sha5010!
 * 2025-01-03: v1.8, the "Happy New Year" release:
   * `findso`: better help, fixes. `-s` flag to skip symlinks.
-  * `tsdec`: add Chome/WebKit timestamp support.
+  * `tsdec`: add Chrome/WebKit timestamp support.
   * `symlink` command to create symlinks for all applets.
 * 2024-11-11: v1.7:
   * new `escape` and `unescape` applets for easy string (un)escaping
