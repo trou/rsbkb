@@ -100,7 +100,7 @@ rsbkb symlink
 * `crc32`: CRC-32
 * `bofpatt` / `boffpattoff`: buffer overflow pattern generator / offset calculator
 * `tsdec`: decode various timestamps (Epoch with different resolutions, Windows FILETIME)
-* `slice`: take a "slice" of a file (like `dd`) :
+* `slice`: take a "slice" of a file (like `dd`):
  * `slice input_file 10` will output `input_file` from offset 10 on `stdout`
  * `slice input_file 0x10 0x20` will do the same from 0x10 to 0x20 (excluded)
  * `slice input_file 0x10 +0xFF` will copy `0xFF` bytes starting at `0x10`
