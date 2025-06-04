@@ -111,7 +111,7 @@ impl Applet for UnHexApplet {
 
     fn clap_command(&self) -> Command {
         Command::new(self.command()).about(self.description())
-             .arg(arg!(-o --"hex-only"  "expect only hex data, stop at first non-hex byte (but copy the rest)"))
+             .arg(arg!(-o --"hex-only"  "expect only hex data, stop at first non-hex byte (but copy the rest, except spaces)"))
              .arg(arg!(-s --strict  "strict decoding, error on invalid data"))
              .arg(arg!([value]  "input value, reads from stdin in not present"))
              .after_help("By default, decode all hex data in the input, regardless of garbage in-between.")
