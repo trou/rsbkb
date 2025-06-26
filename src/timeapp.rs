@@ -66,7 +66,7 @@ impl Applet for TimeApplet {
             .about(self.description())
             .arg(arg!(-l --local  "show time in local time zone"))
             .arg(arg!(-v --verbose "show which type of timestamp was used for decoding"))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn new() -> Box<dyn Applet> {

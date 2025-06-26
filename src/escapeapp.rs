@@ -97,7 +97,7 @@ impl Applet for EscapeApplet {
                     .value_parser(clap::builder::EnumValueParser::<EscType>::new())
                     .default_value("generic"),
             )
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
@@ -197,7 +197,7 @@ impl Applet for UnEscapeApplet {
             .about(self.description())
             .arg(arg!(-t --html "unescape HTML entities"))
             .arg(arg!(-m --multiline "expect multiline string, do not trim input"))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {

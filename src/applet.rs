@@ -22,7 +22,7 @@ pub trait Applet {
     fn clap_command(&self) -> Command {
         Command::new(self.command())
             .about(self.description())
-            .arg(arg!([value] "input value, reads from stdin in not present"))
+            .arg(arg!([value] "input value, reads from stdin if not present"))
     }
 
     /// By default, applets accept the input as:

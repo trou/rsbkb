@@ -89,7 +89,7 @@ impl Applet for UrlEncApplet {
                     .conflicts_with("rfc3986"),
             )
             .arg(arg!(-e --"exclude-chars" <chars>  "a string of chars to exclude from encoding"))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
             .after_help("By default, encode all non alphanumeric characters in the input.")
     }
 

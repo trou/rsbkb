@@ -33,7 +33,7 @@ impl Applet for BaseIntApplet {
                  .value_parser(clap::value_parser!(u32).range(2..37)))
             .arg(arg!(-t --to <radix> "target radix, defaults to decimal, except if input was decimal, then default to hex")
                  .value_parser(clap::value_parser!(u32).range(2..37)))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
