@@ -26,7 +26,7 @@ impl Applet for B64EncApplet {
                     .conflicts_with("URL")
                     .required(false),
             )
-            .arg(arg!([value] "input value, reads from stdin in not present"))
+            .arg(arg!([value] "input value, reads from stdin if not present"))
     }
 
     fn new() -> Box<dyn Applet> {
@@ -81,7 +81,7 @@ impl Applet for B64DecApplet {
                     .required(false),
             )
             .arg(arg!(-s --strict "strict decoding, error on invalid data"))
-            .arg(arg!([value] "input value, reads from stdin in not present"))
+            .arg(arg!([value] "input value, reads from stdin if not present"))
     }
 
     fn new() -> Box<dyn Applet> {

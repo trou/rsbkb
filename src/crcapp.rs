@@ -202,7 +202,7 @@ impl Applet for CRCApplet {
                 arg!([type] "CRC type to compute. Use 'all' to compute all known algorithms.")
                     .required_unless_present("list"),
             )
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {

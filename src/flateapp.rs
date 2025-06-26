@@ -22,7 +22,7 @@ impl Applet for DeflateApplet {
                     .default_value("6"),
             )
             .arg(arg!(-z --zlib "add Zlib header"))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn description(&self) -> &'static str {
@@ -72,7 +72,7 @@ impl Applet for InflateApplet {
             .about(self.description())
             .arg(arg!(-z --zlib "expect Zlib header"))
             .arg(arg!(-q --quiet "don't output error message on stderr if decompression failed"))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn description(&self) -> &'static str {

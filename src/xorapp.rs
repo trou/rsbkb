@@ -24,7 +24,7 @@ impl Applet for XorApplet {
                     .conflicts_with("keyfile"),
             )
             .arg(arg!(-f --keyfile <keyfile>  "File to use as key"))
-            .arg(arg!([value]  "input value, reads from stdin in not present"))
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
     }
 
     fn new() -> Box<dyn Applet> {
