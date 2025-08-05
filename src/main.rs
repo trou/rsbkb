@@ -37,7 +37,8 @@ mod sliceapp;
 use sliceapp::SliceApplet;
 
 mod timeapp;
-use timeapp::TimeApplet;
+use timeapp::TsDecApplet;
+use timeapp::TsEncApplet;
 
 mod patternapp;
 use patternapp::BofPattGenApplet;
@@ -90,7 +91,8 @@ fn main() -> Result<()> {
         SliceApplet,
         BgrepApplet,
         FindSoApplet,
-        TimeApplet,
+        TsDecApplet,
+        TsEncApplet,
         DeflateApplet,
         InflateApplet,
         BaseIntApplet,

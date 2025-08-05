@@ -2,7 +2,7 @@ use crate::applet::{Applet, FromStrWithRadix};
 use anyhow::{Context, Result};
 use clap::{arg, Command};
 use std::convert::TryFrom;
-use time::{format_description, Duration, OffsetDateTime, UtcOffset};
+use time::{format_description, Duration, OffsetDateTime, UtcOffset, UtcDateTime};
 
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.
@@ -49,11 +49,92 @@ fn decode_windows_filetime(ts: i64) -> Result<OffsetDateTime> {
     decode_epoch_subseconds(shifted, 10_000_000)
 }
 
-pub struct TimeApplet {
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+enum TimeEncoding {
+    #[default]
+    UnixSecond = 1,
+    UnixCentiSecond = 100,
+    UnixMilliSecond = 1000,
+    UnixMicroSecond = 1000000,
+    UnixNanoSecond = 1000000000,
+    FILETIME,
+    Chrome,
+}
+
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+enum TimeFormats {
+        #[default]
+        Iso8601,
+        Rfc2822,
+        Rfc3339
+}
+
+pub struct TsEncApplet {
+    encoding_type: TimeEncoding,
+}
+
+impl Applet for TsEncApplet {
+    fn command(&self) -> &'static str {
+        "tsenc"
+    }
+    fn description(&self) -> &'static str {
+        "timestamp encoder"
+    }
+
+    fn clap_command(&self) -> Command {
+        Command::new(self.command())
+            .about(self.description())
+            .arg(
+                arg!(-i --"input-format" [input] "input format")
+                    .value_parser(clap::builder::EnumValueParser::<TimeFormats>::new())
+                    .default_value("iso8601"))
+            .arg(
+                arg!(-t --type [type] "type of timestamp to use for encoding")
+                    .value_parser(clap::builder::EnumValueParser::<TimeEncoding>::new())
+                    .default_value("unix-second"),
+            )
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
+    }
+
+    fn new() -> Box<dyn Applet> {
+        Box::new(Self {
+            encoding_type: TimeEncoding::UnixSecond,
+        })
+    }
+
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {
+            encoding_type: args.get_one::<TimeEncoding>("type").unwrap().clone(),
+        }))
+    }
+
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
+        // TODO: add input format option
+        let t = UtcDateTime::parse(
+            String::from_utf8(val)
+                .context("Could not parse input as utf8")?
+                .as_str(),
+            &time::format_description::well_known::Iso8601::DEFAULT,
+        )
+        .context("Could not parse time")?;
+        let res = match self.encoding_type {
+            TimeEncoding::UnixSecond => (t-UtcDateTime::UNIX_EPOCH).whole_seconds() as i128,
+            TimeEncoding::UnixCentiSecond => (t-UtcDateTime::UNIX_EPOCH).whole_milliseconds()/10,
+            TimeEncoding::UnixMilliSecond => (t-UtcDateTime::UNIX_EPOCH).whole_milliseconds(),
+            TimeEncoding::UnixMicroSecond => (t-UtcDateTime::UNIX_EPOCH).whole_microseconds(),
+            TimeEncoding::UnixNanoSecond => (t-UtcDateTime::UNIX_EPOCH).whole_nanoseconds(),
+            TimeEncoding::FILETIME => ((t-UtcDateTime::UNIX_EPOCH).whole_nanoseconds()/100)+116_444_736_000_000_000,
+            TimeEncoding::Chrome => ((t-UtcDateTime::UNIX_EPOCH).whole_nanoseconds()/1000)+116_444_736_000_000_00,
+        };
+        Ok(format!("{}", res).as_bytes().to_vec())
+    }
+}
+pub struct TsDecApplet {
     local: bool,
     verbose: bool,
 }
-impl Applet for TimeApplet {
+
+impl Applet for TsDecApplet {
     fn command(&self) -> &'static str {
         "tsdec"
     }
@@ -156,7 +237,7 @@ impl Applet for TimeApplet {
 mod tests {
     use super::*;
 
-    fn run_decode(app: &TimeApplet, ts: &str) -> String {
+    fn run_decode(app: &TsDecApplet, ts: &str) -> String {
         String::from_utf8(app.process_test(ts.as_bytes().to_vec())).unwrap()
     }
 
@@ -174,7 +255,7 @@ mod tests {
 
     #[test]
     fn test_decimal() {
-        let ts = TimeApplet {
+        let ts = TsDecApplet {
             local: false,
             verbose: false,
         };
@@ -201,7 +282,7 @@ mod tests {
 
     #[test]
     fn test_hex() {
-        let ts = TimeApplet {
+        let ts = TsDecApplet {
             local: false,
             verbose: false,
         };
