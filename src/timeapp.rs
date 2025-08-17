@@ -2,7 +2,7 @@ use crate::applet::{Applet, FromStrWithRadix};
 use anyhow::{Context, Result};
 use clap::{arg, Command};
 use std::convert::TryFrom;
-use time::{format_description, Duration, OffsetDateTime, UtcOffset, UtcDateTime};
+use time::{format_description, Duration, OffsetDateTime, UtcDateTime, UtcOffset};
 
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.
@@ -63,14 +63,15 @@ enum TimeEncoding {
 
 #[derive(clap::ValueEnum, Clone, Default, Debug)]
 enum TimeFormats {
-        #[default]
-        Iso8601,
-        Rfc2822,
-        Rfc3339
+    #[default]
+    Iso8601,
+    Rfc2822,
+    Rfc3339,
 }
 
 pub struct TsEncApplet {
     encoding_type: TimeEncoding,
+    input_format: TimeFormats,
 }
 
 impl Applet for TsEncApplet {
@@ -87,7 +88,8 @@ impl Applet for TsEncApplet {
             .arg(
                 arg!(-i --"input-format" [input] "input format")
                     .value_parser(clap::builder::EnumValueParser::<TimeFormats>::new())
-                    .default_value("iso8601"))
+                    .default_value("iso8601"),
+            )
             .arg(
                 arg!(-t --type [type] "type of timestamp to use for encoding")
                     .value_parser(clap::builder::EnumValueParser::<TimeEncoding>::new())
@@ -99,32 +101,40 @@ impl Applet for TsEncApplet {
     fn new() -> Box<dyn Applet> {
         Box::new(Self {
             encoding_type: TimeEncoding::UnixSecond,
+            input_format: TimeFormats::Iso8601,
         })
     }
 
     fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
         Ok(Box::new(Self {
             encoding_type: args.get_one::<TimeEncoding>("type").unwrap().clone(),
+            input_format: args.get_one::<TimeFormats>("input-format").unwrap().clone(),
         }))
     }
 
     fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
-        // TODO: add input format option
-        let t = UtcDateTime::parse(
-            String::from_utf8(val)
-                .context("Could not parse input as utf8")?
-                .as_str(),
-            &time::format_description::well_known::Iso8601::DEFAULT,
-        )
-        .context("Could not parse time")?;
+        let val_from_utf8 = String::from_utf8(val).context("Could not parse input as utf8")?;
+        let val_str = val_from_utf8.as_str();
+
+        let t = match self.input_format {
+                TimeFormats::Iso8601 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Iso8601::DEFAULT),
+                TimeFormats::Rfc2822 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Rfc2822),
+                TimeFormats::Rfc3339 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Rfc3339),
+        }.context("Could not parse time")?;
         let res = match self.encoding_type {
-            TimeEncoding::UnixSecond => (t-UtcDateTime::UNIX_EPOCH).whole_seconds() as i128,
-            TimeEncoding::UnixCentiSecond => (t-UtcDateTime::UNIX_EPOCH).whole_milliseconds()/10,
-            TimeEncoding::UnixMilliSecond => (t-UtcDateTime::UNIX_EPOCH).whole_milliseconds(),
-            TimeEncoding::UnixMicroSecond => (t-UtcDateTime::UNIX_EPOCH).whole_microseconds(),
-            TimeEncoding::UnixNanoSecond => (t-UtcDateTime::UNIX_EPOCH).whole_nanoseconds(),
-            TimeEncoding::FILETIME => ((t-UtcDateTime::UNIX_EPOCH).whole_nanoseconds()/100)+116_444_736_000_000_000,
-            TimeEncoding::Chrome => ((t-UtcDateTime::UNIX_EPOCH).whole_nanoseconds()/1000)+116_444_736_000_000_00,
+            TimeEncoding::UnixSecond => (t - UtcDateTime::UNIX_EPOCH).whole_seconds() as i128,
+            TimeEncoding::UnixCentiSecond => {
+                (t - UtcDateTime::UNIX_EPOCH).whole_milliseconds() / 10
+            }
+            TimeEncoding::UnixMilliSecond => (t - UtcDateTime::UNIX_EPOCH).whole_milliseconds(),
+            TimeEncoding::UnixMicroSecond => (t - UtcDateTime::UNIX_EPOCH).whole_microseconds(),
+            TimeEncoding::UnixNanoSecond => (t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds(),
+            TimeEncoding::FILETIME => {
+                ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 100) + 116_444_736_000_000_000
+            }
+            TimeEncoding::Chrome => {
+                ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 1000) + 116_444_736_000_000_00
+            }
         };
         Ok(format!("{}", res).as_bytes().to_vec())
     }
