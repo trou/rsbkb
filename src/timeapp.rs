@@ -245,6 +245,8 @@ impl Applet for TsDecApplet {
 
 #[cfg(test)]
 mod tests {
+    use super::TimeEncoding::*;
+    use super::TimeFormats::*;
     use super::*;
 
     fn run_decode(app: &TsDecApplet, ts: &str) -> String {
@@ -252,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn test_verbose_cli_stdin() {
+    fn test_tsdec_verbose_cli_stdin() {
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
             .args(&["tsdec", "-v"])
@@ -264,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn test_decimal() {
+    fn test_tsdec_decimal() {
         let ts = TsDecApplet {
             local: false,
             verbose: false,
@@ -291,12 +293,119 @@ mod tests {
     }
 
     #[test]
-    fn test_hex() {
+    fn test_tsdec_hex() {
         let ts = TsDecApplet {
             local: false,
             verbose: false,
         };
         assert_eq!(run_decode(&ts, "0x0"), "1970-01-01T00:00:00Z");
         assert_eq!(run_decode(&ts, "0x1"), "1970-01-01T00:00:01Z");
+    }
+
+    fn run_encode(app: &TsEncApplet, date: &str) -> String {
+        String::from_utf8(app.process_test(date.as_bytes().to_vec())).unwrap()
+    }
+
+    #[test]
+    fn test_tsenc_cli_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc"])
+            .write_stdin("1970-01-01T00:00:01Z")
+            .assert()
+            .stdout("1")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-t", "filetime"])
+            .write_stdin("1601-01-01T00:00:01Z")
+            .assert()
+            .stdout("10000000")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-i", "iso8601"])
+            .write_stdin("1970-01-01T00:00:01Z")
+            .assert()
+            .stdout("1")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-i", "rfc2822"])
+            .write_stdin("Sat, 12 Jun 1993 13:25:19 GMT")
+            .assert()
+            .stdout("739891519")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-i", "rfc3339"])
+            .write_stdin("1985-04-12T23:20:50.52Z")
+            .assert()
+            .stdout("482196050")
+            .success();
+    }
+
+    #[test]
+    fn test_tsenc() {
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixCentiSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "100"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixMilliSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "1000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixMicroSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "1000000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixNanoSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "1000000000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: FILETIME,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "116444736010000000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: Chrome,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "11644473601000000"
+        );
     }
 }
