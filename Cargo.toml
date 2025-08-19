@@ -31,7 +31,7 @@ base64 = "0.22"
 percent-encoding = "2.2.0"
 clap = {version = "~4.4", features = ["derive"]}
 crc = "3"
-time = {version = "0.3", features=["local-offset", "formatting"]}
+time = {version = "0.3", features=["local-offset", "formatting", "parsing"]}
 regex = {version = "1.10", default-features=false, features=["std", "perf"]}
 memmap2 = "0.9"
 goblin = {version = "0.8", features=["elf32", "elf64", "endian_fd"]}

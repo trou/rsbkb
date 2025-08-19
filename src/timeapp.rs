@@ -2,7 +2,7 @@ use crate::applet::{Applet, FromStrWithRadix};
 use anyhow::{Context, Result};
 use clap::{arg, Command};
 use std::convert::TryFrom;
-use time::{format_description, Duration, OffsetDateTime, UtcOffset};
+use time::{format_description, Duration, OffsetDateTime, UtcDateTime, UtcOffset};
 
 /*
     Decode a numeric timestamp in Epoch seconds format to a human-readable timestamp.
@@ -49,11 +49,102 @@ fn decode_windows_filetime(ts: i64) -> Result<OffsetDateTime> {
     decode_epoch_subseconds(shifted, 10_000_000)
 }
 
-pub struct TimeApplet {
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+enum TimeEncoding {
+    #[default]
+    UnixSecond = 1,
+    UnixCentiSecond = 100,
+    UnixMilliSecond = 1000,
+    UnixMicroSecond = 1000000,
+    UnixNanoSecond = 1000000000,
+    FILETIME,
+    Chrome,
+}
+
+#[derive(clap::ValueEnum, Clone, Default, Debug)]
+enum TimeFormats {
+    #[default]
+    Iso8601,
+    Rfc2822,
+    Rfc3339,
+}
+
+pub struct TsEncApplet {
+    encoding_type: TimeEncoding,
+    input_format: TimeFormats,
+}
+
+impl Applet for TsEncApplet {
+    fn command(&self) -> &'static str {
+        "tsenc"
+    }
+    fn description(&self) -> &'static str {
+        "timestamp encoder"
+    }
+
+    fn clap_command(&self) -> Command {
+        Command::new(self.command())
+            .about(self.description())
+            .arg(
+                arg!(-i --"input-format" [input] "input format")
+                    .value_parser(clap::builder::EnumValueParser::<TimeFormats>::new())
+                    .default_value("iso8601"),
+            )
+            .arg(
+                arg!(-t --type [type] "type of timestamp to use for encoding")
+                    .value_parser(clap::builder::EnumValueParser::<TimeEncoding>::new())
+                    .default_value("unix-second"),
+            )
+            .arg(arg!([value]  "input value, reads from stdin if not present"))
+    }
+
+    fn new() -> Box<dyn Applet> {
+        Box::new(Self {
+            encoding_type: TimeEncoding::UnixSecond,
+            input_format: TimeFormats::Iso8601,
+        })
+    }
+
+    fn parse_args(&self, args: &clap::ArgMatches) -> Result<Box<dyn Applet>> {
+        Ok(Box::new(Self {
+            encoding_type: args.get_one::<TimeEncoding>("type").unwrap().clone(),
+            input_format: args.get_one::<TimeFormats>("input-format").unwrap().clone(),
+        }))
+    }
+
+    fn process(&self, val: Vec<u8>) -> Result<Vec<u8>> {
+        let val_from_utf8 = String::from_utf8(val).context("Could not parse input as utf8")?;
+        let val_str = val_from_utf8.as_str();
+
+        let t = match self.input_format {
+                TimeFormats::Iso8601 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Iso8601::DEFAULT),
+                TimeFormats::Rfc2822 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Rfc2822),
+                TimeFormats::Rfc3339 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Rfc3339),
+        }.context("Could not parse time")?;
+        let res = match self.encoding_type {
+            TimeEncoding::UnixSecond => (t - UtcDateTime::UNIX_EPOCH).whole_seconds() as i128,
+            TimeEncoding::UnixCentiSecond => {
+                (t - UtcDateTime::UNIX_EPOCH).whole_milliseconds() / 10
+            }
+            TimeEncoding::UnixMilliSecond => (t - UtcDateTime::UNIX_EPOCH).whole_milliseconds(),
+            TimeEncoding::UnixMicroSecond => (t - UtcDateTime::UNIX_EPOCH).whole_microseconds(),
+            TimeEncoding::UnixNanoSecond => (t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds(),
+            TimeEncoding::FILETIME => {
+                ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 100) + 116_444_736_000_000_000
+            }
+            TimeEncoding::Chrome => {
+                ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 1000) + 116_444_736_000_000_00
+            }
+        };
+        Ok(format!("{}", res).as_bytes().to_vec())
+    }
+}
+pub struct TsDecApplet {
     local: bool,
     verbose: bool,
 }
-impl Applet for TimeApplet {
+
+impl Applet for TsDecApplet {
     fn command(&self) -> &'static str {
         "tsdec"
     }
@@ -154,14 +245,16 @@ impl Applet for TimeApplet {
 
 #[cfg(test)]
 mod tests {
+    use super::TimeEncoding::*;
+    use super::TimeFormats::*;
     use super::*;
 
-    fn run_decode(app: &TimeApplet, ts: &str) -> String {
+    fn run_decode(app: &TsDecApplet, ts: &str) -> String {
         String::from_utf8(app.process_test(ts.as_bytes().to_vec())).unwrap()
     }
 
     #[test]
-    fn test_verbose_cli_stdin() {
+    fn test_tsdec_verbose_cli_stdin() {
         assert_cmd::Command::cargo_bin("rsbkb")
             .expect("Could not run binary")
             .args(&["tsdec", "-v"])
@@ -173,8 +266,8 @@ mod tests {
     }
 
     #[test]
-    fn test_decimal() {
-        let ts = TimeApplet {
+    fn test_tsdec_decimal() {
+        let ts = TsDecApplet {
             local: false,
             verbose: false,
         };
@@ -200,12 +293,119 @@ mod tests {
     }
 
     #[test]
-    fn test_hex() {
-        let ts = TimeApplet {
+    fn test_tsdec_hex() {
+        let ts = TsDecApplet {
             local: false,
             verbose: false,
         };
         assert_eq!(run_decode(&ts, "0x0"), "1970-01-01T00:00:00Z");
         assert_eq!(run_decode(&ts, "0x1"), "1970-01-01T00:00:01Z");
+    }
+
+    fn run_encode(app: &TsEncApplet, date: &str) -> String {
+        String::from_utf8(app.process_test(date.as_bytes().to_vec())).unwrap()
+    }
+
+    #[test]
+    fn test_tsenc_cli_stdin() {
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc"])
+            .write_stdin("1970-01-01T00:00:01Z")
+            .assert()
+            .stdout("1")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-t", "filetime"])
+            .write_stdin("1601-01-01T00:00:01Z")
+            .assert()
+            .stdout("10000000")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-i", "iso8601"])
+            .write_stdin("1970-01-01T00:00:01Z")
+            .assert()
+            .stdout("1")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-i", "rfc2822"])
+            .write_stdin("Sat, 12 Jun 1993 13:25:19 GMT")
+            .assert()
+            .stdout("739891519")
+            .success();
+        assert_cmd::Command::cargo_bin("rsbkb")
+            .expect("Could not run binary")
+            .args(&["tsenc", "-i", "rfc3339"])
+            .write_stdin("1985-04-12T23:20:50.52Z")
+            .assert()
+            .stdout("482196050")
+            .success();
+    }
+
+    #[test]
+    fn test_tsenc() {
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixCentiSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "100"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixMilliSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "1000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixMicroSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "1000000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: UnixNanoSecond,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "1000000000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: FILETIME,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "116444736010000000"
+        );
+        assert_eq!(
+            run_encode(
+                &TsEncApplet {
+                    encoding_type: Chrome,
+                    input_format: Iso8601,
+                },
+                "1970-01-01T00:00:01Z"
+            ),
+            "11644473601000000"
+        );
     }
 }
