@@ -215,13 +215,13 @@ impl SliceApplet {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::{thread_rng, Rng};
+    use rand::{rng, Rng};
     use std::io::Write;
     use tempfile::NamedTempFile;
 
     fn setup() -> (NamedTempFile, [u8; 100]) {
         let mut rand_data = [0u8; 100];
-        thread_rng().fill(&mut rand_data[..]);
+        rng().fill(&mut rand_data[..]);
 
         let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
         tmpfile.write(&rand_data).unwrap();
