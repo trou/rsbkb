@@ -184,6 +184,8 @@ impl Applet for FindSoApplet {
                             resolved_sofiles.push(full_path);
                         }
                     }
+                } else {
+                    resolved_sofiles.push(so_path.clone());
                 }
             }
         } else {
