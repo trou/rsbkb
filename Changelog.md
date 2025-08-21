@@ -1,3 +1,6 @@
+* 2025-08-21: v1.9:
+  * `tsenc` applet. Thanks Edwin Park!
+  * MSRV is now 1.85. Update dependencies.
 * 2025-03-19: v1.8.1:
   * `(un)escape`: add HTML entities support
   * `urlenc`: fix encoding of "0xFF", thanks sha5010!
