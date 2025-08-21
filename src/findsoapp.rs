@@ -180,7 +180,7 @@ impl Applet for FindSoApplet {
                 if so_path.is_relative() {
                     for p in paths.iter() {
                         let full_path = p.join(&so_path);
-                        if full_path.is_file() && self.skip_symlinks && !full_path.is_symlink() {
+                        if full_path.is_file() && (!self.skip_symlinks || full_path.is_symlink()) {
                             resolved_sofiles.push(full_path);
                         }
                     }

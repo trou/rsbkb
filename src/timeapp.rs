@@ -117,10 +117,18 @@ impl Applet for TsEncApplet {
         let val_str = val_from_utf8.as_str();
 
         let t = match self.input_format {
-                TimeFormats::Iso8601 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Iso8601::DEFAULT),
-                TimeFormats::Rfc2822 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Rfc2822),
-                TimeFormats::Rfc3339 => UtcDateTime::parse(&val_str, &time::format_description::well_known::Rfc3339),
-        }.context("Could not parse time")?;
+            TimeFormats::Iso8601 => UtcDateTime::parse(
+                val_str,
+                &time::format_description::well_known::Iso8601::DEFAULT,
+            ),
+            TimeFormats::Rfc2822 => {
+                UtcDateTime::parse(val_str, &time::format_description::well_known::Rfc2822)
+            }
+            TimeFormats::Rfc3339 => {
+                UtcDateTime::parse(val_str, &time::format_description::well_known::Rfc3339)
+            }
+        }
+        .context("Could not parse time")?;
         let res = match self.encoding_type {
             TimeEncoding::UnixSecond => (t - UtcDateTime::UNIX_EPOCH).whole_seconds() as i128,
             TimeEncoding::UnixCentiSecond => {
@@ -133,7 +141,7 @@ impl Applet for TsEncApplet {
                 ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 100) + 116_444_736_000_000_000
             }
             TimeEncoding::Chrome => {
-                ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 1000) + 116_444_736_000_000_00
+                ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 1000) + 11_644_473_600_000_000
             }
         };
         Ok(format!("{}", res).as_bytes().to_vec())
