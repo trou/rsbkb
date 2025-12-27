@@ -64,6 +64,9 @@ mod escapeapp;
 use escapeapp::EscapeApplet;
 use escapeapp::UnEscapeApplet;
 
+mod htmlapp;
+use htmlapp::HtmlEntApplet;
+
 // Helper to "register" applets
 macro_rules! applets {
     ($a:ident = $($x:ident),* )  =>
@@ -97,7 +100,8 @@ fn main() -> Result<()> {
         InflateApplet,
         BaseIntApplet,
         EscapeApplet,
-        UnEscapeApplet
+        UnEscapeApplet,
+        HtmlEntApplet
     );
 
     // Define a busybox-like multicall binary

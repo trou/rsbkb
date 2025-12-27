@@ -43,7 +43,7 @@ fn build_url_table(excluded: &str, table: &mut [bool; 256]) {
     }
 }
 
-fn build_custom_table(excluded: &str, custom: &str, table: &mut [bool; 256]) {
+pub fn build_custom_table(excluded: &str, custom: &str, table: &mut [bool; 256]) {
     for i in 0..256 {
         let c = char::from_u32(i).unwrap();
         if custom.contains(c) {
