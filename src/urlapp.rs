@@ -156,47 +156,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_urlenc_cli_arg() {
-        assert_cmd::Command::cargo_bin("rsbkb")
-            .expect("Could not run binary")
-            .args(&["urlenc", "aAé!,"])
-            .assert()
-            .stdout("aA%c3%a9%21%2c")
-            .success();
-    }
-
-    #[test]
-    fn test_urlenc_cli_arg_exclude() {
-        assert_cmd::Command::cargo_bin("rsbkb")
-            .expect("Could not run binary")
-            .args(&["urlenc", "-e", "!,", "aAé!,"])
-            .assert()
-            .stdout("aA%c3%a9!,")
-            .success();
-    }
-
-    #[test]
-    fn test_urlenc_cli_arg_custom() {
-        assert_cmd::Command::cargo_bin("rsbkb")
-            .expect("Could not run binary")
-            .args(&["urlenc", "-e", "!,", "-c", "aA,", "aAé!,"])
-            .assert()
-            .stdout("%61%41é!,")
-            .success();
-    }
-
-    #[test]
-    fn test_urlenc_stdin() {
-        assert_cmd::Command::cargo_bin("rsbkb")
-            .expect("Could not run binary")
-            .args(&["urlenc"])
-            .write_stdin("aAé!,")
-            .assert()
-            .stdout("aA%c3%a9%21%2c")
-            .success();
-    }
-
-    #[test]
     fn test_urlenc() {
         let mut table = [false; 256];
         build_default_table(&"".to_string(), &mut table);

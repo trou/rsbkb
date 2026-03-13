@@ -1,3 +1,5 @@
+* XXX:
+  * Move CLI tests to integration tests
 * 2025-08-21: v1.9:
   * `tsenc` applet. Thanks Edwin Park!
   * MSRV is now 1.85. Update dependencies.
