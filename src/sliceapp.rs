@@ -129,13 +129,14 @@ impl SliceApplet {
         };
 
         // Read initial data
-        let mut res = vec![0; self.start.offset as usize];
+        let mut res = Vec::new();
 
-        f.read_exact(&mut res)
-            .with_context(|| "Could not read until start")?;
-
-        // Drop it
-        res.clear();
+        // Skip initial data efficiently without allocating
+        std::io::copy(
+            &mut f.by_ref().take(self.start.offset),
+            &mut std::io::sink(),
+        )
+        .with_context(|| "Could not skip until start")?;
 
         let start = self.start.offset;
 
