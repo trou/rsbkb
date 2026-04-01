@@ -188,7 +188,7 @@ fn main() -> Result<()> {
         if !sub_matches.contains_id(argname) {
             io::stdin()
                 .read_to_end(&mut inputval)
-                .expect("Reading stdin failed");
+                .context("Reading stdin failed")?;
         } else {
             /* Check if the given argument could be a filename, which is probably not
              * what the user wants */

@@ -173,7 +173,7 @@ mod tests {
 
         let d64 = B64DecApplet {
             strict: false,
-            engine: engine,
+            engine,
         };
         assert_eq!(
             "::::".as_bytes().to_vec(),

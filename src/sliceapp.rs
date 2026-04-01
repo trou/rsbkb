@@ -140,9 +140,7 @@ impl SliceApplet {
 
         let start = self.start.offset;
 
-        if self.end.is_some() {
-            let end_pos = self.end.as_ref().unwrap();
-
+        if let Some(end_pos) = &self.end {
             let end = if end_pos.relative {
                 start + end_pos.offset
             } else {
@@ -188,8 +186,7 @@ impl SliceApplet {
             .with_context(|| "seek failed")?;
 
         let mut res = vec![];
-        if self.end.is_some() {
-            let end_pos = self.end.as_ref().unwrap();
+        if let Some(end_pos) = &self.end {
             let end = if end_pos.from_end {
                 flen - end_pos.offset
             } else if end_pos.relative {
@@ -225,7 +222,7 @@ mod tests {
         rng().fill(&mut rand_data[..]);
 
         let mut tmpfile = tempfile::NamedTempFile::new().unwrap();
-        tmpfile.write(&rand_data).unwrap();
+        tmpfile.write_all(&rand_data).unwrap();
         (tmpfile, rand_data)
     }
 
