@@ -1,7 +1,7 @@
 ---
 name: rsbkb (Rust BlackBag)
 
-description: Use rsbkb for binary data manipulation, CLI tools: hex unhex urlenc urldec crc16 crc32 crc b64 d64 bofpattoff bofpatt xor entropy slice bgrep findso tsdec tsenc deflate inflate base escape unescape
+description: "Use rsbkb for binary data manipulation, CLI tools: hex unhex urlenc urldec crc16 crc32 crc b64 d64 bofpattoff bofpatt xor entropy slice bgrep findso tsdec tsenc deflate inflate base escape unescape"
 ---
 
 ## Overview
