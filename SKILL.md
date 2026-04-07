@@ -1,6 +1,8 @@
-## Metadata
+---
 name: rsbkb (Rust BlackBag)
-description: Use rsbkb for binary data manipulation, encoding/decoding, and security-oriented data analysis via a CLI multi-tool.
+
+description: Use rsbkb for binary data manipulation, CLI tools: hex unhex urlenc urldec crc16 crc32 crc b64 d64 bofpattoff bofpatt xor entropy slice bgrep findso tsdec tsenc deflate inflate base escape unescape
+---
 
 ## Overview
 rsbkb is a versatile collection of command-line tools (applets) designed for rapid data transformation and analysis. It functions similarly to `busybox`, where a single binary provides multiple utilities that can be chained together via pipes to perform complex operations, effectively serving as a high-performance CLI alternative to CyberChef.
@@ -67,8 +69,8 @@ These take a specific **numeric or string value** as a positional argument, not 
 | `bofpattoff` | `<extract>` — pattern string or `0xAABBCCDD` register value |
 
 ## Usage Guidelines
-- **Piping**: Stdin applets chain naturally:  
-  `slice file 0x10 +64 | xor -x deadbeef | b64 -u`  
+- **Piping**: Stdin applets chain naturally: 
+  `slice file 0x10 +64 | xor -x deadbeef | b64 -u` 
   `cat firmware.bin | entropy`
 - **Invocation**: Call via `rsbkb <applet> [args]` or via symlinks created by `rsbkb symlink`.
 - **Help**: Detailed documentation for any applet is available via `rsbkb help <applet>`.
