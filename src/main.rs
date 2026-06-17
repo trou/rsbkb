@@ -64,41 +64,37 @@ mod escapeapp;
 use escapeapp::EscapeApplet;
 use escapeapp::UnEscapeApplet;
 
-// Helper to "register" applets
-macro_rules! applets {
-    ($a:ident = $($x:ident),* )  =>
-        {
-            let $a : Vec<Box<dyn Applet>>= vec![$($x::new(),)*];
-
-        };
+/// Build the list of all registered applets.
+fn applets() -> Vec<Box<dyn Applet>> {
+    vec![
+        HexApplet::new(),
+        UnHexApplet::new(),
+        UrlEncApplet::new(),
+        UrlDecApplet::new(),
+        CRC16Applet::new(),
+        CRC32Applet::new(),
+        CRCApplet::new(),
+        B64EncApplet::new(),
+        B64DecApplet::new(),
+        BofPattOffApplet::new(),
+        BofPattGenApplet::new(),
+        XorApplet::new(),
+        EntropyApplet::new(),
+        SliceApplet::new(),
+        BgrepApplet::new(),
+        FindSoApplet::new(),
+        TsDecApplet::new(),
+        TsEncApplet::new(),
+        DeflateApplet::new(),
+        InflateApplet::new(),
+        BaseIntApplet::new(),
+        EscapeApplet::new(),
+        UnEscapeApplet::new(),
+    ]
 }
 
 fn main() -> Result<()> {
-    applets!(
-        apps = HexApplet,
-        UnHexApplet,
-        UrlEncApplet,
-        UrlDecApplet,
-        CRC16Applet,
-        CRC32Applet,
-        CRCApplet,
-        B64EncApplet,
-        B64DecApplet,
-        BofPattOffApplet,
-        BofPattGenApplet,
-        XorApplet,
-        EntropyApplet,
-        SliceApplet,
-        BgrepApplet,
-        FindSoApplet,
-        TsDecApplet,
-        TsEncApplet,
-        DeflateApplet,
-        InflateApplet,
-        BaseIntApplet,
-        EscapeApplet,
-        UnEscapeApplet
-    );
+    let apps = applets();
 
     // Define a busybox-like multicall binary
     // Subcommands must be defined both as subcommands for "rsbkb" and
