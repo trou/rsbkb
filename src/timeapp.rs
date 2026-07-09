@@ -57,7 +57,7 @@ enum TimeEncoding {
     UnixMilliSecond = 1000,
     UnixMicroSecond = 1000000,
     UnixNanoSecond = 1000000000,
-    FILETIME,
+    Filetime,
     Chrome,
 }
 
@@ -137,7 +137,7 @@ impl Applet for TsEncApplet {
             TimeEncoding::UnixMilliSecond => (t - UtcDateTime::UNIX_EPOCH).whole_milliseconds(),
             TimeEncoding::UnixMicroSecond => (t - UtcDateTime::UNIX_EPOCH).whole_microseconds(),
             TimeEncoding::UnixNanoSecond => (t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds(),
-            TimeEncoding::FILETIME => {
+            TimeEncoding::Filetime => {
                 ((t - UtcDateTime::UNIX_EPOCH).whole_nanoseconds() / 100) + 116_444_736_000_000_000
             }
             TimeEncoding::Chrome => {
@@ -347,7 +347,7 @@ mod tests {
         assert_eq!(
             run_encode(
                 &TsEncApplet {
-                    encoding_type: FILETIME,
+                    encoding_type: Filetime,
                     input_format: Iso8601,
                 },
                 "1970-01-01T00:00:01Z"
